@@ -11,6 +11,8 @@ import (
 
 // Server is the nats gateway server
 type Server struct {
+	Application string // name of the asterisk application this gateway is serving
+
 	readyCh chan struct{}
 
 	ctx    context.Context
@@ -22,7 +24,7 @@ type Server struct {
 }
 
 // NewServer creates a new nats gw server
-func NewServer(client *ari.Client, opts *Options) (srv *Server, err error) {
+func NewServer(client *ari.Client, application string, opts *Options) (srv *Server, err error) {
 
 	if client == nil {
 		err = errors.New("No client provided")
@@ -45,8 +47,12 @@ func NewServer(client *ari.Client, opts *Options) (srv *Server, err error) {
 		opts.URL = nats.DefaultURL
 	}
 
-	srv = &Server{}
-	srv.readyCh = make(chan struct{})
+	srv = &Server{
+		Application: application,
+		readyCh:     make(chan struct{}),
+		log:         opts.Logger,
+		upstream:    client,
+	}
 	defer func() {
 		if err != nil {
 			srv = nil // don't return and garbage collect srv on error
@@ -59,8 +65,6 @@ func NewServer(client *ari.Client, opts *Options) (srv *Server, err error) {
 	}
 
 	srv.ctx, srv.cancel = context.WithCancel(opts.Parent)
-	srv.log = opts.Logger
-	srv.upstream = client
 
 	return
 }

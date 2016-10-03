@@ -17,7 +17,6 @@ import (
 func runServer(log log15.Logger) int {
 
 	// inject logger
-
 	native.Logger = log
 	nc.Logger = log
 
@@ -32,6 +31,8 @@ func runServer(log log15.Logger) int {
 	}
 	defer cl.Close()
 
+	// build ARI proxy
+
 	opts := ariproxy.Options{
 		URL:    viper.GetString("nats.url"),
 		Logger: log,
@@ -42,9 +43,11 @@ func runServer(log log15.Logger) int {
 		opts.URL = "nats://" + os.Getenv("NATS_SERVICE_HOST") + ":" + os.Getenv("NATS_SERVICE_PORT_CLIENT")
 	}
 
+	// start ARI proxy
+
 	log.Debug("Connecting to NATS", "url", opts.URL)
 
-	srv, err := ariproxy.NewServer(cl, &opts)
+	srv, err := ariproxy.NewServer(cl, viper.GetString("ari.application"), &opts)
 	if err != nil {
 		log.Error("Failed to connect to NATS", "url", opts.URL, "error", err)
 		return -1

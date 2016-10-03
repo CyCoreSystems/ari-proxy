@@ -8,3 +8,6 @@ Proxy for the Asterisk REST interface.
 
 	go get github.com/CyCoreSystems/ari-proxy/cmd/ari-proxy
 
+## Development
+
+New development occurs on `develop` branch.

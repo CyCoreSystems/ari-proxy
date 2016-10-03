@@ -5,12 +5,14 @@ import (
 
 	"github.com/CyCoreSystems/ari"
 	"github.com/nats-io/nats"
+	uuid "github.com/satori/go.uuid"
 	"golang.org/x/net/context"
 	log15 "gopkg.in/inconshreveable/log15.v2"
 )
 
 // Server is the nats gateway server
 type Server struct {
+	ID          string // server identifier
 	Application string // name of the asterisk application this gateway is serving
 
 	readyCh chan struct{}
@@ -25,6 +27,8 @@ type Server struct {
 
 // NewServer creates a new nats gw server
 func NewServer(client *ari.Client, application string, opts *Options) (srv *Server, err error) {
+
+	id := uuid.NewV1().String() //TODO: allow users to specify server, load from hostname, etc?
 
 	if client == nil {
 		err = errors.New("No client provided")
@@ -48,6 +52,7 @@ func NewServer(client *ari.Client, application string, opts *Options) (srv *Serv
 	}
 
 	srv = &Server{
+		ID:          id,
 		Application: application,
 		readyCh:     make(chan struct{}),
 		log:         opts.Logger,

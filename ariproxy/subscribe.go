@@ -22,7 +22,6 @@ func (srv *Server) subscribe(endpoint string, h Handler) {
 			if err != nil {
 				respMap := nc.ErrorToMap(err, "")
 				resp, _ := json.Marshal(respMap)
-				//			resp := append([]byte{nc.MagicRespErr}, resp...)
 				if err2 := srv.conn.Publish(reply+".err", resp); err2 != nil {
 					srv.log.Error("Error sending error reply", "reply", reply, "error", err2, "body", err)
 				}
@@ -38,7 +37,6 @@ func (srv *Server) subscribe(endpoint string, h Handler) {
 				}
 			}
 
-			//resp = append([]byte{nc.MagicRespOK}, resp...)
 			if err = srv.conn.Publish(reply+".resp", resp); err != nil {
 				srv.log.Error("Error sending response reply", "reply", reply, "error", err, "body", resp)
 			}

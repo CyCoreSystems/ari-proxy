@@ -12,10 +12,6 @@ const DefaultRequestTimeout = 200 * time.Millisecond
 
 // Options is the list options
 type Options struct {
-
-	// URL is the nats URL
-	URL string
-
 	// ReadOperationRetryCount is the amount of times to retry a read operation
 	ReadOperationRetryCount int
 
@@ -23,22 +19,15 @@ type Options struct {
 	RequestTimeout time.Duration
 }
 
-// New creates a new ari.Client connected to a gateway ARI server via NATS
-func New(opts Options) (cl *ari.Client, err error) {
-
-	var client *nats.Conn
-	client, err = nats.Connect(opts.URL)
-	if err != nil {
-		return
-	}
-
+// NewFromConn creates a new ari.Client connected to a gateway ARI server via NATS
+func NewFromConn(nc *nats.Conn, opts Options) (cl *ari.Client, err error) {
 	if opts.RequestTimeout == 0 {
 		opts.RequestTimeout = DefaultRequestTimeout
 	}
 
 	conn := &Conn{
 		opts: opts,
-		conn: client,
+		conn: nc,
 	}
 
 	playback := natsPlayback{conn}
@@ -50,7 +39,7 @@ func New(opts Options) (cl *ari.Client, err error) {
 	config := &natsConfig{conn}
 
 	cl = &ari.Client{
-		Cleanup:     func() error { client.Close(); return nil },
+		Cleanup:     func() error { nc.Close(); return nil },
 		Asterisk:    &natsAsterisk{conn, logging, modules, config},
 		Application: &natsApplication{conn},
 		Bridge:      &natsBridge{conn, &playback, liveRecording},
@@ -67,4 +56,17 @@ func New(opts Options) (cl *ari.Client, err error) {
 	}
 
 	return
+
+}
+
+// New creates a new ari.Client connected to a gateway ARI server via NATS
+func New(url string, opts Options) (cl *ari.Client, err error) {
+
+	var nc *nats.Conn
+	nc, err = nats.Connect(url)
+	if err != nil {
+		return
+	}
+
+	return NewFromConn(nc, opts)
 }

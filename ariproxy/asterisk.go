@@ -1,36 +1,37 @@
 package ariproxy
 
-import "encoding/json"
+import (
+	"encoding/json"
 
-func (srv *Server) asterisk() {
+	"github.com/CyCoreSystems/ari-proxy/session"
+)
 
-	srv.subscribe("ari.asterisk.reload.>",
-		NamedHandler(len("ari.asterisk.reload."), func(name string, _ []byte, reply Reply) {
-			err := srv.upstream.Asterisk.ReloadModule(name)
-			reply(nil, err)
-		}))
+func (ins *Instance) asterisk() {
 
-	srv.subscribe("ari.asterisk.info", func(_ string, _ []byte, reply Reply) {
-		ai, err := srv.upstream.Asterisk.Info("")
+	ins.subscribe("ari.asterisk.reload", func(msg *session.Message, reply Reply) {
+		err := ins.upstream.Asterisk.ReloadModule(msg.Object)
+		reply(nil, err)
+	})
+
+	ins.subscribe("ari.asterisk.info", func(_ *session.Message, reply Reply) {
+		ai, err := ins.upstream.Asterisk.Info("")
 		reply(ai, err)
 	})
 
-	srv.subscribe("ari.asterisk.variables.get.>",
-		NamedHandler(len("ari.asterisk.variables.get."), func(name string, _ []byte, reply Reply) {
-			val, err := srv.upstream.Asterisk.Variables().Get(name)
-			reply(val, err)
-		}))
+	ins.subscribe("ari.asterisk.variables.get", func(msg *session.Message, reply Reply) {
+		val, err := ins.upstream.Asterisk.Variables().Get(msg.Object)
+		reply(val, err)
+	})
 
-	srv.subscribe("ari.asterisk.variables.set.>",
-		NamedHandler(len("ari.asterisk.variables.set."), func(name string, data []byte, reply Reply) {
-			var value string
-			if err := json.Unmarshal(data, &value); err != nil {
-				reply(nil, &decodingError{"ari.asterisk.variables.set." + name, err})
-				return
-			}
+	ins.subscribe("ari.asterisk.variables.set", func(msg *session.Message, reply Reply) {
+		var value string
+		if err := json.Unmarshal(msg.Payload, &value); err != nil {
+			reply(nil, &decodingError{msg.Command, err})
+			return
+		}
 
-			err := srv.upstream.Asterisk.Variables().Set(name, value)
-			reply(nil, err)
-		}))
+		err := ins.upstream.Asterisk.Variables().Set(msg.Object, value)
+		reply(nil, err)
+	})
 
 }

@@ -1,16 +1,14 @@
 package client
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/CyCoreSystems/ari"
-
-	"github.com/nats-io/nats"
 )
 
 type natsBridge struct {
 	conn          *Conn
+	subscriber    ari.Subscriber
 	playback      ari.Playback
 	liveRecording ari.LiveRecording
 }
@@ -127,31 +125,20 @@ func (b *natsBridge) Subscribe(id string, nx ...string) ari.Subscription {
 	bridgeHandle := b.Get(id)
 
 	go func() {
-		for _, n := range nx {
-			subj := fmt.Sprintf("ari.events.%s", n)
-			sub, err := b.conn.conn.Subscribe(subj, func(msg *nats.Msg) {
-				eventType := msg.Subject[len("ari.events."):]
+		sub := b.subscriber.Subscribe(nx...)
+		defer sub.Cancel()
+		for {
 
-				var ariMessage ari.Message
-				ariMessage.SetRaw(&msg.Data)
-				ariMessage.Type = eventType
-
-				evt := ari.Events.Parse(&ariMessage)
-
-				//TODO: do we want to send in events on the bridge for a specific channel?
+			select {
+			case <-ns.closeChan:
+				ns.closeChan = nil
+				return
+			case evt := <-sub.Events():
 				if bridgeHandle.Match(evt) {
 					ns.events <- evt
 				}
-			})
-			if err != nil {
-				//TODO: handle error
-				panic(err)
 			}
-			defer sub.Unsubscribe()
 		}
-
-		<-ns.closeChan
-		ns.closeChan = nil
 	}()
 
 	return &ns

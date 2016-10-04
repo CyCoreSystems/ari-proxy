@@ -1,12 +1,9 @@
 package client
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/CyCoreSystems/ari"
-
-	"github.com/nats-io/nats"
 )
 
 // ContinueRequest is the request body for continuing over the message queue
@@ -18,6 +15,7 @@ type ContinueRequest struct {
 
 type natsChannel struct {
 	conn          *Conn
+	subscriber    ari.Subscriber
 	playback      ari.Playback
 	liveRecording ari.LiveRecording
 }
@@ -216,8 +214,7 @@ func (c *natsChannel) Record(id string, name string, opts *ari.RecordingOptions)
 	return
 }
 
-func (c *natsChannel) Subscribe(id string, nx ...string) ari.Subscription {
-
+func (c *natsChannel) Subscribe(id string, n ...string) ari.Subscription {
 	var ns natsSubscription
 
 	ns.events = make(chan ari.Event, 10)
@@ -226,31 +223,36 @@ func (c *natsChannel) Subscribe(id string, nx ...string) ari.Subscription {
 	channelHandle := c.Get(id)
 
 	go func() {
-		for _, n := range nx {
-			subj := fmt.Sprintf("ari.events.%s", n)
-			sub, err := c.conn.conn.Subscribe(subj, func(msg *nats.Msg) {
-				eventType := msg.Subject[len("ari.events."):]
+		sub := c.subscriber.Subscribe(n...)
+		defer sub.Cancel()
+		for {
 
-				var ariMessage ari.Message
-				ariMessage.SetRaw(&msg.Data)
-				ariMessage.Type = eventType
-
-				evt := ari.Events.Parse(&ariMessage)
-
+			select {
+			case <-ns.closeChan:
+				ns.closeChan = nil
+				return
+			case evt := <-sub.Events():
 				if channelHandle.Match(evt) {
 					ns.events <- evt
 				}
-			})
-			if err != nil {
-				//TODO: handle error
-				panic(err)
 			}
-			defer sub.Unsubscribe()
 		}
-
-		<-ns.closeChan
-		ns.closeChan = nil
 	}()
 
 	return &ns
+}
+
+type natsSubscription struct {
+	closeChan chan struct{}
+	events    chan ari.Event
+}
+
+func (ns *natsSubscription) Events() chan ari.Event {
+	return ns.events
+}
+
+func (ns *natsSubscription) Cancel() {
+	if ns.closeChan != nil {
+		close(ns.closeChan)
+	}
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/CyCoreSystems/ari-proxy/session"
 	"github.com/nats-io/nats"
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
@@ -11,15 +12,16 @@ import (
 
 // Conn is the wrapper type for a nats connnection along some ARI specific options
 type Conn struct {
-	opts Options
-	conn *nats.Conn
+	opts   Options
+	conn   *nats.Conn
+	dialog *session.Dialog
 }
 
 // ReadRequest sends a request that is a "read"... a request
 // which can be retried as needed without consequence.
 // NOTE: It is less about "read" operations and more about
 // operations which are repeatable/idempotent.
-func (c *Conn) ReadRequest(subj string, body interface{}, dest interface{}) (err error) {
+func (c *Conn) ReadRequest(cmd string, name string, body interface{}, dest interface{}) (err error) {
 
 	maxRetries := c.opts.ReadOperationRetryCount
 
@@ -29,7 +31,7 @@ func (c *Conn) ReadRequest(subj string, body interface{}, dest interface{}) (err
 
 	for i := 0; i <= maxRetries; i++ {
 
-		err = c.standardRequest(subj, body, dest)
+		err = c.StandardRequest(cmd, name, body, dest)
 		if err == nil {
 			return
 		}
@@ -44,7 +46,7 @@ func (c *Conn) ReadRequest(subj string, body interface{}, dest interface{}) (err
 
 // StandardRequest is a request that sends JSON and receives JSON (on success)
 // OR receives an error from the remote server
-func (c *Conn) StandardRequest(subj string, body interface{}, dest interface{}) (err error) {
+func (c *Conn) StandardRequest(cmd string, name string, body interface{}, dest interface{}) (err error) {
 
 	// build json request
 
@@ -59,7 +61,7 @@ func (c *Conn) StandardRequest(subj string, body interface{}, dest interface{}) 
 	// make request
 
 	var msg *nats.Msg
-	msg, err = c.RawRequest(subj, data)
+	msg, err = c.RawRequest(cmd, name, data)
 
 	// parse json response
 
@@ -72,9 +74,25 @@ func (c *Conn) StandardRequest(subj string, body interface{}, dest interface{}) 
 
 // RawRequest sends a tiered request, with an initial OK to acknowledge receipt,
 // followed by either a response or an error.
-func (c *Conn) RawRequest(subj string, data []byte) (msg *nats.Msg, err error) {
+func (c *Conn) RawRequest(cmd string, name string, data []byte) (msg *nats.Msg, err error) {
 
 	conn := c.conn
+
+	// build message
+
+	subj := "ari.commands.dialog." + c.dialog.ID
+	var sessionMessage session.Message
+	sessionMessage.Command = cmd
+	sessionMessage.Object = name
+	sessionMessage.Payload = data
+
+	// convert to json
+
+	var body []byte
+	body, err = json.Marshal(&sessionMessage)
+	if err != nil {
+		return
+	}
 
 	// prepare response channel
 
@@ -90,7 +108,7 @@ func (c *Conn) RawRequest(subj string, data []byte) (msg *nats.Msg, err error) {
 
 	// send request
 
-	if err = conn.PublishRequest(subj, replyID, data); err != nil {
+	if err = conn.PublishRequest(subj, replyID, body); err != nil {
 		return
 	}
 
@@ -135,11 +153,11 @@ func (c *Conn) RawRequest(subj string, data []byte) (msg *nats.Msg, err error) {
 // compatibility stubs
 
 func (c *Conn) readRequest(subj string, body interface{}, dest interface{}) (err error) {
-	return c.ReadRequest(subj, body, dest)
+	panic("unsupported")
 }
 
 func (c *Conn) standardRequest(subj string, body interface{}, dest interface{}) (err error) {
-	return c.StandardRequest(subj, body, dest)
+	panic("unsupported")
 }
 
 // --

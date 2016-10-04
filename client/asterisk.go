@@ -37,7 +37,7 @@ func (a *natsAsterisk) ReloadModule(name string) (err error) {
 
 func (a *natsAsterisk) Info(only string) (*ari.AsteriskInfo, error) {
 	ai := &ari.AsteriskInfo{}
-	err := a.conn.readRequest("ari.asterisk.info", only, ai)
+	err := a.conn.ReadRequest("ari.asterisk.info", "", only, ai)
 	if err != nil {
 		return nil, err
 	}
@@ -49,11 +49,11 @@ func (a *natsAsterisk) Variables() ari.Variables {
 }
 
 func (a *natsAsteriskVariables) Get(variable string) (ret string, err error) {
-	err = a.conn.readRequest("ari.asterisk.variables.get."+variable, nil, &ret)
+	err = a.conn.ReadRequest("ari.asterisk.variables.get", variable, nil, &ret)
 	return
 }
 
 func (a *natsAsteriskVariables) Set(variable string, value string) (err error) {
-	err = a.conn.standardRequest("ari.asterisk.variables.set."+variable, value, nil)
+	err = a.conn.StandardRequest("ari.asterisk.variables.set", variable, value, nil)
 	return
 }

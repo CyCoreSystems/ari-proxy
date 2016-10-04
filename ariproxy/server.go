@@ -15,6 +15,8 @@ type Server struct {
 	ID          string // server identifier
 	Application string // name of the asterisk application this gateway is serving
 
+	cache instanceCache
+
 	readyCh chan struct{}
 
 	ctx    context.Context
@@ -80,20 +82,7 @@ func (srv *Server) Start() {
 	go func() {
 		defer srv.conn.Close()
 
-		srv.application()
-		srv.asterisk()
-		srv.bridge()
-		srv.channel()
-		srv.device()
-		srv.playback()
 		srv.events()
-		srv.mailbox()
-		srv.sound()
-		srv.liveRecording()
-		srv.storedRecording()
-		srv.modules()
-		srv.logging()
-		srv.config()
 
 		close(srv.readyCh)
 

@@ -3,7 +3,11 @@ package client
 import (
 	"time"
 
+	"golang.org/x/net/context"
+
 	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari-proxy/session"
+	"github.com/CyCoreSystems/ari/stdbus"
 	"github.com/nats-io/nats"
 )
 
@@ -17,21 +21,29 @@ type Options struct {
 
 	// RequestTimeout is the timeout duration of a request
 	RequestTimeout time.Duration
+
+	Parent context.Context
 }
 
-// NewFromConn creates a new ari.Client connected to a gateway ARI server via NATS
-func NewFromConn(nc *nats.Conn, opts Options) (cl *ari.Client, err error) {
+// New creates a new ari.Client connected to a gateway ARI server via NATS
+func New(nc *nats.Conn, d *session.Dialog, opts Options) (cl *ari.Client, err error) {
 	if opts.RequestTimeout == 0 {
 		opts.RequestTimeout = DefaultRequestTimeout
 	}
 
+	if opts.Parent == nil {
+		opts.Parent = context.Background()
+	}
+
 	conn := &Conn{
-		opts: opts,
-		conn: nc,
+		opts:   opts,
+		conn:   nc,
+		dialog: d,
 	}
 
 	playback := natsPlayback{conn}
-	bus := &natsBus{conn}
+	bus := stdbus.Start(opts.Parent)
+
 	liveRecording := &natsLiveRecording{conn}
 	storedRecording := &natsStoredRecording{conn}
 	logging := &natsLogging{conn}
@@ -42,8 +54,8 @@ func NewFromConn(nc *nats.Conn, opts Options) (cl *ari.Client, err error) {
 		Cleanup:     func() error { nc.Close(); return nil },
 		Asterisk:    &natsAsterisk{conn, logging, modules, config},
 		Application: &natsApplication{conn},
-		Bridge:      &natsBridge{conn, &playback, liveRecording},
-		Channel:     &natsChannel{conn, &playback, liveRecording},
+		Bridge:      &natsBridge{conn, bus, &playback, liveRecording},
+		Channel:     &natsChannel{conn, bus, &playback, liveRecording},
 		DeviceState: &natsDeviceState{conn},
 		Mailbox:     &natsMailbox{conn},
 		Sound:       &natsSound{conn},
@@ -57,16 +69,4 @@ func NewFromConn(nc *nats.Conn, opts Options) (cl *ari.Client, err error) {
 
 	return
 
-}
-
-// New creates a new ari.Client connected to a gateway ARI server via NATS
-func New(url string, opts Options) (cl *ari.Client, err error) {
-
-	var nc *nats.Conn
-	nc, err = nats.Connect(url)
-	if err != nil {
-		return
-	}
-
-	return NewFromConn(nc, opts)
 }

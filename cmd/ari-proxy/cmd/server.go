@@ -6,9 +6,9 @@ import (
 
 	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/ariproxy"
+	"github.com/CyCoreSystems/ari-proxy/client"
 
 	"github.com/CyCoreSystems/ari/client/native"
-	"github.com/CyCoreSystems/ari/client/nc"
 	"github.com/spf13/viper"
 
 	log15 "gopkg.in/inconshreveable/log15.v2"
@@ -18,7 +18,7 @@ func runServer(log log15.Logger) int {
 
 	// inject logger
 	native.Logger = log
-	nc.Logger = log
+	client.Logger = log
 
 	log.Info("Starting ari-proxy server")
 

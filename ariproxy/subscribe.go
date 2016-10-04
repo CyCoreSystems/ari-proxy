@@ -3,7 +3,7 @@ package ariproxy
 import (
 	"encoding/json"
 
-	"github.com/CyCoreSystems/ari/client/nc"
+	"github.com/CyCoreSystems/ari-proxy/client"
 	"github.com/nats-io/nats"
 )
 
@@ -20,7 +20,7 @@ func (srv *Server) subscribe(endpoint string, h Handler) {
 		h(subj, data, func(i interface{}, err error) {
 
 			if err != nil {
-				respMap := nc.ErrorToMap(err, "")
+				respMap := client.ErrorToMap(err, "")
 				resp, _ := json.Marshal(respMap)
 				if err2 := srv.conn.Publish(reply+".err", resp); err2 != nil {
 					srv.log.Error("Error sending error reply", "reply", reply, "error", err2, "body", err)

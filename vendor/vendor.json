@@ -19,12 +19,6 @@
 			"revisionTime": "2016-10-01T21:16:47Z"
 		},
 		{
-			"checksumSHA1": "1yi+UGL2pAlNKf21hPoq7aRNkZ0=",
-			"path": "github.com/CyCoreSystems/ari/client/nc",
-			"revision": "768a281f58ebe670d98651942763016158b44044",
-			"revisionTime": "2016-10-01T21:16:47Z"
-		},
-		{
 			"checksumSHA1": "dnQMyxdsLDKd6NHD0naLAqguz6U=",
 			"path": "github.com/fsnotify/fsnotify",
 			"revision": "c07fd863aee264025aa0ef438bf9d2046c803493",

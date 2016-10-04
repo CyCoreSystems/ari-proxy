@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/CyCoreSystems/ari"
-	"github.com/CyCoreSystems/ari/client/nc"
+	"github.com/CyCoreSystems/ari-proxy/client"
 )
 
 func (srv *Server) bridge() {
@@ -35,7 +35,7 @@ func (srv *Server) bridge() {
 
 	srv.subscribe("ari.bridges.create", func(subj string, data []byte, reply Reply) {
 
-		var req nc.CreateBridgeRequest
+		var req client.CreateBridgeRequest
 		if err := json.Unmarshal(data, &req); err != nil {
 			reply(nil, &decodingError{subj, err})
 			return
@@ -86,7 +86,7 @@ func (srv *Server) bridge() {
 	srv.subscribe("ari.bridges.play.>", func(subj string, data []byte, reply Reply) {
 		name := subj[len("ari.bridges.play."):]
 
-		var pr nc.PlayRequest
+		var pr client.PlayRequest
 		if err := json.Unmarshal(data, &pr); err != nil {
 			reply(nil, &decodingError{subj, err})
 			return
@@ -99,7 +99,7 @@ func (srv *Server) bridge() {
 	srv.subscribe("ari.bridges.record.>", func(subj string, data []byte, reply Reply) {
 		name := subj[len("ari.bridges.record."):]
 
-		var rr nc.RecordRequest
+		var rr client.RecordRequest
 		if err := json.Unmarshal(data, &rr); err != nil {
 			reply(nil, &decodingError{subj, err})
 			return

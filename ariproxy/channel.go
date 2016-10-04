@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/CyCoreSystems/ari"
-	"github.com/CyCoreSystems/ari/client/nc"
+	"github.com/CyCoreSystems/ari-proxy/client"
 )
 
 func (srv *Server) channel() {
@@ -152,7 +152,7 @@ func (srv *Server) channel() {
 	srv.subscribe("ari.channels.play.>", func(subj string, data []byte, reply Reply) {
 		name := subj[len("ari.channels.play."):]
 
-		var pr nc.PlayRequest
+		var pr client.PlayRequest
 		if err := json.Unmarshal(data, &pr); err != nil {
 			reply(nil, &decodingError{subj, err})
 			return
@@ -183,7 +183,7 @@ func (srv *Server) channel() {
 	srv.subscribe("ari.channels.continue.>", func(subj string, data []byte, reply Reply) {
 		name := subj[len("ari.channels.continue."):]
 
-		var req nc.ContinueRequest
+		var req client.ContinueRequest
 		if err := json.Unmarshal(data, &req); err != nil {
 			reply(nil, &decodingError{subj, err})
 			return
@@ -196,7 +196,7 @@ func (srv *Server) channel() {
 	srv.subscribe("ari.channels.dial.>", func(subj string, data []byte, reply Reply) {
 		name := subj[len("ari.channels.dial."):]
 
-		var req nc.DialRequest
+		var req client.DialRequest
 		if err := json.Unmarshal(data, &req); err != nil {
 			reply(nil, &decodingError{subj, err})
 			return
@@ -210,7 +210,7 @@ func (srv *Server) channel() {
 	srv.subscribe("ari.channels.snoop.>", func(subj string, data []byte, reply Reply) {
 		name := subj[len("ari.channels.snoop."):]
 
-		var req nc.SnoopRequest
+		var req client.SnoopRequest
 		if err := json.Unmarshal(data, &req); err != nil {
 			reply(nil, &decodingError{subj, err})
 			return
@@ -223,7 +223,7 @@ func (srv *Server) channel() {
 	srv.subscribe("ari.channels.record.>", func(subj string, data []byte, reply Reply) {
 		name := subj[len("ari.channels.record."):]
 
-		var rr nc.RecordRequest
+		var rr client.RecordRequest
 		if err := json.Unmarshal(data, &rr); err != nil {
 			reply(nil, &decodingError{subj, err})
 			return

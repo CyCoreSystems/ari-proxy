@@ -66,6 +66,8 @@ func NewServer(client *ari.Client, application string, opts *Options) (srv *Serv
 		}
 	}()
 
+	srv.cache.Init()
+
 	srv.conn, err = nats.Connect(opts.URL)
 	if err != nil {
 		return

@@ -8,6 +8,10 @@ type instanceCache struct {
 	lock  sync.RWMutex
 }
 
+func (ic *instanceCache) Init() {
+	ic.cache = make(map[string]*Instance)
+}
+
 func (ic *instanceCache) Add(id string, i *Instance) {
 
 	i.Dialog.Objects.Add(id)

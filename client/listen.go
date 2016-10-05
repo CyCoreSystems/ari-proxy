@@ -68,6 +68,7 @@ func sendErrorReply(conn *nats.Conn, reply string, err error) {
 }
 
 func sendOkReply(conn *nats.Conn, reply string) bool {
+	Logger.Debug("Sending OK", "reply", reply)
 	// send okay outside of goroutine, so the other side doesn't time out
 	data := []byte("ok")
 	if err := conn.Publish(reply, data); err != nil {

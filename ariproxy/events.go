@@ -180,25 +180,30 @@ func (srv *Server) tryStasisStart(evt ari.Event) (i *Instance) {
 
 	reply := uuid.NewV1().String()
 
-	doneCh := make(chan struct{})
 	var err error
 
-	srv.conn.Subscribe(reply, func(msg *nats.Msg) {
-		defer close(doneCh)
-		body := string(msg.Data)
-		if body != "ok" {
-			err = errors.New(body)
-		}
-	})
+	ch := make(chan *nats.Msg, 1)
+	defer close(ch)
+	sub, err := srv.conn.ChanSubscribe(reply, ch)
+	if err != nil {
+		srv.log.Error("Error subscribing on reply channel", "error", err)
+		i = nil
+		return
+	}
+	defer sub.Unsubscribe()
 
 	srv.conn.PublishRequest("ari.app."+st.GetApplication(), reply, body)
 
 	srv.log.Debug("Waiting for response")
 
 	select {
-	case <-doneCh:
+	case msg := <-ch:
+		body := string(msg.Data)
+		if body != "ok" {
+			err = errors.New(body)
+		}
 		srv.log.Debug("Got response", "error", err)
-	case <-time.After(300 * time.Millisecond):
+	case <-time.After(1000 * time.Millisecond):
 		srv.log.Error("Timed out")
 	}
 

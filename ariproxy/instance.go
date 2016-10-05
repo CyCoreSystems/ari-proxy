@@ -48,6 +48,8 @@ func (i *Instance) Start(ctx context.Context) {
 	go func() {
 		i.application()
 		i.asterisk()
+		i.modules()
+
 		/*
 			i.bridge()
 			i.channel()
@@ -57,7 +59,6 @@ func (i *Instance) Start(ctx context.Context) {
 			i.sound()
 			i.liveRecording()
 			i.storedRecording()
-			i.modules()
 			i.logging()
 			i.config()
 		*/

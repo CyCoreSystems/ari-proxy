@@ -1,8 +1,10 @@
 package ariproxy
 
-func (srv *Server) modules() {
-	srv.subscribe("ari.modules.all", func(_ string, _ []byte, reply Reply) {
-		mx, err := srv.upstream.Asterisk.Modules().List()
+import "github.com/CyCoreSystems/ari-proxy/session"
+
+func (ins *Instance) modules() {
+	ins.subscribe("ari.modules.all", func(msg *session.Message, reply Reply) {
+		mx, err := ins.upstream.Asterisk.Modules().List()
 		if err != nil {
 			reply(nil, err)
 			return
@@ -16,27 +18,27 @@ func (srv *Server) modules() {
 		reply(modules, nil)
 	})
 
-	srv.subscribe("ari.modules.data.>", func(subj string, _ []byte, reply Reply) {
-		name := subj[len("ari.modules.data."):]
-		data, err := srv.upstream.Asterisk.Modules().Data(name)
+	ins.subscribe("ari.modules.data", func(msg *session.Message, reply Reply) {
+		name := msg.Object
+		data, err := ins.upstream.Asterisk.Modules().Data(name)
 		reply(data, err)
 	})
 
-	srv.subscribe("ari.modules.load.>", func(subj string, _ []byte, reply Reply) {
-		name := subj[len("ari.modules.load."):]
-		err := srv.upstream.Asterisk.Modules().Load(name)
+	ins.subscribe("ari.modules.load", func(msg *session.Message, reply Reply) {
+		name := msg.Object
+		err := ins.upstream.Asterisk.Modules().Load(name)
 		reply(nil, err)
 	})
 
-	srv.subscribe("ari.modules.unload.>", func(subj string, _ []byte, reply Reply) {
-		name := subj[len("ari.modules.unload."):]
-		err := srv.upstream.Asterisk.Modules().Unload(name)
+	ins.subscribe("ari.modules.unload", func(msg *session.Message, reply Reply) {
+		name := msg.Object
+		err := ins.upstream.Asterisk.Modules().Unload(name)
 		reply(nil, err)
 	})
 
-	srv.subscribe("ari.modules.reload.>", func(subj string, _ []byte, reply Reply) {
-		name := subj[len("ari.modules.reload."):]
-		err := srv.upstream.Asterisk.Modules().Reload(name)
+	ins.subscribe("ari.modules.reload", func(msg *session.Message, reply Reply) {
+		name := msg.Object
+		err := ins.upstream.Asterisk.Modules().Reload(name)
 		reply(nil, err)
 	})
 

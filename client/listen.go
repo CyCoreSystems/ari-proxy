@@ -15,9 +15,13 @@ type Handler func(cl *ari.Client, dialog *session.Dialog)
 
 // Listen listens for an AppStart event and calls the handler when an event comes in
 func Listen(ctx context.Context, conn *nats.Conn, appName string, h Handler) error {
+
+	Logger.Debug("Listening on endpoint", "endpoint", "ari.app."+appName)
+
 	ch := make(chan *nats.Msg, 2)
 	sub, err := conn.QueueSubscribeSyncWithChan("ari.app."+appName, appName+"_app_listener", ch)
 	if err != nil {
+		Logger.Debug("Error listening on endpoint", "error", err)
 		return errors.Wrap(err, "Unable to subscribe to ARI application start queue")
 	}
 
@@ -32,13 +36,16 @@ func Listen(ctx context.Context, conn *nats.Conn, appName string, h Handler) err
 		case <-ctx.Done():
 			return nil
 		case msg, ok := <-ch:
+
 			if !ok {
 				return nil
 			}
+			Logger.Debug("Got message", "msg", string(msg.Data), "ok", ok)
+
 			var appStart session.AppStart
 			err := json.Unmarshal(msg.Data, &appStart)
 			if err != nil {
-				//TODO: log error
+				Logger.Error("error unmarshaling appstart", "error", err)
 				go sendErrorReply(conn, msg.Reply, err)
 				continue
 			}
@@ -52,14 +59,14 @@ func sendErrorReply(conn *nats.Conn, reply string, err error) {
 	// we got an error in the AppStart, reply with the error
 	data := []byte(err.Error())
 	if err := conn.Publish(reply, data); err != nil {
-		//TODO: log error
+		Logger.Error("error publishing error response", "error", err)
 	}
 }
 
 func handler(conn *nats.Conn, reply string, appStart session.AppStart, h Handler) {
 	data := []byte("ok")
 	if err := conn.Publish(reply, data); err != nil {
-		//TODO: log error
+		Logger.Error("error publishing ok response", "error", err)
 		return
 	}
 
@@ -68,7 +75,7 @@ func handler(conn *nats.Conn, reply string, appStart session.AppStart, h Handler
 
 	cl, err := New(conn, appStart.Application, d, Options{})
 	if err != nil {
-		//TODO: log error
+		Logger.Error("error creating client", "error", err)
 		return
 	}
 
@@ -76,6 +83,7 @@ func handler(conn *nats.Conn, reply string, appStart session.AppStart, h Handler
 		conn.Subscribe("events.dialog."+d.ID, func(msg *nats.Msg) {
 			var ariMessage ari.Message
 			ariMessage.SetRaw(&msg.Data)
+			Logger.Debug("got eventc", "type", ariMessage.Type)
 			cl.Bus.Send(&ariMessage)
 		})
 	}()

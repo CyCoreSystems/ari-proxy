@@ -16,7 +16,9 @@ func (ins *Instance) subscribe(endpoint string, h Handler2) {
 }
 
 func (ins *Instance) commands() {
+
 	endpoint := "ari.commands.dialog." + ins.Dialog.ID
+	ins.log.Debug("Subscribing on nats endpoint", "endpoint", endpoint)
 
 	cb := func(m *nats.Msg) {
 

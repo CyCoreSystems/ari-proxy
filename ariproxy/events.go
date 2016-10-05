@@ -160,6 +160,8 @@ func (srv *Server) tryStasisStart(evt ari.Event) (i *Instance) {
 
 	// start server side of the component
 
+	srv.log.Debug("Sending out AppStart to endpoint", "endpoint", "ari.app."+st.GetApplication())
+
 	id := uuid.NewV1().String()
 	i = srv.newInstance(id, nil)
 	i.Dialog.ChannelID = st.Channel.ID
@@ -191,9 +193,13 @@ func (srv *Server) tryStasisStart(evt ari.Event) (i *Instance) {
 
 	srv.conn.PublishRequest("ari.app."+st.GetApplication(), reply, body)
 
+	srv.log.Debug("Waiting for response")
+
 	select {
 	case <-doneCh:
+		srv.log.Debug("Got response", "error", err)
 	case <-time.After(300 * time.Millisecond):
+		srv.log.Error("Timed out")
 	}
 
 	//TODO: log error

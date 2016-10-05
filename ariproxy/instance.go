@@ -45,6 +45,8 @@ func (srv *Server) newInstance(id string, transport session.Transport) *Instance
 func (i *Instance) Start(ctx context.Context) {
 	i.ctx, i.cancel = context.WithCancel(ctx)
 
+	i.log.Debug("Starting dialog instance")
+
 	go func() {
 		i.application()
 		i.asterisk()

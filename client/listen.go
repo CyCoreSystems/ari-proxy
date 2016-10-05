@@ -46,11 +46,15 @@ func Listen(ctx context.Context, conn *nats.Conn, appName string, h Handler) err
 			err := json.Unmarshal(msg.Data, &appStart)
 			if err != nil {
 				Logger.Error("error unmarshaling appstart", "error", err)
-				go sendErrorReply(conn, msg.Reply, err)
+				sendErrorReply(conn, msg.Reply, err)
 				continue
 			}
 
-			go handler(conn, msg.Reply, appStart, h)
+			if !sendOkReply(conn, msg.Reply) {
+				continue
+			}
+
+			go handler(conn, appStart, h)
 		}
 	}
 }
@@ -63,13 +67,18 @@ func sendErrorReply(conn *nats.Conn, reply string, err error) {
 	}
 }
 
-func handler(conn *nats.Conn, reply string, appStart session.AppStart, h Handler) {
+func sendOkReply(conn *nats.Conn, reply string) bool {
+	// send okay outside of goroutine, so the other side doesn't time out
 	data := []byte("ok")
-	if err := conn.Publish(reply, data); err != nil {
+	if err := conn.Publish(msg.Reply, data); err != nil {
 		Logger.Error("error publishing ok response", "error", err)
-		return
+		return false
 	}
 
+	return true
+}
+
+func handler(conn *nats.Conn, appStart session.AppStart, h Handler) {
 	d := session.NewDialog(appStart.DialogID, nil)
 	d.ChannelID = appStart.ChannelID
 

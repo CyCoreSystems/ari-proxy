@@ -13,7 +13,6 @@ import (
 )
 
 var cfgFile string
-var verbose bool
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
@@ -28,12 +27,18 @@ via the ari client transport under github.com/CyCoreSystems/ari/client/nc.`,
 		log := log15.New()
 		var handler log15.Handler = log15.StdoutHandler
 
+		verbose := viper.GetBool("verbose")
+
 		if verbose {
 			handler = log15.LvlFilterHandler(log15.LvlDebug, handler)
 		} else {
 			handler = log15.LvlFilterHandler(log15.LvlInfo, handler)
 		}
 		log.SetHandler(handler)
+
+		if verbose {
+			log.Info("Verbose logging enabled")
+		}
 
 		// run server
 		os.Exit(runServer(log))
@@ -55,7 +60,7 @@ func init() {
 	p := RootCmd.PersistentFlags()
 
 	p.StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ari-proxy.yaml)")
-	p.BoolVarP(&verbose, "verbose", "v", false, "Enable verbose logging")
+	p.BoolP("verbose", "v", false, "Enable verbose logging")
 
 	p.String("nats.url", nats.DefaultURL, "URL for connecting to the NATS cluster")
 	p.String("ari.application", "", "ARI Stasis Application")

@@ -31,11 +31,15 @@ func (srv *Server) events() {
 		sub := srv.upstream.Bus.Subscribe(ari.Events.All)
 		defer sub.Cancel()
 
+		srv.log.Debug("Listening for events")
+
 		for {
 			select {
 			case <-srv.ctx.Done():
 				return
 			case evt := <-sub.Events():
+
+				srv.log.Debug("Got event", "event", evt)
 
 				t := evt.GetType()
 

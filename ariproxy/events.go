@@ -157,6 +157,7 @@ func (srv *Server) tryStasisStart(evt ari.Event) (i *Instance) {
 	// start server side of the component
 
 	i = srv.newInstance(nil)
+	i.Dialog.ChannelID = st.Channel.ID
 	i.Dialog.Objects.Add(st.Channel.ID)
 	i.Start(srv.ctx)
 	srv.cache.Add(st.Channel.ID, i)
@@ -167,6 +168,7 @@ func (srv *Server) tryStasisStart(evt ari.Event) (i *Instance) {
 		ServerID:    srv.ID,
 		DialogID:    i.Dialog.ID,
 		Application: st.GetApplication(),
+		ChannelID:   st.Channel.ID,
 	})
 
 	reply := uuid.NewV1().String()

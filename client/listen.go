@@ -64,6 +64,7 @@ func handler(conn *nats.Conn, reply string, appStart session.AppStart, h Handler
 	}
 
 	d := session.NewDialog(appStart.DialogID, nil)
+	d.ChannelID = appStart.ChannelID
 
 	cl, err := New(conn, d, Options{})
 	if err != nil {

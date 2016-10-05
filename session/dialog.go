@@ -5,6 +5,7 @@ type Dialog struct {
 	ID        string
 	Transport Transport
 	Objects   Objects
+	ChannelID string // The channel ID from the StasisStart event
 }
 
 // NewDialog creates a new dialog with the given transport

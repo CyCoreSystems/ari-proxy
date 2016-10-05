@@ -84,6 +84,15 @@ func (srv *Server) Start() {
 
 		srv.events()
 
+		// The '$app_0' dialog is for clients
+		// that haven't started a dialog yet.
+		//
+		// this instance is not added to the
+		// instance cache for event routing and
+		// only serves commands.
+		i := srv.newInstance(srv.Application+"_0", nil)
+		i.Start(srv.ctx)
+
 		close(srv.readyCh)
 
 		<-srv.ctx.Done()

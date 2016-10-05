@@ -6,7 +6,6 @@ import (
 	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/session"
 	"github.com/nats-io/nats"
-	uuid "github.com/satori/go.uuid"
 	"golang.org/x/net/context"
 	log15 "gopkg.in/inconshreveable/log15.v2"
 )
@@ -30,8 +29,7 @@ type Instance struct {
 	log      log15.Logger
 }
 
-func (srv *Server) newInstance(transport session.Transport) *Instance {
-	id := uuid.NewV1().String()
+func (srv *Server) newInstance(id string, transport session.Transport) *Instance {
 	return &Instance{
 		Dialog:     session.NewDialog(id, transport),
 		readyCh:    make(chan struct{}),

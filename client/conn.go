@@ -12,9 +12,10 @@ import (
 
 // Conn is the wrapper type for a nats connnection along some ARI specific options
 type Conn struct {
-	opts   Options
-	conn   *nats.Conn
-	dialog *session.Dialog
+	opts        Options
+	conn        *nats.Conn
+	dialog      *session.Dialog
+	application string
 }
 
 // ReadRequest sends a request that is a "read"... a request
@@ -80,7 +81,13 @@ func (c *Conn) RawRequest(cmd string, name string, data []byte) (msg *nats.Msg, 
 
 	// build message
 
-	subj := "ari.commands.dialog." + c.dialog.ID
+	var subj string
+	if c.dialog != nil {
+		subj = "ari.commands.dialog." + c.dialog.ID
+	} else {
+		subj = "ari.commands.dialog." + c.application + "_0"
+	}
+
 	var sessionMessage session.Message
 	sessionMessage.Command = cmd
 	sessionMessage.Object = name

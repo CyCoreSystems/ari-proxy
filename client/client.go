@@ -26,7 +26,7 @@ type Options struct {
 }
 
 // New creates a new ari.Client connected to a gateway ARI server via NATS
-func New(nc *nats.Conn, d *session.Dialog, opts Options) (cl *ari.Client, err error) {
+func New(nc *nats.Conn, application string, d *session.Dialog, opts Options) (cl *ari.Client, err error) {
 	if opts.RequestTimeout == 0 {
 		opts.RequestTimeout = DefaultRequestTimeout
 	}
@@ -36,9 +36,10 @@ func New(nc *nats.Conn, d *session.Dialog, opts Options) (cl *ari.Client, err er
 	}
 
 	conn := &Conn{
-		opts:   opts,
-		conn:   nc,
-		dialog: d,
+		application: application,
+		opts:        opts,
+		conn:        nc,
+		dialog:      d,
 	}
 
 	playback := natsPlayback{conn}

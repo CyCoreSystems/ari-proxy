@@ -93,7 +93,6 @@ func handler(conn *nats.Conn, appStart session.AppStart, h Handler) {
 		conn.Subscribe("events.dialog."+d.ID, func(msg *nats.Msg) {
 			var ariMessage ari.Message
 			ariMessage.SetRaw(&msg.Data)
-			Logger.Debug("got eventc", "type", ariMessage.Type)
 			cl.Bus.Send(&ariMessage)
 		})
 	}()

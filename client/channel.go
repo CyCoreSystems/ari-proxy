@@ -215,44 +215,7 @@ func (c *natsChannel) Record(id string, name string, opts *ari.RecordingOptions)
 }
 
 func (c *natsChannel) Subscribe(id string, n ...string) ari.Subscription {
-	var ns natsSubscription
-
-	ns.events = make(chan ari.Event, 10)
-	ns.closeChan = make(chan struct{})
-
-	channelHandle := c.Get(id)
-
-	go func() {
-		sub := c.subscriber.Subscribe(n...)
-		defer sub.Cancel()
-		for {
-
-			select {
-			case <-ns.closeChan:
-				ns.closeChan = nil
-				return
-			case evt := <-sub.Events():
-				if channelHandle.Match(evt) {
-					ns.events <- evt
-				}
-			}
-		}
-	}()
-
-	return &ns
-}
-
-type natsSubscription struct {
-	closeChan chan struct{}
-	events    chan ari.Event
-}
-
-func (ns *natsSubscription) Events() chan ari.Event {
-	return ns.events
-}
-
-func (ns *natsSubscription) Cancel() {
-	if ns.closeChan != nil {
-		close(ns.closeChan)
-	}
+	ns := newSubscription(c.Get(id))
+	go ns.Run(c.subscriber, n...)
+	return ns
 }

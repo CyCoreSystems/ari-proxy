@@ -27,30 +27,7 @@ func (p *natsPlayback) Stop(id string) (err error) {
 }
 
 func (p *natsPlayback) Subscribe(id string, nx ...string) ari.Subscription {
-
-	var ns natsSubscription
-
-	ns.events = make(chan ari.Event, 10)
-	ns.closeChan = make(chan struct{})
-
-	playbackHandle := p.Get(id)
-
-	go func() {
-		sub := p.subscriber.Subscribe(nx...)
-		defer sub.Cancel()
-		for {
-
-			select {
-			case <-ns.closeChan:
-				ns.closeChan = nil
-				return
-			case evt := <-sub.Events():
-				if playbackHandle.Match(evt) {
-					ns.events <- evt
-				}
-			}
-		}
-	}()
-
-	return &ns
+	ns := newSubscription(p.Get(id))
+	go ns.Run(p.subscriber, nx...)
+	return ns
 }

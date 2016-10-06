@@ -116,30 +116,7 @@ func (b *natsBridge) Record(id string, name string, opts *ari.RecordingOptions) 
 }
 
 func (b *natsBridge) Subscribe(id string, nx ...string) ari.Subscription {
-
-	var ns natsSubscription
-
-	ns.events = make(chan ari.Event, 10)
-	ns.closeChan = make(chan struct{})
-
-	bridgeHandle := b.Get(id)
-
-	go func() {
-		sub := b.subscriber.Subscribe(nx...)
-		defer sub.Cancel()
-		for {
-
-			select {
-			case <-ns.closeChan:
-				ns.closeChan = nil
-				return
-			case evt := <-sub.Events():
-				if bridgeHandle.Match(evt) {
-					ns.events <- evt
-				}
-			}
-		}
-	}()
-
-	return &ns
+	ns := newSubscription(b.Get(id))
+	go ns.Run(b.subscriber, nx...)
+	return ns
 }

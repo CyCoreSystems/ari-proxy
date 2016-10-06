@@ -157,16 +157,6 @@ func (c *Conn) RawRequest(cmd string, name string, data []byte) (msg *nats.Msg, 
 	}
 }
 
-// compatibility stubs
-
-func (c *Conn) readRequest(subj string, body interface{}, dest interface{}) (err error) {
-	panic("unsupported")
-}
-
-func (c *Conn) standardRequest(subj string, body interface{}, dest interface{}) (err error) {
-	panic("unsupported")
-}
-
 // --
 
 type temp interface {

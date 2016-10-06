@@ -6,12 +6,13 @@ import (
 
 	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/client"
+	"github.com/CyCoreSystems/ari-proxy/session"
 )
 
-func (srv *Server) channel() {
+func (ins *Instance) channel() {
 
-	srv.subscribe("ari.channels.all", func(_ string, _ []byte, reply Reply) {
-		cx, err := srv.upstream.Channel.List()
+	ins.subscribe("ari.channels.all", func(msg *session.Message, reply Reply) {
+		cx, err := ins.upstream.Channel.List()
 		if err != nil {
 			reply(nil, err)
 			return
@@ -25,15 +26,15 @@ func (srv *Server) channel() {
 		reply(channels, nil)
 	})
 
-	srv.subscribe("ari.channels.create", func(subj string, data []byte, reply Reply) {
+	ins.subscribe("ari.channels.create", func(msg *session.Message, reply Reply) {
 		var req ari.OriginateRequest
 
-		if err := json.Unmarshal(data, &req); err != nil {
-			reply(nil, &decodingError{subj, err})
+		if err := json.Unmarshal(msg.Payload, &req); err != nil {
+			reply(nil, &decodingError{msg.Command, err})
 			return
 		}
 
-		handle, err := srv.upstream.Channel.Create(req)
+		handle, err := ins.upstream.Channel.Create(req)
 
 		if err != nil {
 			reply(nil, err)
@@ -43,127 +44,127 @@ func (srv *Server) channel() {
 		reply(handle.ID(), nil)
 	})
 
-	srv.subscribe("ari.channels.data.>", func(subj string, _ []byte, reply Reply) {
-		name := subj[len("ari.channels.data."):]
-		d, err := srv.upstream.Channel.Data(name)
+	ins.subscribe("ari.channels.data", func(msg *session.Message, reply Reply) {
+		name := msg.Object
+		d, err := ins.upstream.Channel.Data(name)
 		reply(&d, err)
 	})
 
-	srv.subscribe("ari.channels.answer.>", func(subj string, _ []byte, reply Reply) {
-		name := subj[len("ari.channels.answer."):]
-		srv.log.Debug("answering channel", "subj", subj)
-		err := srv.upstream.Channel.Answer(name)
-		srv.log.Debug("answered channel", "subj", subj, "name", name, "error", err)
+	ins.subscribe("ari.channels.answer", func(msg *session.Message, reply Reply) {
+		name := msg.Object
+		ins.log.Debug("answering channel", "msg.Command", msg.Command)
+		err := ins.upstream.Channel.Answer(name)
+		ins.log.Debug("answered channel", "msg.Command", msg.Command, "name", name, "error", err)
 
 		reply(nil, err)
 	})
 
-	srv.subscribe("ari.channels.hangup.>", func(subj string, data []byte, reply Reply) {
-		name := subj[len("ari.channels.hangup."):]
+	ins.subscribe("ari.channels.hangup", func(msg *session.Message, reply Reply) {
+		name := msg.Object
 
 		var reason string
-		if err := json.Unmarshal(data, &reason); err != nil {
-			reply(nil, &decodingError{subj, err})
+		if err := json.Unmarshal(msg.Payload, &reason); err != nil {
+			reply(nil, &decodingError{msg.Command, err})
 			return
 		}
 
-		err := srv.upstream.Channel.Hangup(name, reason)
+		err := ins.upstream.Channel.Hangup(name, reason)
 		reply(nil, err)
 	})
 
-	srv.subscribe("ari.channels.ring.>", func(subj string, _ []byte, reply Reply) {
-		name := subj[len("ari.channels.ring."):]
-		err := srv.upstream.Channel.Ring(name)
+	ins.subscribe("ari.channels.ring", func(msg *session.Message, reply Reply) {
+		name := msg.Object
+		err := ins.upstream.Channel.Ring(name)
 		reply(nil, err)
 	})
 
-	srv.subscribe("ari.channels.stopring.>", func(subj string, _ []byte, reply Reply) {
-		name := subj[len("ari.channels.stopring."):]
-		err := srv.upstream.Channel.StopRing(name)
+	ins.subscribe("ari.channels.stopring", func(msg *session.Message, reply Reply) {
+		name := msg.Object
+		err := ins.upstream.Channel.StopRing(name)
 		reply(nil, err)
 	})
 
-	srv.subscribe("ari.channels.hold.>", func(subj string, _ []byte, reply Reply) {
-		name := subj[len("ari.channels.hold."):]
-		err := srv.upstream.Channel.Hold(name)
+	ins.subscribe("ari.channels.hold", func(msg *session.Message, reply Reply) {
+		name := msg.Object
+		err := ins.upstream.Channel.Hold(name)
 		reply(nil, err)
 	})
 
-	srv.subscribe("ari.channels.stophold.>", func(subj string, _ []byte, reply Reply) {
-		name := subj[len("ari.channels.stophold."):]
-		err := srv.upstream.Channel.StopHold(name)
+	ins.subscribe("ari.channels.stophold", func(msg *session.Message, reply Reply) {
+		name := msg.Object
+		err := ins.upstream.Channel.StopHold(name)
 		reply(nil, err)
 	})
 
-	srv.subscribe("ari.channels.mute.>", func(subj string, data []byte, reply Reply) {
-		name := subj[len("ari.channels.mute."):]
+	ins.subscribe("ari.channels.mute", func(msg *session.Message, reply Reply) {
+		name := msg.Object
 
 		var dir string
-		if err := json.Unmarshal(data, &dir); err != nil {
-			reply(nil, &decodingError{subj, err})
+		if err := json.Unmarshal(msg.Payload, &dir); err != nil {
+			reply(nil, &decodingError{msg.Command, err})
 		}
 
-		err := srv.upstream.Channel.Mute(name, dir)
+		err := ins.upstream.Channel.Mute(name, dir)
 		reply(nil, err)
 	})
 
-	srv.subscribe("ari.channels.unmute.>", func(subj string, data []byte, reply Reply) {
-		name := subj[len("ari.channels.unmute."):]
+	ins.subscribe("ari.channels.unmute", func(msg *session.Message, reply Reply) {
+		name := msg.Object
 
 		var dir string
-		if err := json.Unmarshal(data, &dir); err != nil {
-			reply(nil, &decodingError{subj, err})
+		if err := json.Unmarshal(msg.Payload, &dir); err != nil {
+			reply(nil, &decodingError{msg.Command, err})
 		}
 
-		err := srv.upstream.Channel.Unmute(name, dir)
+		err := ins.upstream.Channel.Unmute(name, dir)
 		reply(nil, err)
 	})
 
-	srv.subscribe("ari.channels.silence.>", func(subj string, _ []byte, reply Reply) {
-		name := subj[len("ari.channels.silence."):]
-		err := srv.upstream.Channel.Silence(name)
+	ins.subscribe("ari.channels.silence", func(msg *session.Message, reply Reply) {
+		name := msg.Object
+		err := ins.upstream.Channel.Silence(name)
 		reply(nil, err)
 	})
 
-	srv.subscribe("ari.channels.stopsilence.>", func(subj string, _ []byte, reply Reply) {
-		name := subj[len("ari.channels.stopsilence."):]
-		err := srv.upstream.Channel.StopSilence(name)
+	ins.subscribe("ari.channels.stopsilence", func(msg *session.Message, reply Reply) {
+		name := msg.Object
+		err := ins.upstream.Channel.StopSilence(name)
 		reply(nil, err)
 	})
 
-	srv.subscribe("ari.channels.moh.>", func(subj string, data []byte, reply Reply) {
-		name := subj[len("ari.channels.moh."):]
+	ins.subscribe("ari.channels.moh", func(msg *session.Message, reply Reply) {
+		name := msg.Object
 
 		var music string
-		if err := json.Unmarshal(data, &music); err != nil {
-			reply(nil, &decodingError{subj, err})
+		if err := json.Unmarshal(msg.Payload, &music); err != nil {
+			reply(nil, &decodingError{msg.Command, err})
 		}
 
-		err := srv.upstream.Channel.MOH(name, music)
+		err := ins.upstream.Channel.MOH(name, music)
 		reply(nil, err)
 	})
 
-	srv.subscribe("ari.channels.stopmoh.>", func(subj string, _ []byte, reply Reply) {
-		name := subj[len("ari.channels.stopmoh."):]
-		err := srv.upstream.Channel.StopMOH(name)
+	ins.subscribe("ari.channels.stopmoh", func(msg *session.Message, reply Reply) {
+		name := msg.Object
+		err := ins.upstream.Channel.StopMOH(name)
 		reply(nil, err)
 	})
 
-	srv.subscribe("ari.channels.play.>", func(subj string, data []byte, reply Reply) {
-		name := subj[len("ari.channels.play."):]
+	ins.subscribe("ari.channels.play", func(msg *session.Message, reply Reply) {
+		name := msg.Object
 
 		var pr client.PlayRequest
-		if err := json.Unmarshal(data, &pr); err != nil {
-			reply(nil, &decodingError{subj, err})
+		if err := json.Unmarshal(msg.Payload, &pr); err != nil {
+			reply(nil, &decodingError{msg.Command, err})
 			return
 		}
 
-		_, err := srv.upstream.Channel.Play(name, pr.PlaybackID, pr.MediaURI)
+		_, err := ins.upstream.Channel.Play(name, pr.PlaybackID, pr.MediaURI)
 		reply(nil, err)
 	})
 
-	srv.subscribe("ari.channels.dtmf.>", func(subj string, data []byte, reply Reply) {
-		name := subj[len("ari.channels.dtmf."):]
+	ins.subscribe("ari.channels.dtmf", func(msg *session.Message, reply Reply) {
+		name := msg.Object
 
 		type request struct {
 			Dtmf string           `json:"dtmf,omitempty"`
@@ -171,61 +172,61 @@ func (srv *Server) channel() {
 		}
 
 		var req request
-		if err := json.Unmarshal(data, &req); err != nil {
-			reply(nil, &decodingError{subj, err})
+		if err := json.Unmarshal(msg.Payload, &req); err != nil {
+			reply(nil, &decodingError{msg.Command, err})
 			return
 		}
 
-		err := srv.upstream.Channel.SendDTMF(name, req.Dtmf, req.Opts)
+		err := ins.upstream.Channel.SendDTMF(name, req.Dtmf, req.Opts)
 		reply(nil, err)
 	})
 
-	srv.subscribe("ari.channels.continue.>", func(subj string, data []byte, reply Reply) {
-		name := subj[len("ari.channels.continue."):]
+	ins.subscribe("ari.channels.continue", func(msg *session.Message, reply Reply) {
+		name := msg.Object
 
 		var req client.ContinueRequest
-		if err := json.Unmarshal(data, &req); err != nil {
-			reply(nil, &decodingError{subj, err})
+		if err := json.Unmarshal(msg.Payload, &req); err != nil {
+			reply(nil, &decodingError{msg.Command, err})
 			return
 		}
 
-		err := srv.upstream.Channel.Continue(name, req.Context, req.Extension, req.Priority)
+		err := ins.upstream.Channel.Continue(name, req.Context, req.Extension, req.Priority)
 		reply(nil, err)
 	})
 
-	srv.subscribe("ari.channels.dial.>", func(subj string, data []byte, reply Reply) {
-		name := subj[len("ari.channels.dial."):]
+	ins.subscribe("ari.channels.dial", func(msg *session.Message, reply Reply) {
+		name := msg.Object
 
 		var req client.DialRequest
-		if err := json.Unmarshal(data, &req); err != nil {
-			reply(nil, &decodingError{subj, err})
+		if err := json.Unmarshal(msg.Payload, &req); err != nil {
+			reply(nil, &decodingError{msg.Command, err})
 			return
 		}
 
 		//TODO: confirm time is in Seconds, the ARI documentation does not list it for Dial
-		err := srv.upstream.Channel.Dial(name, req.Caller, time.Duration(req.Timeout)*time.Second)
+		err := ins.upstream.Channel.Dial(name, req.Caller, time.Duration(req.Timeout)*time.Second)
 		reply(nil, err)
 	})
 
-	srv.subscribe("ari.channels.snoop.>", func(subj string, data []byte, reply Reply) {
-		name := subj[len("ari.channels.snoop."):]
+	ins.subscribe("ari.channels.snoop", func(msg *session.Message, reply Reply) {
+		name := msg.Object
 
 		var req client.SnoopRequest
-		if err := json.Unmarshal(data, &req); err != nil {
-			reply(nil, &decodingError{subj, err})
+		if err := json.Unmarshal(msg.Payload, &req); err != nil {
+			reply(nil, &decodingError{msg.Command, err})
 			return
 		}
 
-		_, err := srv.upstream.Channel.Snoop(name, req.SnoopID, req.App, req.Options)
+		_, err := ins.upstream.Channel.Snoop(name, req.SnoopID, req.App, req.Options)
 		reply(nil, err)
 	})
 
-	srv.subscribe("ari.channels.record.>", func(subj string, data []byte, reply Reply) {
-		name := subj[len("ari.channels.record."):]
+	ins.subscribe("ari.channels.record", func(msg *session.Message, reply Reply) {
+		name := msg.Object
 
 		var rr client.RecordRequest
-		if err := json.Unmarshal(data, &rr); err != nil {
-			reply(nil, &decodingError{subj, err})
+		if err := json.Unmarshal(msg.Payload, &rr); err != nil {
+			reply(nil, &decodingError{msg.Command, err})
 			return
 		}
 
@@ -238,7 +239,7 @@ func (srv *Server) channel() {
 		opts.Beep = rr.Beep
 		opts.Terminate = rr.TerminateOn
 
-		_, err := srv.upstream.Channel.Record(name, rr.Name, &opts)
+		_, err := ins.upstream.Channel.Record(name, rr.Name, &opts)
 		reply(nil, err)
 	})
 

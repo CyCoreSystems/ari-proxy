@@ -23,7 +23,7 @@ type CreateBridgeRequest struct {
 func (b *natsBridge) Create(id string, t string, name string) (h *ari.BridgeHandle, err error) {
 	var bridgeID string
 	req := CreateBridgeRequest{id, t, name}
-	err = b.conn.standardRequest("ari.bridges.create", &req, &bridgeID)
+	err = b.conn.StandardRequest("ari.bridges.create", "", &req, &bridgeID)
 	if err != nil {
 		return
 	}
@@ -37,7 +37,7 @@ func (b *natsBridge) Get(id string) *ari.BridgeHandle {
 
 func (b *natsBridge) List() (bx []*ari.BridgeHandle, err error) {
 	var bridges []string
-	err = b.conn.readRequest("ari.bridges.all", nil, &bridges)
+	err = b.conn.ReadRequest("ari.bridges.all", "", nil, &bridges)
 	for _, bridge := range bridges {
 		bx = append(bx, b.Get(bridge))
 	}
@@ -49,22 +49,22 @@ func (b *natsBridge) Playback() ari.Playback {
 }
 
 func (b *natsBridge) Data(id string) (d ari.BridgeData, err error) {
-	err = b.conn.readRequest("ari.bridges.data."+id, nil, &d)
+	err = b.conn.ReadRequest("ari.bridges.data", id, nil, &d)
 	return
 }
 
 func (b *natsBridge) AddChannel(bridgeID string, channelID string) (err error) {
-	err = b.conn.standardRequest("ari.bridges.addChannel."+bridgeID, channelID, nil)
+	err = b.conn.StandardRequest("ari.bridges.addChannel", bridgeID, channelID, nil)
 	return
 }
 
 func (b *natsBridge) RemoveChannel(bridgeID string, channelID string) (err error) {
-	err = b.conn.standardRequest("ari.bridges.removeChannel."+bridgeID, channelID, nil)
+	err = b.conn.StandardRequest("ari.bridges.removeChannel", bridgeID, channelID, nil)
 	return
 }
 
 func (b *natsBridge) Delete(id string) (err error) {
-	err = b.conn.standardRequest("ari.bridges.delete."+id, nil, nil)
+	err = b.conn.StandardRequest("ari.bridges.delete", id, nil, nil)
 	return
 }
 
@@ -75,7 +75,7 @@ type PlayRequest struct {
 }
 
 func (b *natsBridge) Play(id string, playbackID string, mediaURI string) (h *ari.PlaybackHandle, err error) {
-	err = b.conn.standardRequest("ari.bridges.play."+id, &PlayRequest{PlaybackID: playbackID, MediaURI: mediaURI}, nil)
+	err = b.conn.StandardRequest("ari.bridges.play", id, &PlayRequest{PlaybackID: playbackID, MediaURI: mediaURI}, nil)
 	if err == nil {
 		h = b.playback.Get(playbackID)
 	}
@@ -108,7 +108,7 @@ func (b *natsBridge) Record(id string, name string, opts *ari.RecordingOptions) 
 		Beep:        opts.Beep,
 		TerminateOn: opts.Terminate,
 	}
-	err = b.conn.standardRequest("ari.bridges.record."+id, req, nil)
+	err = b.conn.StandardRequest("ari.bridges.record", id, req, nil)
 	if err == nil {
 		h = b.liveRecording.Get(name)
 	}

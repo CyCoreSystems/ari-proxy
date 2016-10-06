@@ -12,7 +12,7 @@ func (m *natsMailbox) Get(name string) *ari.MailboxHandle {
 
 func (m *natsMailbox) List() (mx []*ari.MailboxHandle, err error) {
 	var boxes []string
-	err = m.conn.readRequest("ari.mailboxes.all", nil, &boxes)
+	err = m.conn.ReadRequest("ari.mailboxes.all", "", nil, &boxes)
 	for _, id := range boxes {
 		mx = append(mx, m.Get(id))
 	}
@@ -20,7 +20,7 @@ func (m *natsMailbox) List() (mx []*ari.MailboxHandle, err error) {
 }
 
 func (m *natsMailbox) Data(name string) (d ari.MailboxData, err error) {
-	err = m.conn.readRequest("ari.mailboxes.data."+name, nil, &d)
+	err = m.conn.ReadRequest("ari.mailboxes.data", name, nil, &d)
 	return
 }
 
@@ -32,11 +32,11 @@ type UpdateMailboxRequest struct {
 
 func (m *natsMailbox) Update(name string, oldMessages int, newMessages int) (err error) {
 	request := UpdateMailboxRequest{Old: oldMessages, New: newMessages}
-	err = m.conn.standardRequest("ari.mailboxes.update."+name, &request, nil)
+	err = m.conn.StandardRequest("ari.mailboxes.update", name, &request, nil)
 	return
 }
 
 func (m *natsMailbox) Delete(name string) (err error) {
-	err = m.conn.standardRequest("ari.mailboxes.delete."+name, nil, nil)
+	err = m.conn.StandardRequest("ari.mailboxes.delete", name, nil, nil)
 	return
 }

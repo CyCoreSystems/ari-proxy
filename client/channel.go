@@ -30,7 +30,7 @@ func (c *natsChannel) Get(id string) *ari.ChannelHandle {
 
 func (c *natsChannel) List() (cx []*ari.ChannelHandle, err error) {
 	var channels []string
-	err = c.conn.readRequest("ari.channels.all", nil, &channels)
+	err = c.conn.ReadRequest("ari.channels.all", "", nil, &channels)
 	for _, ch := range channels {
 		cx = append(cx, c.Get(ch))
 	}
@@ -39,7 +39,7 @@ func (c *natsChannel) List() (cx []*ari.ChannelHandle, err error) {
 
 func (c *natsChannel) Create(req ari.OriginateRequest) (h *ari.ChannelHandle, err error) {
 	var channelID string
-	err = c.conn.standardRequest("ari.channels.create", &req, &channelID)
+	err = c.conn.StandardRequest("ari.channels.create", "", &req, &channelID)
 	if err != nil {
 		return
 	}
@@ -48,12 +48,12 @@ func (c *natsChannel) Create(req ari.OriginateRequest) (h *ari.ChannelHandle, er
 }
 
 func (c *natsChannel) Data(id string) (cd ari.ChannelData, err error) {
-	err = c.conn.readRequest("ari.channels.data."+id, nil, &cd)
+	err = c.conn.ReadRequest("ari.channels.data", id, nil, &cd)
 	return
 }
 
 func (c *natsChannel) Continue(id string, context string, extension string, priority int) (err error) {
-	err = c.conn.standardRequest("ari.channels.continue."+id, &ContinueRequest{
+	err = c.conn.StandardRequest("ari.channels.continue", id, &ContinueRequest{
 		Context:   context,
 		Extension: extension,
 		Priority:  priority,
@@ -72,22 +72,22 @@ func (c *natsChannel) Congestion(id string) (err error) {
 }
 
 func (c *natsChannel) Hangup(id string, reason string) (err error) {
-	err = c.conn.standardRequest("ari.channels.hangup."+id, &reason, nil)
+	err = c.conn.StandardRequest("ari.channels.hangup", id, &reason, nil)
 	return
 }
 
 func (c *natsChannel) Answer(id string) (err error) {
-	err = c.conn.standardRequest("ari.channels.answer."+id, nil, nil)
+	err = c.conn.StandardRequest("ari.channels.answer", id, nil, nil)
 	return
 }
 
 func (c *natsChannel) Ring(id string) (err error) {
-	err = c.conn.standardRequest("ari.channels.ring."+id, nil, nil)
+	err = c.conn.StandardRequest("ari.channels.ring", id, nil, nil)
 	return
 }
 
 func (c *natsChannel) StopRing(id string) (err error) {
-	err = c.conn.standardRequest("ari.channels.stopring."+id, nil, nil)
+	err = c.conn.StandardRequest("ari.channels.stopring", id, nil, nil)
 	return
 }
 
@@ -103,47 +103,47 @@ func (c *natsChannel) SendDTMF(id string, dtmf string, opts *ari.DTMFOptions) (e
 
 	req := request{dtmf, opts}
 
-	err = c.conn.standardRequest("ari.channels.dtmf."+id, &req, nil)
+	err = c.conn.StandardRequest("ari.channels.dtmf", id, &req, nil)
 	return
 }
 
 func (c *natsChannel) Hold(id string) (err error) {
-	err = c.conn.standardRequest("ari.channels.hold."+id, nil, nil)
+	err = c.conn.StandardRequest("ari.channels.hold", id, nil, nil)
 	return
 }
 
 func (c *natsChannel) StopHold(id string) (err error) {
-	err = c.conn.standardRequest("ari.channels.stophold."+id, nil, nil)
+	err = c.conn.StandardRequest("ari.channels.stophold", id, nil, nil)
 	return
 }
 
 func (c *natsChannel) Mute(id string, dir string) (err error) {
-	err = c.conn.standardRequest("ari.channels.mute."+id, &dir, nil)
+	err = c.conn.StandardRequest("ari.channels.mute", id, &dir, nil)
 	return
 }
 
 func (c *natsChannel) Unmute(id string, dir string) (err error) {
-	err = c.conn.standardRequest("ari.channels.unmute."+id, &dir, nil)
+	err = c.conn.StandardRequest("ari.channels.unmute", id, &dir, nil)
 	return
 }
 
 func (c *natsChannel) MOH(id string, moh string) (err error) {
-	err = c.conn.standardRequest("ari.channels.moh."+id, &moh, nil)
+	err = c.conn.StandardRequest("ari.channels.moh", id, &moh, nil)
 	return
 }
 
 func (c *natsChannel) StopMOH(id string) (err error) {
-	err = c.conn.standardRequest("ari.channels.stopmoh."+id, nil, nil)
+	err = c.conn.StandardRequest("ari.channels.stopmoh", id, nil, nil)
 	return
 }
 
 func (c *natsChannel) Silence(id string) (err error) {
-	err = c.conn.standardRequest("ari.channels.silence."+id, nil, nil)
+	err = c.conn.StandardRequest("ari.channels.silence", id, nil, nil)
 	return
 }
 
 func (c *natsChannel) StopSilence(id string) (err error) {
-	err = c.conn.standardRequest("ari.channels.stopsilence."+id, nil, nil)
+	err = c.conn.StandardRequest("ari.channels.stopsilence", id, nil, nil)
 	return
 }
 
@@ -160,7 +160,7 @@ func (c *natsChannel) Snoop(id string, snoopID string, app string, opts *ari.Sno
 		App:     app,
 		Options: opts,
 	}
-	err = c.conn.standardRequest("ari.channels.snoop."+id, &req, nil)
+	err = c.conn.StandardRequest("ari.channels.snoop", id, &req, nil)
 	if err == nil {
 		ch = c.Get(snoopID)
 	}
@@ -177,12 +177,12 @@ func (c *natsChannel) Dial(id string, caller string, timeout time.Duration) (err
 	//TODO: the dial documentation does not reference the unit of timeout,
 	// second is assumed from similar parameters
 	req := DialRequest{caller, int(timeout / time.Second)}
-	err = c.conn.standardRequest("ari.channels.dial."+id, &req, nil)
+	err = c.conn.StandardRequest("ari.channels.dial", id, &req, nil)
 	return
 }
 
 func (c *natsChannel) Play(id string, playbackID string, mediaURI string) (p *ari.PlaybackHandle, err error) {
-	err = c.conn.standardRequest("ari.channels.play."+id, &PlayRequest{
+	err = c.conn.StandardRequest("ari.channels.play", id, &PlayRequest{
 		PlaybackID: playbackID,
 		MediaURI:   mediaURI,
 	}, nil)
@@ -207,7 +207,7 @@ func (c *natsChannel) Record(id string, name string, opts *ari.RecordingOptions)
 		Beep:        opts.Beep,
 		TerminateOn: opts.Terminate,
 	}
-	err = c.conn.standardRequest("ari.channels.record."+id, req, nil)
+	err = c.conn.StandardRequest("ari.channels.record", id, req, nil)
 	if err == nil {
 		h = c.liveRecording.Get(name)
 	}

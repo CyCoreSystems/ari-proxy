@@ -1,31 +1,35 @@
 package ariproxy
 
-import "encoding/json"
+import (
+	"encoding/json"
 
-func (srv *Server) playback() {
+	"github.com/CyCoreSystems/ari-proxy/session"
+)
 
-	srv.subscribe("ari.playback.data.>", func(subj string, _ []byte, reply Reply) {
-		name := subj[len("ari.playback.data."):]
-		d, err := srv.upstream.Playback.Data(name)
+func (ins *Instance) playback() {
+
+	ins.subscribe("ari.playback.data", func(msg *session.Message, reply Reply) {
+		name := msg.Object
+		d, err := ins.upstream.Playback.Data(name)
 		reply(&d, err)
 	})
 
-	srv.subscribe("ari.playback.control.>", func(subj string, data []byte, reply Reply) {
-		name := subj[len("ari.playback.control."):]
+	ins.subscribe("ari.playback.control", func(msg *session.Message, reply Reply) {
+		name := msg.Object
 
 		var command string
-		if err := json.Unmarshal(data, &command); err != nil {
-			reply(nil, &decodingError{subj, err})
+		if err := json.Unmarshal(msg.Payload, &command); err != nil {
+			reply(nil, &decodingError{msg.Command, err})
 			return
 		}
 
-		err := srv.upstream.Playback.Control(name, command)
+		err := ins.upstream.Playback.Control(name, command)
 		reply(nil, err)
 	})
 
-	srv.subscribe("ari.playback.stop.>", func(subj string, _ []byte, reply Reply) {
-		name := subj[len("ari.playback.stop."):]
-		err := srv.upstream.Playback.Stop(name)
+	ins.subscribe("ari.playback.stop", func(msg *session.Message, reply Reply) {
+		name := msg.Object
+		err := ins.upstream.Playback.Stop(name)
 		reply(nil, err)
 	})
 

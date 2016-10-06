@@ -14,16 +14,16 @@ func (c *natsConfig) Data(configClass string, objectType string, id string) (cd 
 	cd.ID = id
 	cd.Type = objectType
 	cd.Class = configClass
-	err = c.conn.readRequest("ari.asterisk.config.data."+configClass+"."+objectType+"."+id, nil, &cd.Fields)
+	err = c.conn.ReadRequest("ari.asterisk.config.data", configClass+"."+objectType+"."+id, nil, &cd.Fields)
 	return
 }
 
 func (c *natsConfig) Update(configClass string, objectType string, id string, tuples []ari.ConfigTuple) (err error) {
-	err = c.conn.standardRequest("ari.asterisk.config.update."+configClass+"."+objectType+"."+id, &tuples, nil)
+	err = c.conn.StandardRequest("ari.asterisk.config.update", configClass+"."+objectType+"."+id, &tuples, nil)
 	return
 }
 
 func (c *natsConfig) Delete(configClass string, objectType string, id string) (err error) {
-	err = c.conn.standardRequest("ari.asterisk.config.delete."+configClass+"."+objectType+"."+id, nil, nil)
+	err = c.conn.StandardRequest("ari.asterisk.config.delete", configClass+"."+objectType+"."+id, nil, nil)
 	return
 }

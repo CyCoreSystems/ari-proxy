@@ -91,7 +91,3 @@ func (ins *Instance) commands() {
 		sub.Unsubscribe()
 	}()
 }
-
-func (srv *Server) subscribe(endpoint string, h Handler) {
-	panic("Unsupported")
-}

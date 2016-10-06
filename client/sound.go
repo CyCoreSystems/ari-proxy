@@ -13,7 +13,7 @@ func (s *natsSound) List(filters map[string]string) (sx []*ari.SoundHandle, err 
 	}
 
 	var sounds []string
-	err = s.conn.readRequest("ari.sounds.all", &filters, &sounds)
+	err = s.conn.ReadRequest("ari.sounds.all", "", &filters, &sounds)
 	for _, sh := range sounds {
 		sx = append(sx, s.Get(sh))
 	}
@@ -25,6 +25,6 @@ func (s *natsSound) Get(name string) *ari.SoundHandle {
 }
 
 func (s *natsSound) Data(name string) (sd ari.SoundData, err error) {
-	err = s.conn.readRequest("ari.sounds.data."+name, nil, &sd)
+	err = s.conn.ReadRequest("ari.sounds.data", name, nil, &sd)
 	return
 }

@@ -51,19 +51,16 @@ func (i *Instance) Start(ctx context.Context) {
 		i.application()
 		i.asterisk()
 		i.modules()
-
-		/*
-			i.bridge()
-			i.channel()
-			i.device()
-			i.playback()
-			i.mailbox()
-			i.sound()
-			i.liveRecording()
-			i.storedRecording()
-			i.logging()
-			i.config()
-		*/
+		i.channel()
+		i.storedRecording()
+		i.liveRecording()
+		i.bridge()
+		i.device()
+		i.playback()
+		i.mailbox()
+		i.sound()
+		i.logging()
+		i.config()
 
 		// do commands last, since that is the one that will be dispatching
 		i.commands()

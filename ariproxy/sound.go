@@ -2,14 +2,16 @@ package ariproxy
 
 import (
 	"encoding/json"
+
+	"github.com/CyCoreSystems/ari-proxy/session"
 )
 
-func (srv *Server) sound() {
-	srv.subscribe("ari.sounds.all", func(subj string, data []byte, reply Reply) {
+func (ins *Instance) sound() {
+	ins.subscribe("ari.sounds.all", func(msg *session.Message, reply Reply) {
 
 		var filters map[string]string
-		if err := json.Unmarshal(data, &filters); err != nil {
-			reply(nil, &decodingError{subj, err})
+		if err := json.Unmarshal(msg.Payload, &filters); err != nil {
+			reply(nil, &decodingError{msg.Command, err})
 			return
 		}
 
@@ -17,7 +19,7 @@ func (srv *Server) sound() {
 			filters = nil // just send nil to upstream if empty. makes tests easier
 		}
 
-		sx, err := srv.upstream.Sound.List(filters)
+		sx, err := ins.upstream.Sound.List(filters)
 		if err != nil {
 			reply(nil, err)
 			return
@@ -31,9 +33,9 @@ func (srv *Server) sound() {
 		reply(sounds, nil)
 	})
 
-	srv.subscribe("ari.sounds.data.>", func(subj string, _ []byte, reply Reply) {
-		name := subj[len("ari.sounds.data."):]
-		sd, err := srv.upstream.Sound.Data(name)
+	ins.subscribe("ari.sounds.data", func(msg *session.Message, reply Reply) {
+		name := msg.Object
+		sd, err := ins.upstream.Sound.Data(name)
 		reply(&sd, err)
 	})
 

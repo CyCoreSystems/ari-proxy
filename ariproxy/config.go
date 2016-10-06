@@ -6,11 +6,12 @@ import (
 	"strings"
 
 	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari-proxy/session"
 )
 
-func (srv *Server) config() {
-	srv.subscribe("ari.asterisk.config.data.>", func(subj string, _ []byte, reply Reply) {
-		name := subj[len("ari.asterisk.config.data."):]
+func (ins *Instance) config() {
+	ins.subscribe("ari.asterisk.config.data", func(msg *session.Message, reply Reply) {
+		name := msg.Object
 
 		items := strings.Split(name, ".")
 		if len(items) != 3 {
@@ -18,12 +19,12 @@ func (srv *Server) config() {
 			return
 		}
 
-		cd, err := srv.upstream.Asterisk.Config().Data(items[0], items[1], items[2])
+		cd, err := ins.upstream.Asterisk.Config().Data(items[0], items[1], items[2])
 		reply(&cd.Fields, err)
 	})
 
-	srv.subscribe("ari.asterisk.config.delete.>", func(subj string, _ []byte, reply Reply) {
-		name := subj[len("ari.asterisk.config.delete."):]
+	ins.subscribe("ari.asterisk.config.delete", func(msg *session.Message, reply Reply) {
+		name := msg.Object
 
 		items := strings.Split(name, ".")
 		if len(items) != 3 {
@@ -31,12 +32,12 @@ func (srv *Server) config() {
 			return
 		}
 
-		err := srv.upstream.Asterisk.Config().Delete(items[0], items[1], items[2])
+		err := ins.upstream.Asterisk.Config().Delete(items[0], items[1], items[2])
 		reply(nil, err)
 	})
 
-	srv.subscribe("ari.asterisk.config.update.>", func(subj string, data []byte, reply Reply) {
-		name := subj[len("ari.asterisk.config.delete."):]
+	ins.subscribe("ari.asterisk.config.update", func(msg *session.Message, reply Reply) {
+		name := msg.Object
 
 		items := strings.Split(name, ".")
 		if len(items) != 3 {
@@ -45,12 +46,12 @@ func (srv *Server) config() {
 		}
 
 		var fl []ari.ConfigTuple
-		if err := json.Unmarshal(data, &fl); err != nil {
-			reply(nil, &decodingError{subj, err})
+		if err := json.Unmarshal(msg.Payload, &fl); err != nil {
+			reply(nil, &decodingError{msg.Command, err})
 			return
 		}
 
-		err := srv.upstream.Asterisk.Config().Update(items[0], items[1], items[2], fl)
+		err := ins.upstream.Asterisk.Config().Update(items[0], items[1], items[2], fl)
 		reply(nil, err)
 	})
 

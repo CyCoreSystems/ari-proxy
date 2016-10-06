@@ -1,10 +1,14 @@
 package ariproxy
 
-import "encoding/json"
+import (
+	"encoding/json"
 
-func (srv *Server) mailbox() {
-	srv.subscribe("ari.mailboxes.all", func(_ string, _ []byte, reply Reply) {
-		mx, err := srv.upstream.Mailbox.List()
+	"github.com/CyCoreSystems/ari-proxy/session"
+)
+
+func (ins *Instance) mailbox() {
+	ins.subscribe("ari.mailboxes.all", func(msg *session.Message, reply Reply) {
+		mx, err := ins.upstream.Mailbox.List()
 		if err != nil {
 			reply(nil, err)
 			return
@@ -18,14 +22,14 @@ func (srv *Server) mailbox() {
 		reply(mailboxes, nil)
 	})
 
-	srv.subscribe("ari.mailboxes.data.>", func(subj string, _ []byte, reply Reply) {
-		name := subj[len("ari.mailboxes.data."):]
-		data, err := srv.upstream.Mailbox.Data(name)
-		reply(data, err)
+	ins.subscribe("ari.mailboxes.data", func(msg *session.Message, reply Reply) {
+		name := msg.Object
+		dd, err := ins.upstream.Mailbox.Data(name)
+		reply(dd, err)
 	})
 
-	srv.subscribe("ari.mailboxes.update.>", func(subj string, data []byte, reply Reply) {
-		name := subj[len("ari.mailboxes.delete."):]
+	ins.subscribe("ari.mailboxes.update", func(msg *session.Message, reply Reply) {
+		name := msg.Object
 
 		type req struct {
 			Old int `json:"old"`
@@ -33,18 +37,18 @@ func (srv *Server) mailbox() {
 		}
 
 		var request req
-		if err := json.Unmarshal(data, &request); err != nil {
-			reply(nil, &decodingError{subj, err})
+		if err := json.Unmarshal(msg.Payload, &request); err != nil {
+			reply(nil, &decodingError{msg.Command, err})
 			return
 		}
 
-		err := srv.upstream.Mailbox.Update(name, request.Old, request.New)
+		err := ins.upstream.Mailbox.Update(name, request.Old, request.New)
 		reply(nil, err)
 	})
 
-	srv.subscribe("ari.mailboxes.delete.>", func(subj string, _ []byte, reply Reply) {
-		name := subj[len("ari.mailboxes.delete."):]
-		err := srv.upstream.Mailbox.Delete(name)
+	ins.subscribe("ari.mailboxes.delete", func(msg *session.Message, reply Reply) {
+		name := msg.Object
+		err := ins.upstream.Mailbox.Delete(name)
 		reply(nil, err)
 	})
 

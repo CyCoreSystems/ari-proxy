@@ -6,13 +6,14 @@ import (
 
 	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/client"
+	"github.com/CyCoreSystems/ari-proxy/session"
 )
 
-func (srv *Server) bridge() {
+func (ins *Instance) bridge() {
 
-	srv.subscribe("ari.bridges.all", func(_ string, _ []byte, reply Reply) {
+	ins.subscribe("ari.bridges.all", func(msg *session.Message, reply Reply) {
 
-		bx, err := srv.upstream.Bridge.List()
+		bx, err := ins.upstream.Bridge.List()
 		if err != nil {
 			reply(nil, err)
 			return
@@ -26,22 +27,22 @@ func (srv *Server) bridge() {
 		reply(bridges, nil)
 	})
 
-	srv.subscribe("ari.bridges.data.>", func(subj string, _ []byte, reply Reply) {
-		name := subj[len("ari.bridges.data."):]
-		bd, err := srv.upstream.Bridge.Data(name)
+	ins.subscribe("ari.bridges.data", func(msg *session.Message, reply Reply) {
+		name := msg.Object
+		bd, err := ins.upstream.Bridge.Data(name)
 		reply(&bd, err)
 		return
 	})
 
-	srv.subscribe("ari.bridges.create", func(subj string, data []byte, reply Reply) {
+	ins.subscribe("ari.bridges.create", func(msg *session.Message, reply Reply) {
 
 		var req client.CreateBridgeRequest
-		if err := json.Unmarshal(data, &req); err != nil {
-			reply(nil, &decodingError{subj, err})
+		if err := json.Unmarshal(msg.Payload, &req); err != nil {
+			reply(nil, &decodingError{msg.Command, err})
 			return
 		}
 
-		bh, err := srv.upstream.Bridge.Create(req.ID, req.Type, req.Name)
+		bh, err := ins.upstream.Bridge.Create(req.ID, req.Type, req.Name)
 
 		if err != nil {
 			reply(nil, err)
@@ -51,57 +52,57 @@ func (srv *Server) bridge() {
 		reply(bh.ID(), err)
 	})
 
-	srv.subscribe("ari.bridges.addChannel.>", func(subj string, data []byte, reply Reply) {
-		name := subj[len("ari.bridges.addChannel."):]
+	ins.subscribe("ari.bridges.addChannel", func(msg *session.Message, reply Reply) {
+		name := msg.Object
 
 		var channelID string
-		if err := json.Unmarshal(data, &channelID); err != nil {
-			reply(nil, &decodingError{subj, err})
+		if err := json.Unmarshal(msg.Payload, &channelID); err != nil {
+			reply(nil, &decodingError{msg.Command, err})
 			return
 		}
 
-		err := srv.upstream.Bridge.AddChannel(name, channelID)
+		err := ins.upstream.Bridge.AddChannel(name, channelID)
 		reply(nil, err)
 	})
 
-	srv.subscribe("ari.bridges.removeChannel.>", func(subj string, data []byte, reply Reply) {
-		name := subj[len("ari.bridges.removeChannel."):]
+	ins.subscribe("ari.bridges.removeChannel", func(msg *session.Message, reply Reply) {
+		name := msg.Object
 
 		var channelID string
-		if err := json.Unmarshal(data, &channelID); err != nil {
-			reply(nil, &decodingError{subj, err})
+		if err := json.Unmarshal(msg.Payload, &channelID); err != nil {
+			reply(nil, &decodingError{msg.Command, err})
 			return
 		}
 
-		err := srv.upstream.Bridge.RemoveChannel(name, channelID)
+		err := ins.upstream.Bridge.RemoveChannel(name, channelID)
 		reply(nil, err)
 	})
 
-	srv.subscribe("ari.bridges.delete.>", func(subj string, _ []byte, reply Reply) {
-		name := subj[len("ari.bridges.delete."):]
-		err := srv.upstream.Bridge.Delete(name)
+	ins.subscribe("ari.bridges.delete", func(msg *session.Message, reply Reply) {
+		name := msg.Object
+		err := ins.upstream.Bridge.Delete(name)
 		reply(nil, err)
 	})
 
-	srv.subscribe("ari.bridges.play.>", func(subj string, data []byte, reply Reply) {
-		name := subj[len("ari.bridges.play."):]
+	ins.subscribe("ari.bridges.play", func(msg *session.Message, reply Reply) {
+		name := msg.Object
 
 		var pr client.PlayRequest
-		if err := json.Unmarshal(data, &pr); err != nil {
-			reply(nil, &decodingError{subj, err})
+		if err := json.Unmarshal(msg.Payload, &pr); err != nil {
+			reply(nil, &decodingError{msg.Command, err})
 			return
 		}
 
-		_, err := srv.upstream.Bridge.Play(name, pr.PlaybackID, pr.MediaURI)
+		_, err := ins.upstream.Bridge.Play(name, pr.PlaybackID, pr.MediaURI)
 		reply(nil, err)
 	})
 
-	srv.subscribe("ari.bridges.record.>", func(subj string, data []byte, reply Reply) {
-		name := subj[len("ari.bridges.record."):]
+	ins.subscribe("ari.bridges.record", func(msg *session.Message, reply Reply) {
+		name := msg.Object
 
 		var rr client.RecordRequest
-		if err := json.Unmarshal(data, &rr); err != nil {
-			reply(nil, &decodingError{subj, err})
+		if err := json.Unmarshal(msg.Payload, &rr); err != nil {
+			reply(nil, &decodingError{msg.Command, err})
 			return
 		}
 
@@ -114,7 +115,7 @@ func (srv *Server) bridge() {
 		opts.Beep = rr.Beep
 		opts.Terminate = rr.TerminateOn
 
-		_, err := srv.upstream.Bridge.Record(name, rr.Name, &opts)
+		_, err := ins.upstream.Bridge.Record(name, rr.Name, &opts)
 		reply(nil, err)
 	})
 }

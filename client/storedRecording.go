@@ -13,7 +13,7 @@ func (sr *natsStoredRecording) NatsConnection() *Conn {
 
 func (sr *natsStoredRecording) List() (sx []*ari.StoredRecordingHandle, err error) {
 	var recordings []string
-	err = sr.conn.readRequest("ari.recording.stored.all", nil, &recordings)
+	err = sr.conn.ReadRequest("ari.recording.stored.all", "", nil, &recordings)
 	for _, r := range recordings {
 		sx = append(sx, sr.Get(r))
 	}
@@ -26,12 +26,12 @@ func (sr *natsStoredRecording) Get(name string) *ari.StoredRecordingHandle {
 }
 
 func (sr *natsStoredRecording) Data(name string) (srd ari.StoredRecordingData, err error) {
-	err = sr.conn.readRequest("ari.recording.stored.data."+name, nil, &srd)
+	err = sr.conn.ReadRequest("ari.recording.stored.data", name, nil, &srd)
 	return
 }
 
 func (sr *natsStoredRecording) Copy(name string, dest string) (h *ari.StoredRecordingHandle, err error) {
-	err = sr.conn.standardRequest("ari.recording.stored.copy."+name, &dest, nil)
+	err = sr.conn.StandardRequest("ari.recording.stored.copy", name, &dest, nil)
 	if err != nil {
 		return
 	}
@@ -40,6 +40,6 @@ func (sr *natsStoredRecording) Copy(name string, dest string) (h *ari.StoredReco
 }
 
 func (sr *natsStoredRecording) Delete(name string) (err error) {
-	err = sr.conn.standardRequest("ari.recording.stored.delete."+name, nil, nil)
+	err = sr.conn.StandardRequest("ari.recording.stored.delete", name, nil, nil)
 	return
 }

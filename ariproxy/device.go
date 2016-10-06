@@ -2,12 +2,14 @@ package ariproxy
 
 import (
 	"encoding/json"
+
+	"github.com/CyCoreSystems/ari-proxy/session"
 )
 
-func (srv *Server) device() {
-	srv.subscribe("ari.devices.all", func(_ string, _ []byte, reply Reply) {
+func (ins *Instance) device() {
+	ins.subscribe("ari.devices.all", func(msg *session.Message, reply Reply) {
 
-		dx, err := srv.upstream.DeviceState.List()
+		dx, err := ins.upstream.DeviceState.List()
 		if err != nil {
 			reply(nil, err)
 			return
@@ -21,28 +23,28 @@ func (srv *Server) device() {
 		reply(ret, nil)
 	})
 
-	srv.subscribe("ari.devices.data.>", func(subj string, _ []byte, reply Reply) {
-		name := subj[len("ari.devices.data."):]
-		data, err := srv.upstream.DeviceState.Data(name)
-		reply(data, err)
+	ins.subscribe("ari.devices.data", func(msg *session.Message, reply Reply) {
+		name := msg.Object
+		dd, err := ins.upstream.DeviceState.Data(name)
+		reply(dd, err)
 	})
 
-	srv.subscribe("ari.devices.update.>", func(subj string, data []byte, reply Reply) {
-		name := subj[len("ari.devices.update."):]
+	ins.subscribe("ari.devices.update", func(msg *session.Message, reply Reply) {
+		name := msg.Object
 
 		var state string
-		if err := json.Unmarshal(data, &state); err != nil {
-			reply(nil, &decodingError{subj, err})
+		if err := json.Unmarshal(msg.Payload, &state); err != nil {
+			reply(nil, &decodingError{msg.Command, err})
 			return
 		}
 
-		err := srv.upstream.DeviceState.Update(name, state)
+		err := ins.upstream.DeviceState.Update(name, state)
 		reply(nil, err)
 	})
 
-	srv.subscribe("ari.devices.delete.>", func(subj string, _ []byte, reply Reply) {
-		name := subj[len("ari.devices.delete."):]
-		err := srv.upstream.DeviceState.Delete(name)
+	ins.subscribe("ari.devices.delete", func(msg *session.Message, reply Reply) {
+		name := msg.Object
+		err := ins.upstream.DeviceState.Delete(name)
 		reply(nil, err)
 	})
 

@@ -42,9 +42,9 @@ func New(nc *nats.Conn, application string, d *session.Dialog, opts Options) (cl
 		dialog:      d,
 	}
 
-	playback := natsPlayback{conn}
 	bus := stdbus.Start(opts.Parent)
 
+	playback := natsPlayback{conn, bus}
 	liveRecording := &natsLiveRecording{conn}
 	storedRecording := &natsStoredRecording{conn}
 	logging := &natsLogging{conn}

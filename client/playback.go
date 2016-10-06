@@ -1,14 +1,10 @@
 package client
 
-import (
-	"fmt"
-
-	"github.com/CyCoreSystems/ari"
-	"github.com/nats-io/nats"
-)
+import "github.com/CyCoreSystems/ari"
 
 type natsPlayback struct {
-	conn *Conn
+	conn       *Conn
+	subscriber ari.Subscriber
 }
 
 func (p *natsPlayback) Get(id string) *ari.PlaybackHandle {
@@ -40,30 +36,20 @@ func (p *natsPlayback) Subscribe(id string, nx ...string) ari.Subscription {
 	playbackHandle := p.Get(id)
 
 	go func() {
-		for _, n := range nx {
-			subj := fmt.Sprintf("ari.events.%s", n)
-			sub, err := p.conn.conn.Subscribe(subj, func(msg *nats.Msg) {
-				eventType := msg.Subject[len("ari.events."):]
+		sub := p.subscriber.Subscribe(nx...)
+		defer sub.Cancel()
+		for {
 
-				var ariMessage ari.Message
-				ariMessage.SetRaw(&msg.Data)
-				ariMessage.Type = eventType
-
-				evt := ari.Events.Parse(&ariMessage)
-
+			select {
+			case <-ns.closeChan:
+				ns.closeChan = nil
+				return
+			case evt := <-sub.Events():
 				if playbackHandle.Match(evt) {
 					ns.events <- evt
 				}
-			})
-			if err != nil {
-				//TODO: handle error
-				panic(err)
 			}
-			defer sub.Unsubscribe()
 		}
-
-		<-ns.closeChan
-		ns.closeChan = nil
 	}()
 
 	return &ns

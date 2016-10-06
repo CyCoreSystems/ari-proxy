@@ -41,7 +41,7 @@ func (ins *Instance) application() {
 		reply(nil, err)
 	})
 
-	ins.subscribe("ari.applications.unsubscribe.>", func(msg *session.Message, reply Reply) {
+	ins.subscribe("ari.applications.unsubscribe", func(msg *session.Message, reply Reply) {
 		name := msg.Object
 
 		var eventSource string

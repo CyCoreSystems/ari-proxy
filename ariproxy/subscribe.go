@@ -10,6 +10,7 @@ import (
 )
 
 func (ins *Instance) subscribe(endpoint string, h Handler2) {
+	ins.log.Debug("Registering command", "endpoint")
 	ins.dispatcherLock.Lock()
 	defer ins.dispatcherLock.Unlock()
 	ins.dispatcher[endpoint] = h

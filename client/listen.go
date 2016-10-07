@@ -91,9 +91,14 @@ func handler(conn *nats.Conn, appStart session.AppStart, h Handler) {
 
 	go func() {
 		conn.Subscribe("events.dialog."+d.ID, func(msg *nats.Msg) {
-			var ariMessage ari.Message
-			ariMessage.SetRaw(&msg.Data)
-			cl.Bus.Send(&ariMessage)
+
+			ariMessage, err := ari.NewMessage(msg.Data)
+			if err != nil {
+				Logger.Error("Failed to create new message from payload", "error", err)
+				return
+			}
+
+			cl.Bus.Send(ariMessage)
 		})
 	}()
 

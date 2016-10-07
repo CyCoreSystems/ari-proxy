@@ -117,6 +117,6 @@ func (b *natsBridge) Record(id string, name string, opts *ari.RecordingOptions) 
 
 func (b *natsBridge) Subscribe(id string, nx ...string) ari.Subscription {
 	ns := newSubscription(b.Get(id))
-	go ns.Run(b.subscriber, nx...)
+	ns.Start(b.subscriber, nx...)
 	return ns
 }

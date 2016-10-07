@@ -216,6 +216,6 @@ func (c *natsChannel) Record(id string, name string, opts *ari.RecordingOptions)
 
 func (c *natsChannel) Subscribe(id string, n ...string) ari.Subscription {
 	ns := newSubscription(c.Get(id))
-	go ns.Run(c.subscriber, n...)
+	ns.Start(c.subscriber, n...)
 	return ns
 }

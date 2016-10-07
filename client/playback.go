@@ -28,6 +28,6 @@ func (p *natsPlayback) Stop(id string) (err error) {
 
 func (p *natsPlayback) Subscribe(id string, nx ...string) ari.Subscription {
 	ns := newSubscription(p.Get(id))
-	go ns.Run(p.subscriber, nx...)
+	ns.Start(p.subscriber, nx...)
 	return ns
 }

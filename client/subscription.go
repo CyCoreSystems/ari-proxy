@@ -16,24 +16,34 @@ func newSubscription(m ari.Matcher) *natsSubscription {
 	}
 }
 
-func (ns *natsSubscription) Run(s ari.Subscriber, n ...string) {
+func (ns *natsSubscription) Start(s ari.Subscriber, n ...string) {
 
 	sub := s.Subscribe(n...)
-	defer sub.Cancel()
-	for {
-		select {
-		case <-ns.closeChan:
-			ns.closeChan = nil
-			return
-		case evt := <-sub.Events():
-			if ns.m == nil {
-				ns.events <- evt
-			} else if ns.m.Match(evt) {
-				ns.events <- evt
+	readyCh := make(chan struct{})
+
+	go func() {
+		defer sub.Cancel()
+		close(readyCh)
+		for {
+			select {
+			case <-ns.closeChan:
+				ns.closeChan = nil
+				return
+			case evt, ok := <-sub.Events():
+				if !ok {
+					close(ns.closeChan)
+					continue
+				}
+				if ns.m == nil {
+					ns.events <- evt
+				} else if ns.m.Match(evt) {
+					ns.events <- evt
+				}
 			}
 		}
-	}
+	}()
 
+	<-readyCh
 }
 
 func (ns *natsSubscription) Events() chan ari.Event {

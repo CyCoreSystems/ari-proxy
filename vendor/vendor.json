@@ -7,22 +7,22 @@
 			"revision": ""
 		},
 		{
-			"checksumSHA1": "3+8khZZ/7ujgocmNK/LtWEX1cZg=",
+			"checksumSHA1": "18htxJzs+IYUr/x+UUlzK80L4jE=",
 			"path": "github.com/CyCoreSystems/ari",
-			"revision": "3e2fc1b270dfa0bc7850434931ca63228cfebaaf",
-			"revisionTime": "2016-10-06T22:03:26Z"
+			"revision": "8423dbef238a9bc5c468cc5ba8205b62ebafd6cd",
+			"revisionTime": "2016-10-09T01:59:15Z"
 		},
 		{
 			"checksumSHA1": "rbzDiITiP9+8sVLSOIFT9R7usR0=",
 			"path": "github.com/CyCoreSystems/ari/client/native",
-			"revision": "ff0e267393e105cac0fbb17a38924f977161d5f4",
-			"revisionTime": "2016-10-04T22:19:23Z"
+			"revision": "8423dbef238a9bc5c468cc5ba8205b62ebafd6cd",
+			"revisionTime": "2016-10-09T01:59:15Z"
 		},
 		{
-			"checksumSHA1": "8g7ueKF196TK3ooLuSJwhU9KALA=",
+			"checksumSHA1": "rTsT1ef+I/6S+tSm7RQNV9cH/SM=",
 			"path": "github.com/CyCoreSystems/ari/stdbus",
-			"revision": "ff0e267393e105cac0fbb17a38924f977161d5f4",
-			"revisionTime": "2016-10-04T22:19:23Z"
+			"revision": "8423dbef238a9bc5c468cc5ba8205b62ebafd6cd",
+			"revisionTime": "2016-10-09T01:59:15Z"
 		},
 		{
 			"checksumSHA1": "dnQMyxdsLDKd6NHD0naLAqguz6U=",

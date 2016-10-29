@@ -38,8 +38,9 @@ func runServer(log log15.Logger) int {
 		Logger: log,
 	}
 
-	// FIXME:  hack until environment reads work
-	if os.Getenv("NATS_SERVICE_HOST") != "" {
+	if os.Getenv("NATS_URI") != "" {
+		opts.URL = os.Getenv("NATS_URI")
+	} else if os.Getenv("NATS_SERVICE_HOST") != "" {
 		opts.URL = "nats://" + os.Getenv("NATS_SERVICE_HOST") + ":" + os.Getenv("NATS_SERVICE_PORT_CLIENT")
 	}
 

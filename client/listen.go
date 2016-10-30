@@ -79,28 +79,34 @@ func sendOkReply(conn *nats.Conn, reply string) bool {
 	return true
 }
 
-func handler(conn *nats.Conn, appStart session.AppStart, h Handler) {
+func handler(ctx context.Context, nc *nats.Conn, appStart session.AppStart, h Handler) {
+	// Construct a new Dialog handle
 	d := session.NewDialog(appStart.DialogID, nil)
 	d.ChannelID = appStart.ChannelID
 
-	cl, err := New(conn, appStart.Application, d, Options{})
+	// Construct the new ARI client
+	cl, err := New(nc, appStart.Application, d, Options{})
 	if err != nil {
 		Logger.Error("error creating client", "error", err)
 		return
 	}
 
-	go func() {
-		conn.Subscribe("events.dialog."+d.ID, func(msg *nats.Msg) {
+	// Bind dialog-related events to the ARI client bus
+	sub, err := nc.Subscribe("events.dialog."+d.ID, func(msg *nats.Msg) {
+		ariMessage, err := ari.NewMessage(msg.Data)
+		if err != nil {
+			Logger.Error("failed to create new message from payload", "error", err)
+			return
+		}
 
-			ariMessage, err := ari.NewMessage(msg.Data)
-			if err != nil {
-				Logger.Error("Failed to create new message from payload", "error", err)
-				return
-			}
+		cl.Bus.Send(ariMessage)
+	})
+	if err != nil {
+		Logger.Error("failed to bind dialog events to ARI client", "error", err)
+		return
+	}
+	defer sub.Unsubscribe()
 
-			cl.Bus.Send(ariMessage)
-		})
-	}()
-
-	h(cl, d)
+	// Execute the handler
+	h(ctx, cl, d)
 }

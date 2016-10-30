@@ -1,7 +1,8 @@
 package ariproxy
 
 import (
-	"golang.org/x/net/context"
+	"context"
+
 	log15 "gopkg.in/inconshreveable/log15.v2"
 )
 

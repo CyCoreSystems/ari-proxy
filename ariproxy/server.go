@@ -1,12 +1,12 @@
 package ariproxy
 
 import (
+	"context"
 	"errors"
 
 	"github.com/CyCoreSystems/ari"
 	"github.com/nats-io/nats"
 	uuid "github.com/satori/go.uuid"
-	"golang.org/x/net/context"
 	log15 "gopkg.in/inconshreveable/log15.v2"
 )
 

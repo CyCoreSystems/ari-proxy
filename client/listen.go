@@ -1,13 +1,13 @@
 package client
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/session"
 	"github.com/nats-io/nats"
 	"github.com/pkg/errors"
-	"golang.org/x/net/context"
 )
 
 // Handler defines a function which is called when a new dialog is created

@@ -1,12 +1,12 @@
 package ariproxy
 
 import (
+	"context"
 	"sync"
 
 	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/session"
 	"github.com/nats-io/nats"
-	"golang.org/x/net/context"
 	log15 "gopkg.in/inconshreveable/log15.v2"
 )
 

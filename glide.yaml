@@ -1,0 +1,17 @@
+package: github.com/CyCoreSystems/ari-proxy
+import:
+- package: github.com/CyCoreSystems/ari
+  version: ^3.0.1
+  subpackages:
+  - client/native
+  - stdbus
+- package: github.com/nats-io/nats
+  version: ^1.2.2
+- package: github.com/pkg/errors
+  version: ^0.8.0
+- package: github.com/satori/go.uuid
+  version: ^1.1.0
+- package: github.com/spf13/cobra
+- package: github.com/spf13/viper
+- package: gopkg.in/inconshreveable/log15.v2
+  version: ^2.11.0

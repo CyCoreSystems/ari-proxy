@@ -230,6 +230,8 @@ func (ins *Instance) channel() {
 			return
 		}
 
+		ins.server.cache.Add(rr.Name, ins)
+
 		var opts ari.RecordingOptions
 
 		opts.Format = rr.Format

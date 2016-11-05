@@ -106,6 +106,8 @@ func (ins *Instance) bridge() {
 			return
 		}
 
+		ins.server.cache.Add(rr.Name, ins)
+
 		var opts ari.RecordingOptions
 
 		opts.Format = rr.Format

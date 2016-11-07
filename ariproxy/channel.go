@@ -245,4 +245,30 @@ func (ins *Instance) channel() {
 		reply(nil, err)
 	})
 
+	ins.subscribe("ari.channels.variables.get", func(msg *session.Message, reply Reply) {
+		name := msg.Object
+
+		var req client.GetChannelVariable
+		if err := json.Unmarshal(msg.Payload, &req); err != nil {
+			reply(nil, &decodingError{msg.Command, err})
+			return
+		}
+
+		val, err := ins.upstream.Channel.Variables(name).Get(req.Name)
+		reply(val, err)
+	})
+
+	ins.subscribe("ari.channels.variables.set", func(msg *session.Message, reply Reply) {
+		name := msg.Object
+
+		var req client.SetChannelVariable
+		if err := json.Unmarshal(msg.Payload, &req); err != nil {
+			reply(nil, &decodingError{msg.Command, err})
+			return
+		}
+
+		err := ins.upstream.Channel.Variables(name).Set(req.Name, req.Value)
+		reply(nil, err)
+	})
+
 }

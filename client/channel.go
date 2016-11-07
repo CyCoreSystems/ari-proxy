@@ -219,3 +219,35 @@ func (c *natsChannel) Subscribe(id string, n ...string) ari.Subscription {
 	ns.Start(c.subscriber, n...)
 	return ns
 }
+
+type natsChannelVariables struct {
+	conn *Conn
+	id   string
+}
+
+func (c *natsChannel) Variables(id string) ari.Variables {
+	return &natsAsteriskVariables{c.conn}
+}
+
+// GetChannelVariable is the request object for getting a channel variable
+type GetChannelVariable struct {
+	Name string `json:"name"`
+}
+
+// SetChannelVariable is the request object for setting a channel variable
+type SetChannelVariable struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+func (c *natsChannelVariables) Get(variable string) (ret string, err error) {
+	req := GetChannelVariable{variable}
+	err = c.conn.ReadRequest("ari.channels.variables.get", c.id, &req, &ret)
+	return
+}
+
+func (c *natsChannelVariables) Set(variable string, value string) (err error) {
+	req := SetChannelVariable{variable, value}
+	err = c.conn.StandardRequest("ari.channels.variables.set", c.id, &req, nil)
+	return
+}

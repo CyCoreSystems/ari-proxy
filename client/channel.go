@@ -226,7 +226,7 @@ type natsChannelVariables struct {
 }
 
 func (c *natsChannel) Variables(id string) ari.Variables {
-	return &natsAsteriskVariables{c.conn}
+	return &natsChannelVariables{c.conn, id}
 }
 
 // GetChannelVariable is the request object for getting a channel variable

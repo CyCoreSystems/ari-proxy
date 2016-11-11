@@ -175,6 +175,7 @@ func (srv *Server) tryStasisStart(evt ari.Event) (i *Instance) {
 		ServerID:    srv.ID,
 		DialogID:    i.Dialog.ID,
 		Application: st.GetApplication(),
+		AppArgs:     st.Args,
 		ChannelID:   st.Channel.ID,
 	})
 

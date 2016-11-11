@@ -27,7 +27,7 @@ func (ins *Instance) channel() {
 	})
 
 	ins.subscribe("ari.channels.create", func(msg *session.Message, reply Reply) {
-		var req ari.OriginateRequest
+		var req ari.ChannelCreateRequest
 
 		if err := json.Unmarshal(msg.Payload, &req); err != nil {
 			reply(nil, &decodingError{msg.Command, err})

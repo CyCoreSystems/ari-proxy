@@ -11,7 +11,7 @@ import (
 )
 
 // Handler defines a function which is called when a new dialog is created
-type Handler func(context.Context, *ari.Client, *session.Dialog)
+type Handler func(context.Context, *ari.Client, *session.Dialog, *session.AppStart)
 
 // Listen listens for an AppStart event and calls the handler when an event comes in
 func Listen(ctx context.Context, conn *nats.Conn, appName string, h Handler) error {
@@ -108,5 +108,5 @@ func handler(ctx context.Context, nc *nats.Conn, appStart session.AppStart, h Ha
 	defer sub.Unsubscribe()
 
 	// Execute the handler
-	h(ctx, cl, d)
+	h(ctx, cl, d, &appStart)
 }

@@ -91,6 +91,8 @@ func handler(ctx context.Context, nc *nats.Conn, appStart session.AppStart, h Ha
 		return
 	}
 
+	cl.ApplicationArguments = appStart.AppArgs
+
 	// Bind dialog-related events to the ARI client bus
 	sub, err := nc.Subscribe("events.dialog."+d.ID, func(msg *nats.Msg) {
 		ariMessage, err := ari.NewMessage(msg.Data)

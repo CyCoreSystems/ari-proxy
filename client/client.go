@@ -64,7 +64,8 @@ func New(nc *nats.Conn, application string, d *session.Dialog, opts Options) (cl
 			Live:   liveRecording,
 			Stored: storedRecording,
 		},
-		Bus: bus,
+		Bus:             bus,
+		ApplicationName: application,
 	}
 
 	return

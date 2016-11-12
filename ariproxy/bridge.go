@@ -49,6 +49,8 @@ func (ins *Instance) bridge() {
 			return
 		}
 
+		ins.server.cache.Add(req.ID, ins)
+
 		reply(bh.ID(), err)
 	})
 

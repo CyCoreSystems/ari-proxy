@@ -81,6 +81,18 @@ func (srv *Server) tryEvent(evt ari.Event) (i *Instance) {
 		if i != nil {
 			srv.cache.Add(objectID, i)
 		}
+
+		// if the created event has a list of channel IDs and
+		// those channels have instances, associate the the created object
+		ce, ok := evt.(ari.ChannelEvent)
+		if ok {
+			for _, ci := range ce.GetChannelIDs() {
+				i = srv.cache.Find(ci)
+				if i != nil {
+					srv.cache.Add(objectID, i)
+				}
+			}
+		}
 	}
 
 	d, ok := evt.(destroyer)
@@ -89,6 +101,18 @@ func (srv *Server) tryEvent(evt ari.Event) (i *Instance) {
 		i = srv.cache.Find(objectID)
 		if i != nil {
 			srv.cache.Remove(objectID, i)
+		}
+
+		// if the destroyed event has a list of channel IDs and
+		// those channels have instances, remove the association
+		ce, ok := evt.(ari.ChannelEvent)
+		if ok {
+			for _, ci := range ce.GetChannelIDs() {
+				i = srv.cache.Find(ci)
+				if i != nil {
+					srv.cache.Remove(objectID, i)
+				}
+			}
 		}
 	}
 

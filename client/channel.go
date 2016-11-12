@@ -37,6 +37,16 @@ func (c *natsChannel) List() (cx []*ari.ChannelHandle, err error) {
 	return
 }
 
+func (c *natsChannel) Originate(req ari.OriginateRequest) (h *ari.ChannelHandle, err error) {
+	var channelID string
+	err = c.conn.StandardRequest("ari.channels.originate", "", &req, &channelID)
+	if err != nil {
+		return
+	}
+	h = c.Get(channelID)
+	return
+}
+
 func (c *natsChannel) Create(req ari.ChannelCreateRequest) (h *ari.ChannelHandle, err error) {
 	var channelID string
 	err = c.conn.StandardRequest("ari.channels.create", "", &req, &channelID)

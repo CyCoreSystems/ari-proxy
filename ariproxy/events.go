@@ -43,18 +43,20 @@ func (srv *Server) events() {
 
 				t := evt.GetType()
 
-				var i *Instance
+				var ix []*Instance
 
 				switch t {
 				case ari.Events.StasisStart:
-					i = srv.tryStasisStart(evt)
+					ix = srv.tryStasisStart(evt)
 				case ari.Events.StasisEnd:
-					i = srv.tryStasisEnd(evt)
+					ix = srv.tryStasisEnd(evt)
 				default:
-					i = srv.tryEvent(evt)
+					ix = srv.tryEvent(evt)
 				}
 
-				srv.dispatchEvent(evt, i)
+				for _, i := range ix {
+					srv.dispatchEvent(evt, i)
+				}
 			}
 		}
 	}()
@@ -71,15 +73,16 @@ func (srv *Server) dispatchEvent(evt ari.Event, i *Instance) {
 	}
 }
 
-func (srv *Server) tryEvent(evt ari.Event) (i *Instance) {
+func (srv *Server) tryEvent(evt ari.Event) []*Instance {
+	var m = make(map[string]*Instance)
 
 	c, ok := evt.(creator)
 	if ok {
 		objectID, relatedID := c.Created()
 
-		i = srv.cache.Find(relatedID)
-		if i != nil {
+		for _, i := range srv.cache.Find(relatedID) {
 			srv.cache.Add(objectID, i)
+			m[i.Dialog.ID] = i
 		}
 
 		// if the created event has a list of channel IDs and
@@ -87,37 +90,12 @@ func (srv *Server) tryEvent(evt ari.Event) (i *Instance) {
 		ce, ok := evt.(ari.ChannelEvent)
 		if ok {
 			for _, ci := range ce.GetChannelIDs() {
-				i = srv.cache.Find(ci)
-				if i != nil {
+				for _, i := range srv.cache.Find(ci) {
 					srv.cache.Add(objectID, i)
+					m[i.Dialog.ID] = i
 				}
 			}
 		}
-	}
-
-	d, ok := evt.(destroyer)
-	if ok {
-		objectID := d.Destroyed()
-		i = srv.cache.Find(objectID)
-		if i != nil {
-			srv.cache.Remove(objectID, i)
-		}
-
-		// if the destroyed event has a list of channel IDs and
-		// those channels have instances, remove the association
-		ce, ok := evt.(ari.ChannelEvent)
-		if ok {
-			for _, ci := range ce.GetChannelIDs() {
-				i = srv.cache.Find(ci)
-				if i != nil {
-					srv.cache.Remove(objectID, i)
-				}
-			}
-		}
-	}
-
-	if i != nil {
-		return
 	}
 
 	// last resort, check ChannelIDs, BridgeIDs, etc...
@@ -125,9 +103,8 @@ func (srv *Server) tryEvent(evt ari.Event) (i *Instance) {
 	ce, ok := evt.(ari.ChannelEvent)
 	if ok {
 		for _, ci := range ce.GetChannelIDs() {
-			i = srv.cache.Find(ci)
-			if i != nil {
-				return
+			for _, i := range srv.cache.Find(ci) {
+				m[i.Dialog.ID] = i
 			}
 		}
 	}
@@ -135,9 +112,8 @@ func (srv *Server) tryEvent(evt ari.Event) (i *Instance) {
 	be, ok := evt.(ari.BridgeEvent)
 	if ok {
 		for _, bi := range be.GetBridgeIDs() {
-			i = srv.cache.Find(bi)
-			if i != nil {
-				return
+			for _, i := range srv.cache.Find(bi) {
+				m[i.Dialog.ID] = i
 			}
 		}
 	}
@@ -145,9 +121,8 @@ func (srv *Server) tryEvent(evt ari.Event) (i *Instance) {
 	ee, ok := evt.(ari.EndpointEvent)
 	if ok {
 		for _, ei := range ee.GetEndpointIDs() {
-			i = srv.cache.Find(ei)
-			if i != nil {
-				return
+			for _, i := range srv.cache.Find(ei) {
+				m[i.Dialog.ID] = i
 			}
 		}
 	}
@@ -155,9 +130,8 @@ func (srv *Server) tryEvent(evt ari.Event) (i *Instance) {
 	pe, ok := evt.(ari.PlaybackEvent)
 	if ok {
 		for _, pi := range pe.GetPlaybackIDs() {
-			i = srv.cache.Find(pi)
-			if i != nil {
-				return
+			for _, i := range srv.cache.Find(pi) {
+				m[i.Dialog.ID] = i
 			}
 		}
 	}
@@ -165,20 +139,24 @@ func (srv *Server) tryEvent(evt ari.Event) (i *Instance) {
 	re, ok := evt.(ari.RecordingEvent)
 	if ok {
 		for _, ri := range re.GetRecordingIDs() {
-			i = srv.cache.Find(ri)
-			if i != nil {
-				return
+			for _, i := range srv.cache.Find(ri) {
+				m[i.Dialog.ID] = i
 			}
 		}
 	}
 
-	return
+	var ix []*Instance
+	for _, i := range m {
+		ix = append(ix, i)
+	}
+
+	return ix
 }
 
-func (srv *Server) tryStasisStart(evt ari.Event) (i *Instance) {
+func (srv *Server) tryStasisStart(evt ari.Event) (il []*Instance) {
 	st := evt.(*ari.StasisStart)
 
-	if i = srv.cache.Find(st.Channel.ID); i != nil {
+	if il = srv.cache.Find(st.Channel.ID); len(il) != 0 {
 		return
 	}
 
@@ -187,7 +165,7 @@ func (srv *Server) tryStasisStart(evt ari.Event) (i *Instance) {
 	srv.log.Debug("Sending out AppStart to endpoint", "endpoint", "ari.app."+st.GetApplication())
 
 	id := uuid.NewV1().String()
-	i = srv.newInstance(id, nil)
+	i := srv.newInstance(id, nil)
 	i.Dialog.ChannelID = st.Channel.ID
 	i.Dialog.Objects.Add(st.Channel.ID)
 	i.Start(srv.ctx)
@@ -212,12 +190,13 @@ func (srv *Server) tryStasisStart(evt ari.Event) (i *Instance) {
 	sub, err := srv.conn.ChanSubscribe(reply, ch)
 	if err != nil {
 		srv.log.Error("Error subscribing on reply channel", "error", err)
-		i = nil
 		return
 	}
 	defer sub.Unsubscribe()
 
 	srv.conn.PublishRequest("ari.app."+st.GetApplication(), reply, body)
+
+	il = append(il, i)
 
 	srv.log.Debug("Waiting for response")
 
@@ -232,23 +211,23 @@ func (srv *Server) tryStasisStart(evt ari.Event) (i *Instance) {
 		srv.log.Error("Timed out")
 	}
 
-	//TODO: log error
+	if err != nil {
+		srv.log.Error("Error in StasisStart Handler", "error", err)
+	}
 
-	return i
+	return
 }
 
-func (srv *Server) tryStasisEnd(evt ari.Event) (i *Instance) {
+func (srv *Server) tryStasisEnd(evt ari.Event) (il []*Instance) {
 
 	end := evt.(*ari.StasisEnd)
 
-	i = srv.cache.Find(end.Channel.ID)
-	if i == nil {
-		return
+	il = srv.cache.Find(end.Channel.ID)
+
+	for _, i := range il {
+		srv.cache.RemoveAll(i)
+		i.Stop()
 	}
 
-	srv.cache.RemoveAll(i)
-
-	i.Stop()
-
-	return i
+	return
 }

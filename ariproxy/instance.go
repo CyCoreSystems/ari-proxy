@@ -2,6 +2,7 @@ package ariproxy
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/CyCoreSystems/ari"
@@ -79,4 +80,8 @@ func (i *Instance) Stop() {
 		return
 	}
 	i.cancel()
+}
+
+func (i *Instance) String() string {
+	return fmt.Sprintf("Instance{%s}", i.Dialog.ID)
 }

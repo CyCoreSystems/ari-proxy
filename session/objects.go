@@ -62,3 +62,8 @@ func (o *Objects) Clear() {
 
 	o.ids = make([]string, 0)
 }
+
+// Items returns the list of items
+func (o *Objects) Items() []string {
+	return o.ids
+}

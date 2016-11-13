@@ -156,10 +156,6 @@ func (srv *Server) tryEvent(evt ari.Event) []*Instance {
 func (srv *Server) tryStasisStart(evt ari.Event) (il []*Instance) {
 	st := evt.(*ari.StasisStart)
 
-	if il = srv.cache.Find(st.Channel.ID); len(il) != 0 {
-		return
-	}
-
 	// start server side of the component
 
 	srv.log.Debug("Sending out AppStart to endpoint", "endpoint", "ari.app."+st.GetApplication())
@@ -225,8 +221,10 @@ func (srv *Server) tryStasisEnd(evt ari.Event) (il []*Instance) {
 	il = srv.cache.Find(end.Channel.ID)
 
 	for _, i := range il {
-		srv.cache.RemoveAll(i)
-		i.Stop()
+		srv.cache.RemoveObject(end.Channel.ID, i)
+		if len(i.Dialog.Objects.Items()) == 0 {
+			i.Stop()
+		}
 	}
 
 	return

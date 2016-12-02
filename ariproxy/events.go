@@ -190,7 +190,12 @@ func (srv *Server) tryStasisStart(evt ari.Event) (il []*Instance) {
 	}
 	defer sub.Unsubscribe()
 
-	srv.conn.PublishRequest("ari.app."+st.GetApplication(), reply, body)
+	srv.log.Debug("Publishing stasis start request", "appname", st.GetApplication())
+
+	if err = srv.conn.PublishRequest("ari.app."+st.GetApplication(), reply, body); err != nil {
+		srv.log.Error("Error publishing StasisStart request", "error", err, "appname", st.GetApplication())
+		return
+	}
 
 	il = append(il, i)
 

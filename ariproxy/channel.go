@@ -52,6 +52,13 @@ func (ins *Instance) channel() {
 			return
 		}
 
+		if req.ChannelID != "" {
+			ins.server.cache.Add(req.ChannelID, ins)
+		}
+		if req.OtherChannelID != "" {
+			ins.server.cache.Add(req.OtherChannelID, ins)
+		}
+
 		handle, err := ins.upstream.Channel.Create(req)
 
 		if err != nil {

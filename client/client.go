@@ -51,7 +51,7 @@ func New(nc *nats.Conn, application string, d *session.Dialog, opts Options) (cl
 	config := &natsConfig{conn}
 
 	cl = &ari.Client{
-		Cleanup:     func() error { nc.Close(); return nil },
+		Cleanup:     func() error { return nil }, // default cleanup is a no-op
 		Asterisk:    &natsAsterisk{conn, logging, modules, config},
 		Application: &natsApplication{conn},
 		Bridge:      &natsBridge{conn, bus, &playback, liveRecording},

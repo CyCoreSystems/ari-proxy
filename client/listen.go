@@ -18,8 +18,8 @@ func Listen(ctx context.Context, conn *nats.Conn, appName string, h Handler) err
 
 	Logger.Debug("Listening on endpoint", "endpoint", "ari.app."+appName)
 
-	ch := make(chan *nats.Msg, 2)
-	sub, err := conn.QueueSubscribeSyncWithChan("ari.app."+appName, appName+"_app_listener", ch)
+	ch := make(chan *nats.Msg, 100)
+	sub, err := conn.ChanQueueSubscribe("ari.app."+appName, appName+"_app_listener", ch)
 	if err != nil {
 		Logger.Debug("Error listening on endpoint", "error", err)
 		return errors.Wrap(err, "Unable to subscribe to ARI application start queue")

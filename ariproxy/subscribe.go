@@ -80,7 +80,7 @@ func (ins *Instance) commands() {
 		})
 	}
 
-	sub, err := ins.conn.Subscribe(endpoint, cb)
+	sub, err := ins.conn.Subscribe(endpoint, func(m *nats.Msg) { go cb(m) })
 	if err != nil {
 		ins.log.Error("Error starting subscription", "endpoint", endpoint, "error", err)
 		ins.Stop()

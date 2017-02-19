@@ -3,8 +3,57 @@ package ariproxy
 import (
 	"encoding/json"
 
+	"github.com/CyCoreSystems/ari-proxy/proxy"
 	"github.com/CyCoreSystems/ari-proxy/session"
 )
+
+func (s *Server) applicationData(reply string, req *proxy.Request) {
+	app, err := s.ari.Application.Data(req.ApplicationData.Name)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+	if app == nil {
+		s.sendNotFound(reply)
+		return
+	}
+
+	s.nats.Publish(reply, &app)
+}
+
+func (s *Server) applicationList(reply string, req *proxy.Request) {
+	list, err := s.ari.Application.List()
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	resp := proxy.EntityList{List: []*proxy.Entity{}}
+	for _, i := range list {
+		resp.List = append(resp.List, &proxy.Entity{
+			Metadata: s.Metadata(req.Metadata.Dialog),
+			ID:       i.ID(),
+		})
+	}
+	s.nats.Publish(reply, &resp)
+}
+
+func (s *Server) applicationGet(reply string, req *proxy.Request) {
+	app, err := s.ari.Application.Get(req.ApplicationGet.Name)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+	if app == nil {
+		s.sendNotFound(reply)
+		return
+	}
+
+	s.nats.Publish(reply, &proxy.Entity{
+		Metadata: s.Metadata(req.Metadata.Dialog),
+		ID:       app.ID(),
+	})
+}
 
 func (ins *Instance) application() {
 	ins.subscribe("ari.applications.all", func(_ *session.Message, reply Reply) {

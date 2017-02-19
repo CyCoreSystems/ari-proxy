@@ -140,4 +140,11 @@ structure of the announcement is thus:
 }
 ```
 
+### Payload structure
 
+For most requests, payloads exactly match their ARI library values.  However,
+treatment of handlers is slightly different.
+
+Instead of a handler, an `Entity` or array of `Entity`s is returned.  This
+response type contains the Metadata for the entity (ARI application, Asterisk
+ID, and optionally Dialog) as well as the unique ID of the entity.

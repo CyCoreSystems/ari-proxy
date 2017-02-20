@@ -539,6 +539,28 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		}
 	}
 
+	if req.AsteriskModules != nil {
+		if req.AsteriskModules.List != nil {
+			f = s.asteriskModuleList
+		}
+
+		if req.AsteriskModules.Data != nil {
+			f = s.asteriskModuleData
+		}
+
+		if req.AsteriskModules.Load != nil {
+			f = s.asteriskModuleLoad
+		}
+
+		if req.AsteriskModules.Unload != nil {
+			f = s.asteriskModuleUnload
+		}
+
+		if req.AsteriskModules.Reload != nil {
+			f = s.asteriskModuleReload
+		}
+	}
+
 	f(ctx, reply, req)
 }
 

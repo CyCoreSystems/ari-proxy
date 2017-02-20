@@ -90,7 +90,7 @@ type Request struct {
 	AsteriskVariables    *AsteriskVariables
 	AsteriskConfig       *AsteriskConfig
 	AsteriskLogging      *AsteriskLogging
-	//AsteriskModules      *AsteriskModules
+	AsteriskModules      *AsteriskModules
 
 	BridgeAddChannel    *BridgeAddChannel
 	BridgeCreate        *BridgeCreate
@@ -1003,4 +1003,67 @@ type AsteriskLoggingRotate struct {
 
 	// ID is the identifier for this object
 	ID string
+}
+
+// AsteriskModules describes the group of operations on asterisk modules
+type AsteriskModules struct {
+	// AsteriskModules is the signature type for this request
+	AsteriskModules struct{}
+
+	// List is the asterisk modules list operation
+	List *AsteriskModulesList
+
+	// Data is the asterisk modules get data operation
+	Data *AsteriskModulesData
+
+	// Load is the asterisk modules load operation
+	Load *AsteriskModulesLoad
+
+	// Unload is the asterisk modules unload operation
+	Unload *AsteriskModulesUnload
+
+	// Reload is the asterisk modules unload operation
+	Reload *AsteriskModulesReload
+}
+
+// AsteriskModulesList describes the asterisk modules list request
+type AsteriskModulesList struct {
+	// AsteriskModulesList is the signature type for this request
+	AsteriskModulesList struct{}
+}
+
+// AsteriskModulesData describes the asterisk get data request
+type AsteriskModulesData struct {
+	// AsteriskModulesData is the signature type for this request
+	AsteriskModulesData struct{}
+
+	// Name is the name of the asterisk module
+	Name string
+}
+
+// AsteriskModulesLoad describes the asterisk load module request
+type AsteriskModulesLoad struct {
+	// AsteriskModulesLoad is the signature type for this request
+	AsteriskModulesLoad struct{}
+
+	// Name is the name of the asterisk module
+	Name string
+}
+
+// AsteriskModulesUnload describes the asterisk unload module request
+type AsteriskModulesUnload struct {
+	// AsteriskModulesUnload is the signature type for this request
+	AsteriskModulesUnload struct{}
+
+	// Name is the name of the asterisk module
+	Name string
+}
+
+// AsteriskModulesReload describes the asterisk reload module request
+type AsteriskModulesReload struct {
+	// AsteriskModulesReload is the signature type for this request
+	AsteriskModulesReload struct{}
+
+	// Name is the name of the asterisk module
+	Name string
 }

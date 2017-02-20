@@ -148,11 +148,12 @@ type Request struct {
 	PlaybackStop      *PlaybackStop
 	PlaybackSubscribe *PlaybackSubscribe
 
+	RecordingStoredCopy   *RecordingStoredCopy
+	RecordingStoredData   *RecordingStoredData
+	RecordingStoredDelete *RecordingStoredDelete
+	RecordingStoredList   *RecordingStoredList
+
 	/*
-	   RecordingStoredCopy   *RecordingStoredCopy
-	   RecordingStoredData   *RecordingStoredData
-	   RecordingStoredDelete *RecordingStoredDelete
-	   RecordingStoredList   *RecordingStoredList
 
 	   RecordingLiveData   *RecordingLiveData
 	   RecordingLiveDelete *RecordingLiveDelete
@@ -776,5 +777,44 @@ type PlaybackSubscribe struct {
 	PlaybackSubscribe struct{}
 
 	// ID is the playback identifier
+	ID string
+}
+
+//RecordingStoredCopy TODO
+type RecordingStoredCopy struct {
+	// RecordingStoredCopy is the signature type for this request
+	RecordingStoredCopy struct{}
+
+	// ID is the stored recording identifier
+	ID string
+
+	// Destination is the destination location to copy to
+	Destination string
+}
+
+//RecordingStoredData TODO
+type RecordingStoredData struct {
+	// RecordingStoredData is the signature type for this request
+	RecordingStoredData struct{}
+
+	// ID is the stored recording identifier
+	ID string
+}
+
+//RecordingStoredDelete TODO
+type RecordingStoredDelete struct {
+	// RecordingStoredDelete is the signature type for this request
+	RecordingStoredDelete struct{}
+
+	// ID is the stored recording identifier
+	ID string
+}
+
+//RecordingStoredList TODO
+type RecordingStoredList struct {
+	// RecordingStoredList is the signature type for this request
+	RecordingStoredList struct{}
+
+	// ID is the stored recording identifier
 	ID string
 }

@@ -1,46 +1,55 @@
 package ariproxy
 
-/*
-func (ins *Instance) storedRecording() {
-	ins.subscribe("ari.recording.stored.all", func(msg *session.Message, reply Reply) {
-		handles, err := ins.upstream.Recording.Stored.List()
-		if err != nil {
-			reply(nil, err)
-			return
-		}
+import (
+	"context"
 
-		var ret []string
-		for _, h := range handles {
-			ret = append(ret, h.ID())
-		}
+	"github.com/CyCoreSystems/ari-proxy/proxy"
+)
 
-		reply(ret, nil)
-	})
+func (s *Server) recordingStoredCopy(ctx context.Context, reply string, req *proxy.Request) {
+	id := req.RecordingStoredCopy.ID
+	dest := req.RecordingStoredCopy.Destination
 
-	ins.subscribe("ari.recording.stored.data", func(msg *session.Message, reply Reply) {
-		name := msg.Object
-		srd, err := ins.upstream.Recording.Stored.Data(name)
-		reply(srd, err)
-	})
+	srd, err := s.ari.Recording.Stored.Copy(id, dest)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
 
-	ins.subscribe("ari.recording.stored.copy", func(msg *session.Message, reply Reply) {
-		name := msg.Object
-
-		var dest string
-		if err := json.Unmarshal(msg.Payload, &dest); err != nil {
-			reply(nil, &decodingError{msg.Command, err})
-			return
-		}
-
-		srd, err := ins.upstream.Recording.Stored.Copy(name, dest)
-		reply(srd, err)
-	})
-
-	ins.subscribe("ari.recording.stored.delete", func(msg *session.Message, reply Reply) {
-		name := msg.Object
-		err := ins.upstream.Recording.Stored.Delete(name)
-		reply(nil, err)
-	})
-
+	s.nats.Publish(reply, &srd)
 }
-*/
+
+func (s *Server) recordingStoredData(ctx context.Context, reply string, req *proxy.Request) {
+	data, err := s.ari.Recording.Stored.Data(req.RecordingStoredData.ID)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	s.nats.Publish(reply, &data)
+}
+
+func (s *Server) recordingStoredDelete(ctx context.Context, reply string, req *proxy.Request) {
+	err := s.ari.Recording.Stored.Delete(req.RecordingStoredDelete.ID)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	s.sendError(reply, nil)
+}
+
+func (s *Server) recordingStoredList(ctx context.Context, reply string, req *proxy.Request) {
+	handles, err := s.ari.Recording.Stored.List()
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	var ret []string
+	for _, h := range handles {
+		ret = append(ret, h.ID())
+	}
+
+	s.nats.Publish(reply, &handles)
+}

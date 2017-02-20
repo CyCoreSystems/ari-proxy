@@ -462,6 +462,19 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		f = s.playbackSubscribe
 	}
 
+	if req.RecordingStoredCopy != nil {
+		f = s.recordingStoredCopy
+	}
+	if req.RecordingStoredData != nil {
+		f = s.recordingStoredData
+	}
+	if req.RecordingStoredDelete != nil {
+		f = s.recordingStoredDelete
+	}
+	if req.RecordingStoredList != nil {
+		f = s.recordingStoredList
+	}
+
 	f(ctx, reply, req)
 }
 

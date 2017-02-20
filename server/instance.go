@@ -413,6 +413,19 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		}
 	}
 
+	if req.DeviceStateData != nil {
+		f = s.deviceStateData
+	}
+	if req.DeviceStateDelete != nil {
+		f = s.deviceStateDelete
+	}
+	if req.DeviceStateList != nil {
+		f = s.deviceStateList
+	}
+	if req.DeviceStateUpdate != nil {
+		f = s.deviceStateUpdate
+	}
+
 	f(ctx, reply, req)
 }
 

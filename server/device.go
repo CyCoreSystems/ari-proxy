@@ -1,47 +1,55 @@
 package ariproxy
 
-/*
-func (ins *Instance) device() {
-	ins.subscribe("ari.devices.all", func(msg *session.Message, reply Reply) {
+import (
+	"context"
 
-		dx, err := ins.upstream.DeviceState.List()
-		if err != nil {
-			reply(nil, err)
-			return
-		}
+	"github.com/CyCoreSystems/ari-proxy/proxy"
+)
 
-		var ret []string
-		for _, device := range dx {
-			ret = append(ret, device.ID())
-		}
-
-		reply(ret, nil)
-	})
-
-	ins.subscribe("ari.devices.data", func(msg *session.Message, reply Reply) {
-		name := msg.Object
-		dd, err := ins.upstream.DeviceState.Data(name)
-		reply(dd, err)
-	})
-
-	ins.subscribe("ari.devices.update", func(msg *session.Message, reply Reply) {
-		name := msg.Object
-
-		var state string
-		if err := json.Unmarshal(msg.Payload, &state); err != nil {
-			reply(nil, &decodingError{msg.Command, err})
-			return
-		}
-
-		err := ins.upstream.DeviceState.Update(name, state)
-		reply(nil, err)
-	})
-
-	ins.subscribe("ari.devices.delete", func(msg *session.Message, reply Reply) {
-		name := msg.Object
-		err := ins.upstream.DeviceState.Delete(name)
-		reply(nil, err)
-	})
-
+func (s *Server) deviceStateData(ctx context.Context, reply string, req *proxy.Request) {
+	id := req.DeviceStateData.ID
+	dd, err := s.ari.DeviceState.Data(id)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+	s.nats.Publish(reply, &dd)
 }
-*/
+
+func (s *Server) deviceStateDelete(ctx context.Context, reply string, req *proxy.Request) {
+	id := req.DeviceStateDelete.ID
+	err := s.ari.DeviceState.Delete(id)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	s.sendError(reply, nil)
+}
+
+func (s *Server) deviceStateList(ctx context.Context, reply string, req *proxy.Request) {
+	dx, err := s.ari.DeviceState.List()
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	var ret []string
+	for _, device := range dx {
+		ret = append(ret, device.ID())
+	}
+
+	s.nats.Publish(reply, ret)
+}
+
+func (s *Server) deviceStateUpdate(ctx context.Context, reply string, req *proxy.Request) {
+	id := req.DeviceStateUpdate.ID
+	state := req.DeviceStateUpdate.State
+	err := s.ari.DeviceState.Update(id, state)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	s.sendError(reply, nil)
+}

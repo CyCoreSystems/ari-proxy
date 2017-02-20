@@ -129,12 +129,12 @@ type Request struct {
 	ChannelUnmute      *ChannelUnmute
 	ChannelVariables   *ChannelVariables
 
-	/*
-	   DeviceStateData   *DeviceStateData
-	   DeviceStateDelete *DeviceStateDelete
-	   DeviceStateList   *DeviceStateList
-	   DeviceStateUpdate *DeviceStateUpdate
+	DeviceStateData   *DeviceStateData
+	DeviceStateDelete *DeviceStateDelete
+	DeviceStateList   *DeviceStateList
+	DeviceStateUpdate *DeviceStateUpdate
 
+	/*
 	   EndpointData       *EndpointData
 	   EndpointGet        *EndpointGet
 	   EndpointList       *EndpointList
@@ -634,4 +634,43 @@ type ChannelVariables struct {
 
 	// Set is the Set variable request
 	Set *VariablesSet
+}
+
+// DeviceStateData describes the request for getting the device state data
+type DeviceStateData struct {
+	// DeviceStateData is the signature type for this request
+	DeviceStateData struct{}
+
+	// ID is the identifier for the device
+	ID string
+}
+
+// DeviceStateDelete describes the request for delete the device state
+type DeviceStateDelete struct {
+	// DeviceStateDelete is the signature type for this request
+	DeviceStateDelete struct{}
+
+	// ID is the identifier for the device
+	ID string
+}
+
+// DeviceStateList describes the request for listing the devices and their states
+type DeviceStateList struct {
+	// DeviceStateList is the signature type for this request
+	DeviceStateList struct{}
+
+	// ID is the identifier for the device
+	ID string
+}
+
+// DeviceStateUpdate describes the request for updating the device state
+type DeviceStateUpdate struct {
+	// DeviceStateUpdate is the signature type for this request
+	DeviceStateUpdate struct{}
+
+	// ID is the identifier for the device
+	ID string
+
+	// State is the new state of the device to set
+	State string
 }

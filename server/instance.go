@@ -475,6 +475,30 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		f = s.recordingStoredList
 	}
 
+	if req.RecordingLiveData != nil {
+		f = s.recordingLiveData
+	}
+	if req.RecordingLiveDelete != nil {
+		f = s.recordingLiveDelete
+	}
+	if req.RecordingLiveMute != nil {
+		f = s.recordingLiveMute
+	}
+	if req.RecordingLivePause != nil {
+		f = s.recordingLivePause
+	}
+	if req.RecordingLiveResume != nil {
+		f = s.recordingLiveResume
+	}
+	if req.RecordingLiveScrap != nil {
+		f = s.recordingLiveScrap
+	}
+	if req.RecordingLiveStop != nil {
+		f = s.recordingLiveStop
+	}
+	if req.RecordingLiveUnmute != nil {
+		f = s.recordingLiveUnmute
+	}
 	f(ctx, reply, req)
 }
 

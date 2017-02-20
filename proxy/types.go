@@ -153,17 +153,16 @@ type Request struct {
 	RecordingStoredDelete *RecordingStoredDelete
 	RecordingStoredList   *RecordingStoredList
 
+	RecordingLiveData   *RecordingLiveData
+	RecordingLiveDelete *RecordingLiveDelete
+	RecordingLiveMute   *RecordingLiveMute
+	RecordingLivePause  *RecordingLivePause
+	RecordingLiveResume *RecordingLiveResume
+	RecordingLiveScrap  *RecordingLiveScrap
+	RecordingLiveStop   *RecordingLiveStop
+	RecordingLiveUnmute *RecordingLiveUnmute
+
 	/*
-
-	   RecordingLiveData   *RecordingLiveData
-	   RecordingLiveDelete *RecordingLiveDelete
-	   RecordingLiveMute   *RecordingLiveMute
-	   RecordingLivePause  *RecordingLivePause
-	   RecordingLiveResume *RecordingLiveResume
-	   RecordingLiveScrap  *RecordingLiveScrap
-	   RecordingLiveStop   *RecordingLiveStop
-	   RecordingLiveUnmute *RecordingLiveUnmute
-
 	   SoundData *SoundData
 	   SoundList *SoundList
 	*/
@@ -816,5 +815,77 @@ type RecordingStoredList struct {
 	RecordingStoredList struct{}
 
 	// ID is the stored recording identifier
+	ID string
+}
+
+//RecordingLiveData TODO
+type RecordingLiveData struct {
+	// RecordingLiveData is the signature type for this request
+	RecordingLiveData struct{}
+
+	// ID is the live recording identifier
+	ID string
+}
+
+//RecordingLiveDelete TODO
+type RecordingLiveDelete struct {
+	// RecordingLiveDelete is the signature type for this request
+	RecordingLiveDelete struct{}
+
+	// ID is the live recording identifier
+	ID string
+}
+
+//RecordingLiveMute TODO
+type RecordingLiveMute struct {
+	// RecordingLiveMute is the signature type for this request
+	RecordingLiveMute struct{}
+
+	// ID is the live recording identifier
+	ID string
+}
+
+//RecordingLivePause TODO
+type RecordingLivePause struct {
+	// RecordingLivePause is the signature type for this request
+	RecordingLivePause struct{}
+
+	// ID is the live recording identifier
+	ID string
+}
+
+//RecordingLiveResume TODO
+type RecordingLiveResume struct {
+	// RecordingLiveResume is the signature type for this request
+	RecordingLiveResume struct{}
+
+	// ID is the live recording identifier
+	ID string
+}
+
+//RecordingLiveScrap TODO
+type RecordingLiveScrap struct {
+	// RecordingLiveScrap is the signature type for this request
+	RecordingLiveScrap struct{}
+
+	// ID is the live recording identifier
+	ID string
+}
+
+//RecordingLiveStop TODO
+type RecordingLiveStop struct {
+	// RecordingLiveStop is the signature type for this request
+	RecordingLiveStop struct{}
+
+	// ID is the live recording identifier
+	ID string
+}
+
+//RecordingLiveUnmute TODO
+type RecordingLiveUnmute struct {
+	// RecordingLiveUnmute is the signature type for this request
+	RecordingLiveUnmute struct{}
+
+	// ID is the live recording identifier
 	ID string
 }

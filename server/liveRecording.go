@@ -1,54 +1,81 @@
 package ariproxy
 
-/*
-func (ins *Instance) liveRecording() {
-	ins.subscribe("ari.recording.live.data", func(msg *session.Message, reply Reply) {
-		name := msg.Object
-		lrd, err := ins.upstream.Recording.Live.Data(name)
-		reply(lrd, err)
-	})
+import (
+	"context"
 
-	ins.subscribe("ari.recording.live.stop", func(msg *session.Message, reply Reply) {
-		name := msg.Object
-		err := ins.upstream.Recording.Live.Stop(name)
-		reply(nil, err)
-	})
+	"github.com/CyCoreSystems/ari-proxy/proxy"
+)
 
-	ins.subscribe("ari.recording.live.pause", func(msg *session.Message, reply Reply) {
-		name := msg.Object
-		err := ins.upstream.Recording.Live.Pause(name)
-		reply(nil, err)
-	})
+func (s *Server) recordingLiveData(ctx context.Context, reply string, req *proxy.Request) {
+	lrd, err := s.ari.Recording.Live.Data(req.RecordingLiveData.ID)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
 
-	ins.subscribe("ari.recording.live.resume", func(msg *session.Message, reply Reply) {
-		name := msg.Object
-		err := ins.upstream.Recording.Live.Resume(name)
-		reply(nil, err)
-	})
+	s.nats.Publish(reply, &lrd)
+}
 
-	ins.subscribe("ari.recording.live.mute", func(msg *session.Message, reply Reply) {
-		name := msg.Object
-		err := ins.upstream.Recording.Live.Mute(name)
-		reply(nil, err)
-	})
+func (s *Server) recordingLiveDelete(ctx context.Context, reply string, req *proxy.Request) {
+	err := s.ari.Recording.Live.Delete(req.RecordingLiveDelete.ID)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+	s.sendError(reply, nil)
+}
 
-	ins.subscribe("ari.recording.live.unmute", func(msg *session.Message, reply Reply) {
-		name := msg.Object
-		err := ins.upstream.Recording.Live.Unmute(name)
-		reply(nil, err)
-	})
+func (s *Server) recordingLiveMute(ctx context.Context, reply string, req *proxy.Request) {
+	err := s.ari.Recording.Live.Mute(req.RecordingLiveMute.ID)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+	s.sendError(reply, nil)
+}
 
-	ins.subscribe("ari.recording.live.delete", func(msg *session.Message, reply Reply) {
-		name := msg.Object
-		err := ins.upstream.Recording.Live.Delete(name)
-		reply(nil, err)
-	})
+func (s *Server) recordingLivePause(ctx context.Context, reply string, req *proxy.Request) {
+	err := s.ari.Recording.Live.Pause(req.RecordingLivePause.ID)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+	s.sendError(reply, nil)
+}
 
-	ins.subscribe("ari.recording.live.scrap", func(msg *session.Message, reply Reply) {
-		name := msg.Object
-		err := ins.upstream.Recording.Live.Scrap(name)
-		reply(nil, err)
-	})
+func (s *Server) recordingLiveResume(ctx context.Context, reply string, req *proxy.Request) {
+	err := s.ari.Recording.Live.Resume(req.RecordingLiveResume.ID)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+	s.sendError(reply, nil)
+}
+
+func (s *Server) recordingLiveScrap(ctx context.Context, reply string, req *proxy.Request) {
+	err := s.ari.Recording.Live.Scrap(req.RecordingLiveScrap.ID)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+	s.sendError(reply, nil)
+}
+
+func (s *Server) recordingLiveStop(ctx context.Context, reply string, req *proxy.Request) {
+	err := s.ari.Recording.Live.Stop(req.RecordingLiveStop.ID)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+	s.sendError(reply, nil)
+}
+
+func (s *Server) recordingLiveUnmute(ctx context.Context, reply string, req *proxy.Request) {
+	err := s.ari.Recording.Live.Unmute(req.RecordingLiveUnmute.ID)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+	s.sendError(reply, nil)
 
 }
-*/

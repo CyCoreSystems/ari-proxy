@@ -134,12 +134,11 @@ type Request struct {
 	DeviceStateList   *DeviceStateList
 	DeviceStateUpdate *DeviceStateUpdate
 
-	/*
-	   EndpointData       *EndpointData
-	   EndpointGet        *EndpointGet
-	   EndpointList       *EndpointList
-	   EndpointListByTech *EndpointListByTech
+	EndpointData       *EndpointData
+	EndpointList       *EndpointList
+	EndpointListByTech *EndpointListByTech
 
+	/*
 	   MailboxData   *MailboxData
 	   MailboxDelete *MailboxDelete
 	   MailboxList   *MailboxList
@@ -673,4 +672,31 @@ type DeviceStateUpdate struct {
 
 	// State is the new state of the device to set
 	State string
+}
+
+// EndpointData describes the request for getting endpoint data
+type EndpointData struct {
+	// EndpointData is the signature type for this request
+	EndpointData struct{}
+
+	// Tech is the technology for the endpoint
+	Tech string
+
+	// Resource is the resource for the endpoint
+	Resource string
+}
+
+// EndpointList describes the request for the listing endpoints
+type EndpointList struct {
+	// EndpointList is the signature type for this request
+	EndpointList struct{}
+}
+
+// EndpointListByTech describes the request for listing endpoints by technology
+type EndpointListByTech struct {
+	// EndpointListByTech is the signature type for this request
+	EndpointListByTech struct{}
+
+	// Tech is the technology for the endpoint
+	Tech string
 }

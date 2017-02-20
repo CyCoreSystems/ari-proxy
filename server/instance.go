@@ -426,6 +426,16 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		f = s.deviceStateUpdate
 	}
 
+	if req.EndpointData != nil {
+		f = s.endpointData
+	}
+	if req.EndpointList != nil {
+		f = s.endpointList
+	}
+	if req.EndpointListByTech != nil {
+		f = s.endpointListByTech
+	}
+
 	f(ctx, reply, req)
 }
 

@@ -738,7 +738,7 @@ type MailboxUpdate struct {
 	Old int
 }
 
-//PlaybackControl TODO
+// PlaybackControl describes the request for performing a playback command
 type PlaybackControl struct {
 	// PlaybackControl is the signature type for this request
 	PlaybackControl struct{}
@@ -750,7 +750,7 @@ type PlaybackControl struct {
 	Command string
 }
 
-//PlaybackData TODO
+// PlaybackData describes the request for getting the playback data
 type PlaybackData struct {
 	// PlaybackData is the signature type for this request
 	PlaybackData struct{}
@@ -759,7 +759,7 @@ type PlaybackData struct {
 	ID string
 }
 
-//PlaybackStop TODO
+// PlaybackStop describes the request for stopping a playback
 type PlaybackStop struct {
 	// PlaybackStop is the signature type for this request
 	PlaybackStop struct{}
@@ -768,7 +768,7 @@ type PlaybackStop struct {
 	ID string
 }
 
-//PlaybackSubscribe TODO
+// PlaybackSubscribe describes the request for binding a playback object to the dialog
 type PlaybackSubscribe struct {
 	// PlaybackSubscribe is the signature type for this request
 	PlaybackSubscribe struct{}
@@ -777,7 +777,7 @@ type PlaybackSubscribe struct {
 	ID string
 }
 
-//RecordingStoredCopy TODO
+// RecordingStoredCopy describes the request for copying a stored recording
 type RecordingStoredCopy struct {
 	// RecordingStoredCopy is the signature type for this request
 	RecordingStoredCopy struct{}
@@ -789,7 +789,7 @@ type RecordingStoredCopy struct {
 	Destination string
 }
 
-//RecordingStoredData TODO
+// RecordingStoredData describes the request for getting the stored recording data
 type RecordingStoredData struct {
 	// RecordingStoredData is the signature type for this request
 	RecordingStoredData struct{}
@@ -798,7 +798,7 @@ type RecordingStoredData struct {
 	ID string
 }
 
-//RecordingStoredDelete TODO
+// RecordingStoredDelete describes the request for deleting the stored recording
 type RecordingStoredDelete struct {
 	// RecordingStoredDelete is the signature type for this request
 	RecordingStoredDelete struct{}
@@ -807,7 +807,7 @@ type RecordingStoredDelete struct {
 	ID string
 }
 
-//RecordingStoredList TODO
+// RecordingStoredList describes the request for listing the stored recordings
 type RecordingStoredList struct {
 	// RecordingStoredList is the signature type for this request
 	RecordingStoredList struct{}
@@ -816,7 +816,7 @@ type RecordingStoredList struct {
 	ID string
 }
 
-//RecordingLiveData TODO
+// RecordingLiveData decribes the request for getting the recording data
 type RecordingLiveData struct {
 	// RecordingLiveData is the signature type for this request
 	RecordingLiveData struct{}
@@ -825,7 +825,7 @@ type RecordingLiveData struct {
 	ID string
 }
 
-//RecordingLiveDelete TODO
+// RecordingLiveDelete describes the request for deleting the live recording
 type RecordingLiveDelete struct {
 	// RecordingLiveDelete is the signature type for this request
 	RecordingLiveDelete struct{}
@@ -834,7 +834,7 @@ type RecordingLiveDelete struct {
 	ID string
 }
 
-//RecordingLiveMute TODO
+// RecordingLiveMute describes the request for muting a live recording
 type RecordingLiveMute struct {
 	// RecordingLiveMute is the signature type for this request
 	RecordingLiveMute struct{}
@@ -843,7 +843,7 @@ type RecordingLiveMute struct {
 	ID string
 }
 
-//RecordingLivePause TODO
+// RecordingLivePause describes the request for pausing a live recording
 type RecordingLivePause struct {
 	// RecordingLivePause is the signature type for this request
 	RecordingLivePause struct{}
@@ -852,7 +852,7 @@ type RecordingLivePause struct {
 	ID string
 }
 
-//RecordingLiveResume TODO
+// RecordingLiveResume describes the request for resuming a live recording
 type RecordingLiveResume struct {
 	// RecordingLiveResume is the signature type for this request
 	RecordingLiveResume struct{}
@@ -861,7 +861,7 @@ type RecordingLiveResume struct {
 	ID string
 }
 
-//RecordingLiveScrap TODO
+// RecordingLiveScrap describes the request for scrapping a live recording
 type RecordingLiveScrap struct {
 	// RecordingLiveScrap is the signature type for this request
 	RecordingLiveScrap struct{}
@@ -870,7 +870,7 @@ type RecordingLiveScrap struct {
 	ID string
 }
 
-//RecordingLiveStop TODO
+// RecordingLiveStop describes the request for stopping a live recording
 type RecordingLiveStop struct {
 	// RecordingLiveStop is the signature type for this request
 	RecordingLiveStop struct{}
@@ -879,7 +879,7 @@ type RecordingLiveStop struct {
 	ID string
 }
 
-//RecordingLiveUnmute TODO
+// RecordingLiveUnmute describes the request for unmuting a live recording
 type RecordingLiveUnmute struct {
 	// RecordingLiveUnmute is the signature type for this request
 	RecordingLiveUnmute struct{}

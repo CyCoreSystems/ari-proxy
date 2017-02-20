@@ -1,33 +1,47 @@
 package ariproxy
 
-/*
-func (ins *Instance) asterisk() {
+import (
+	"context"
 
-	ins.subscribe("ari.asterisk.reload", func(msg *session.Message, reply Reply) {
-		err := ins.upstream.Asterisk.ReloadModule(msg.Object)
-		reply(nil, err)
-	})
+	"github.com/CyCoreSystems/ari-proxy/proxy"
+)
 
-	ins.subscribe("ari.asterisk.info", func(_ *session.Message, reply Reply) {
-		ai, err := ins.upstream.Asterisk.Info("")
-		reply(ai, err)
-	})
+func (s *Server) asteriskInfo(ctx context.Context, reply string, req *proxy.Request) {
+	info, err := s.ari.Asterisk.Info("")
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
 
-	ins.subscribe("ari.asterisk.variables.get", func(msg *session.Message, reply Reply) {
-		val, err := ins.upstream.Asterisk.Variables().Get(msg.Object)
-		reply(val, err)
-	})
-
-	ins.subscribe("ari.asterisk.variables.set", func(msg *session.Message, reply Reply) {
-		var value string
-		if err := json.Unmarshal(msg.Payload, &value); err != nil {
-			reply(nil, &decodingError{msg.Command, err})
-			return
-		}
-
-		err := ins.upstream.Asterisk.Variables().Set(msg.Object, value)
-		reply(nil, err)
-	})
-
+	s.nats.Publish(reply, &info)
 }
-*/
+
+func (s *Server) asteriskReloadModule(ctx context.Context, reply string, req *proxy.Request) {
+	err := s.ari.Asterisk.ReloadModule(req.AsteriskReloadModule.Name)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	s.nats.Publish(reply, Ok)
+}
+
+func (s *Server) asteriskVariableGet(ctx context.Context, reply string, req *proxy.Request) {
+	val, err := s.ari.Asterisk.Variables().Get(req.AsteriskVariables.Name)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	s.nats.Publish(reply, val)
+}
+
+func (s *Server) asteriskVariableSet(ctx context.Context, reply string, req *proxy.Request) {
+	err := s.ari.Asterisk.Variables().Set(req.AsteriskVariables.Name, req.AsteriskVariables.Set.Value)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	s.nats.Publish(reply, Ok)
+}

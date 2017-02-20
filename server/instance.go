@@ -14,6 +14,10 @@ import (
 	log15 "gopkg.in/inconshreveable/log15.v2"
 )
 
+// Ok is the response to send for a successful operation that
+// returns no content (TODO: could be an empty string?)
+var Ok = "ok"
+
 // Log is the internal logger for the ARI proxy.  It defaults to a no-op
 // handler, but you may configure the handler at any time by calling
 // `ariproxy.Log.SetHandler()`.  See the log15 documentation for details about
@@ -285,6 +289,22 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 	}
 	if req.ApplicationUnsubscribe != nil {
 		f = s.applicationUnsubscribe
+	}
+
+	if req.AsteriskInfo != nil {
+		f = s.asteriskInfo
+	}
+	if req.AsteriskReloadModule != nil {
+		f = s.asteriskReloadModule
+	}
+	if req.AsteriskVariables != nil {
+		if req.AsteriskVariables.Get != nil {
+			f = s.asteriskVariableGet
+		}
+
+		if req.AsteriskVariables.Set != nil {
+			f = s.asteriskVariableSet
+		}
 	}
 
 	f(ctx, reply, req)

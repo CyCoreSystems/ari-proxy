@@ -84,14 +84,14 @@ type Request struct {
 	ApplicationSubscribe   *ApplicationSubscribe
 	ApplicationUnsubscribe *ApplicationUnsubscribe
 
-	/*
-		AsteriskConfig       *AsteriskConfig
-		AsteriskInfo         *AsteriskInfo
-		AsteriskLogging      *AsteriskLogging
-		AsteriskModules      *AsteriskModules
-		AsteriskReloadModule *AsteriskReloadModule
-		AsteriskVariables    *AsteriskVariables
+	AsteriskInfo         *AsteriskInfo
+	AsteriskReloadModule *AsteriskReloadModule
+	AsteriskVariables    *AsteriskVariables
+	//AsteriskConfig       *AsteriskConfig
+	//AsteriskLogging      *AsteriskLogging
+	//AsteriskModules      *AsteriskModules
 
+	/*
 		BridgeAddChannel    *BridgeAddChannel
 		BridgeCreate        *BridgeCreate
 		BridgeData          *BridgeData
@@ -221,4 +221,49 @@ type ApplicationUnsubscribe struct {
 	//  - endpoint:<tech>/<resource> (e.g. SIP/102)
 	//  - deviceState:<deviceName>
 	EventSource string
+}
+
+// AsteriskInfo describes a request to get the asterisk information
+type AsteriskInfo struct {
+	// AsteriskInfo is the signature field for this request
+	AsteriskInfo struct{}
+}
+
+// AsteriskReloadModule descibres a request to reload an asterisk module
+type AsteriskReloadModule struct {
+	// AsteriskReloadModule is the signature field for this request
+	AsteriskReloadModule struct{}
+
+	// Name is the name of the asterisk module to reload
+	Name string
+}
+
+// AsteriskVariables is the request type for asterisk variable operations
+type AsteriskVariables struct {
+	// AsteriskVariables is the signature field for this request
+	AsteriskVariables struct{}
+
+	// Name is the name of the asterisk variable
+	Name string
+
+	// Get is the Get variable request
+	Get *AsteriskVariablesGet
+
+	// Set is the Set variable request
+	Set *AsteriskVariablesSet
+}
+
+// AsteriskVariablesGet is the request type for getting an asterisk variable
+type AsteriskVariablesGet struct {
+	// AsteriskVariablesGet is the signature field for this request
+	AsteriskVariablesGet struct{}
+}
+
+// AsteriskVariablesSet is the request type for setting an asterisk variable
+type AsteriskVariablesSet struct {
+	// AsteriskVariablesSet is the signature field for this request
+	AsteriskVariablesGet struct{}
+
+	// Value is the value to set
+	Value string
 }

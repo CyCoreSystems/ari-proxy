@@ -77,7 +77,7 @@ func (m *memManager) UnbindDialog(dialog string) {
 	var dialogIndex int
 
 	m.mu.Lock()
-	for _, v := range m.bindings {
+	for k, v := range m.bindings {
 		dialogIndex = -1
 		for i, d := range v {
 			if d == dialog {
@@ -87,6 +87,7 @@ func (m *memManager) UnbindDialog(dialog string) {
 		if dialogIndex >= 0 {
 			v[dialogIndex] = v[len(v)-1]
 			v = v[:len(v)-1]
+			m.bindings[k] = v
 		}
 	}
 	m.mu.Unlock()

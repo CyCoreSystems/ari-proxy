@@ -337,6 +337,81 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 	if req.ChannelCongestion != nil {
 		f = s.channelCongestion
 	}
+	if req.ChannelCreate != nil {
+		f = s.channelCreate
+	}
+	if req.ChannelData != nil {
+		f = s.channelData
+	}
+	if req.ChannelContinue != nil {
+		f = s.channelContinue
+	}
+	if req.ChannelDial != nil {
+		f = s.channelDial
+	}
+	if req.ChannelHangup != nil {
+		f = s.channelHangup
+	}
+	if req.ChannelHold != nil {
+		f = s.channelHold
+	}
+	if req.ChannelList != nil {
+		f = s.channelList
+	}
+	if req.ChannelMOH != nil {
+		f = s.channelMOH
+	}
+	if req.ChannelMute != nil {
+		f = s.channelMute
+	}
+	if req.ChannelOriginate != nil {
+		f = s.channelOriginate
+	}
+	if req.ChannelPlay != nil {
+		f = s.channelPlay
+	}
+	if req.ChannelRecord != nil {
+		f = s.channelRecord
+	}
+	if req.ChannelRing != nil {
+		f = s.channelRing
+	}
+	if req.ChannelSendDTMF != nil {
+		f = s.channelSendDTMF
+	}
+	if req.ChannelSilence != nil {
+		f = s.channelSilence
+	}
+	if req.ChannelSnoop != nil {
+		f = s.channelSnoop
+	}
+	if req.ChannelStopHold != nil {
+		f = s.channelStopHold
+	}
+	if req.ChannelStopMOH != nil {
+		f = s.channelStopMOH
+	}
+	if req.ChannelStopRing != nil {
+		f = s.channelStopRing
+	}
+	if req.ChannelStopSilence != nil {
+		f = s.channelStopSilence
+	}
+	if req.ChannelSubscribe != nil {
+		f = s.channelSubscribe
+	}
+	if req.ChannelUnmute != nil {
+		f = s.channelUnmute
+	}
+	if req.ChannelVariables != nil {
+		if req.ChannelVariables.Get != nil {
+			f = s.channelVariableGet
+		}
+
+		if req.ChannelVariables.Set != nil {
+			f = s.channelVariableSet
+		}
+	}
 
 	f(ctx, reply, req)
 }

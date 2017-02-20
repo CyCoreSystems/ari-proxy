@@ -102,69 +102,70 @@ type Request struct {
 	BridgeRemoveChannel *BridgeRemoveChannel
 	BridgeSubscribe     *BridgeSubscribe
 
-	ChannelAnswer     *ChannelAnswer
-	ChannelBusy       *ChannelBusy
-	ChannelCongestion *ChannelCongestion
+	ChannelAnswer      *ChannelAnswer
+	ChannelBusy        *ChannelBusy
+	ChannelCongestion  *ChannelCongestion
+	ChannelCreate      *ChannelCreate
+	ChannelData        *ChannelData
+	ChannelContinue    *ChannelContinue
+	ChannelDial        *ChannelDial
+	ChannelHangup      *ChannelHangup
+	ChannelHold        *ChannelHold
+	ChannelList        *ChannelList
+	ChannelMOH         *ChannelMOH
+	ChannelMute        *ChannelMute
+	ChannelOriginate   *ChannelOriginate
+	ChannelPlay        *ChannelPlay
+	ChannelRecord      *ChannelRecord
+	ChannelRing        *ChannelRing
+	ChannelSendDTMF    *ChannelSendDTMF
+	ChannelSilence     *ChannelSilence
+	ChannelSnoop       *ChannelSnoop
+	ChannelStopHold    *ChannelStopHold
+	ChannelStopMOH     *ChannelStopMOH
+	ChannelStopRing    *ChannelStopRing
+	ChannelStopSilence *ChannelStopSilence
+	ChannelSubscribe   *ChannelSubscribe
+	ChannelUnmute      *ChannelUnmute
+	ChannelVariables   *ChannelVariables
+
 	/*
-		ChannelCreate       *ChannelCreate
-		ChannelDataContinue *ChannelDataContinue
-		ChannelDial         *ChannelDial
-		ChannelHangup       *ChannelHangup
-		ChannelHold         *ChannelHold
-		ChannelList         *ChannelList
-		ChannelMOH          *ChannelMOH
-		ChannelMute         *ChannelMute
-		ChannelOriginate    *ChannelOriginate
-		ChannelPlay         *ChannelPlay
-		ChannelRecord       *ChannelRecord
-		ChannelRing         *ChannelRing
-		ChannelSendDTMF     *ChannelSendDTMF
-		ChannelSilence      *ChannelSilence
-		ChannelSnoop        *ChannelSnoop
-		ChannelStopHold     *ChannelStopHold
-		ChannelStopMOH      *ChannelStopMOH
-		ChannelStopRing     *ChannelStopRing
-		ChannelStopSilence  *ChannelStopSilence
-		ChannelSubscribe    *ChannelSubscribe
-		ChannelUnmute       *ChannelUnmute
-		ChannelVariables    *ChannelVariables
+	   DeviceStateData   *DeviceStateData
+	   DeviceStateDelete *DeviceStateDelete
+	   DeviceStateList   *DeviceStateList
+	   DeviceStateUpdate *DeviceStateUpdate
 
-		DeviceStateData   *DeviceStateData
-		DeviceStateDelete *DeviceStateDelete
-		DeviceStateList   *DeviceStateList
-		DeviceStateUpdate *DeviceStateUpdate
+	   EndpointData       *EndpointData
+	   EndpointGet        *EndpointGet
+	   EndpointList       *EndpointList
+	   EndpointListByTech *EndpointListByTech
 
-		EndpointData       *EndpointData
-		EndpointGet        *EndpointGet
-		EndpointList       *EndpointList
-		EndpointListByTech *EndpointListByTech
+	   MailboxData   *MailboxData
+	   MailboxDelete *MailboxDelete
+	   MailboxList   *MailboxList
+	   MailboxUpdate *MailboxUpdate
 
-		MailboxData   *MailboxData
-		MailboxDelete *MailboxDelete
-		MailboxList   *MailboxList
-		MailboxUpdate *MailboxUpdate
+	   PlaybackControl   *PlaybackControl
+	   PlaybackData      *PlaybackData
+	   PlaybackStop      *PlaybackStop
+	   PlaybackSubscribe *PlaybackSubscribe
 
-		PlaybackControl   *PlaybackControl
-		PlaybackData      *PlaybackData
-		PlaybackStop      *PlaybackStop
-		PlaybackSubscribe *PlaybackSubscribe
+	   RecordingStoredCopy   *RecordingStoredCopy
+	   RecordingStoredData   *RecordingStoredData
+	   RecordingStoredDelete *RecordingStoredDelete
+	   RecordingStoredList   *RecordingStoredList
 
-		RecordingStoredCopy   *RecordingStoredCopy
-		RecordingStoredData   *RecordingStoredData
-		RecordingStoredDelete *RecordingStoredDelete
-		RecordingStoredList   *RecordingStoredList
+	   RecordingLiveData   *RecordingLiveData
+	   RecordingLiveDelete *RecordingLiveDelete
+	   RecordingLiveMute   *RecordingLiveMute
+	   RecordingLivePause  *RecordingLivePause
+	   RecordingLiveResume *RecordingLiveResume
+	   RecordingLiveScrap  *RecordingLiveScrap
+	   RecordingLiveStop   *RecordingLiveStop
+	   RecordingLiveUnmute *RecordingLiveUnmute
 
-		RecordingLiveData   *RecordingLiveData
-		RecordingLiveDelete *RecordingLiveDelete
-		RecordingLiveMute   *RecordingLiveMute
-		RecordingLivePause  *RecordingLivePause
-		RecordingLiveResume *RecordingLiveResume
-		RecordingLiveScrap  *RecordingLiveScrap
-		RecordingLiveStop   *RecordingLiveStop
-		RecordingLiveUnmute *RecordingLiveUnmute
-
-		SoundData *SoundData
-		SoundList *SoundList
+	   SoundData *SoundData
+	   SoundList *SoundList
 	*/
 }
 
@@ -248,22 +249,22 @@ type AsteriskVariables struct {
 	Name string
 
 	// Get is the Get variable request
-	Get *AsteriskVariablesGet
+	Get *VariablesGet
 
 	// Set is the Set variable request
-	Set *AsteriskVariablesSet
+	Set *VariablesSet
 }
 
-// AsteriskVariablesGet is the request type for getting an asterisk variable
-type AsteriskVariablesGet struct {
-	// AsteriskVariablesGet is the signature field for this request
-	AsteriskVariablesGet struct{}
+// VariablesGet is the request type for getting an asterisk variable
+type VariablesGet struct {
+	// VariablesGet is the signature field for this request
+	VariablesGet struct{}
 }
 
-// AsteriskVariablesSet is the request type for setting an asterisk variable
-type AsteriskVariablesSet struct {
-	// AsteriskVariablesSet is the signature field for this request
-	AsteriskVariablesGet struct{}
+// VariablesSet is the request type for setting an asterisk variable
+type VariablesSet struct {
+	// VariablesSet is the signature field for this request
+	VariablesSet struct{}
 
 	// Value is the value to set
 	Value string
@@ -350,7 +351,7 @@ type BridgeRemoveChannel struct {
 	Channel string
 }
 
-// BridgeSubscribe describes a request to subscribe a particular ARI application to an EventSource
+// BridgeSubscribe describes a request to subscribe a bridge
 type BridgeSubscribe struct {
 	// ApplicationSubscribe is the signature field for this request
 	BridgeSubscribe struct{}
@@ -384,4 +385,253 @@ type ChannelCongestion struct {
 
 	// ID is the identifier for the channel
 	ID string
+}
+
+// ChannelCreate describes a request to create a new channel
+type ChannelCreate struct {
+	// ChannelCreate is the signature field for the request
+	ChannelCreate struct{}
+
+	// ChannelCreateRequest is the request for creating the channel
+	ChannelCreateRequest ari.ChannelCreateRequest
+}
+
+// ChannelData describes a request to get the channel data
+type ChannelData struct {
+	// ChannelData is the signature field for the request
+	ChannelData struct{}
+
+	// ID is the channel ID
+	ID string
+}
+
+// ChannelContinue describes a request to continue an ARI application
+type ChannelContinue struct {
+	// ChannelContinue is the signature field for the request
+	ChannelContinue struct{}
+
+	// ID is the channel ID
+	ID string
+
+	// ContinueRequest is the information for the continue request
+	ContinueRequest client.ContinueRequest
+}
+
+// ChannelDial describes a request to dial
+type ChannelDial struct {
+	// ChannelDial is the signature field for the request
+	ChannelDial struct{}
+
+	// ID is the channel ID
+	ID string
+
+	// DialRequest is the data for the dial operation
+	DialRequest client.DialRequest
+}
+
+// ChannelHangup is the request for hanging up a channel
+type ChannelHangup struct {
+	// ChannelHangup is the signature type for this request
+	ChannelHangup struct{}
+
+	// ID is the identifier for the channel
+	ID string
+
+	// Reason is the reason the channel is being hung up
+	Reason string
+}
+
+// ChannelHold is the request for putting a channel on hold
+type ChannelHold struct {
+
+	// ChannelHold is the signature type for this request
+	ChannelHold struct{}
+
+	// ID is the identifier for the channel
+	ID string
+}
+
+// ChannelList is the request for listing a channel
+type ChannelList struct {
+	// ChannelList is the signature type for this request
+	ChannelList struct{}
+
+	// ID is the identifier for the channel
+	ID string
+}
+
+// ChannelMOH is the request playing hold on music on a channel
+type ChannelMOH struct {
+	// ChannelMOH is the signature type for this request
+	ChannelMOH struct{}
+
+	// ID is the identifier for the channel
+	ID string
+
+	// Music is the music to play
+	Music string
+}
+
+// ChannelMute is the request for muting a channel
+type ChannelMute struct {
+	// ChannelMute is the signature type for this request
+	ChannelMute struct{}
+
+	// ID is the identifier for the channel
+	ID string
+
+	// Direction is the direction to mute
+	Direction string
+}
+
+// ChannelOriginate is the request for creating a channel
+type ChannelOriginate struct {
+	// ChannelOriginate is the signature type for this request
+	ChannelOriginate struct{}
+
+	// OriginateRequest contains the information for originating a channel
+	OriginateRequest ari.OriginateRequest
+}
+
+// ChannelPlay is the request for playing audio on a channel
+type ChannelPlay struct {
+	// ChannelPlay is the signature type for this request
+	ChannelPlay struct{}
+
+	// ID is the identifier for the channel
+	ID string
+
+	// PlayRequest is the request information for playing audio
+	PlayRequest client.PlayRequest
+}
+
+// ChannelRecord is the request for recording a channel
+type ChannelRecord struct {
+	// ChannelRecord is the signature type for this request
+	ChannelRecord struct{}
+
+	// ID is the identifier for the channel
+	ID string
+
+	// RecordRequest is the recording request data
+	RecordRequest client.RecordRequest
+}
+
+// ChannelRing is the request for playing a ringing noise on a channel
+type ChannelRing struct {
+	// ChannelRing is the signature type for this request
+	ChannelRing struct{}
+
+	// ID is the identifier for the channel
+	ID string
+}
+
+// ChannelSendDTMF is the request for sending a DTMF event to a channel
+type ChannelSendDTMF struct {
+	// ChannelSendDTMF is the signature type for this request
+	ChannelSendDTMF struct{}
+
+	// ID is the identifier for the channel
+	ID string
+
+	// DTMF is the series of DTMF inputs to send
+	DTMF string
+
+	// Options are the DTMF options
+	Options *ari.DTMFOptions
+}
+
+// ChannelSilence is the request for playing(?) silence on a channel
+type ChannelSilence struct {
+	// ChannelSilence is the signature type for this request
+	ChannelSilence struct{}
+	// ID is the identifier for the channel
+	ID string
+}
+
+// ChannelSnoop is the request for snooping on a channel
+type ChannelSnoop struct {
+	// ChannelSnoop is the signature type for this request
+	ChannelSnoop struct{}
+
+	// ID is the identifier for the channel
+	ID string
+
+	// SnoopRequest is the request information for the snoop
+	SnoopRequest client.SnoopRequest
+}
+
+// ChannelStopHold is the request for stopping the hold of a channel
+type ChannelStopHold struct {
+	// ChannelStopHold is the signature type for this request
+	ChannelStopHold struct{}
+
+	// ID is the identifier for the channel
+	ID string
+}
+
+// ChannelStopMOH stops the music on old for a channel
+type ChannelStopMOH struct {
+	// ChannelStopMOH is the signature type for this request
+	ChannelStopMOH struct{}
+
+	// ID is the identifier for the channel
+	ID string
+}
+
+// ChannelStopRing stops the ringing state for a channel
+type ChannelStopRing struct {
+	// ChannelStopRing is the signature type for this request
+	ChannelStopRing struct{}
+
+	// ID is the identifier for the channel
+	ID string
+}
+
+// ChannelStopSilence stops the silence on the channel
+type ChannelStopSilence struct {
+	// ChannelStopSilence is the signature type for this request
+	ChannelStopSilence struct{}
+
+	// ID is the identifier for the channel
+	ID string
+}
+
+// ChannelSubscribe describes the request for subscribing a channel to a dialog
+type ChannelSubscribe struct {
+	// ChannelSubscribe is the signature type for this request
+	ChannelSubscribe struct{}
+
+	// ID is the identifier for the channel
+	ID string
+}
+
+// ChannelUnmute describes the request for unmuting the channel
+type ChannelUnmute struct {
+	// ChannelUnmute is the signature type for this request
+	ChannelUnmute struct{}
+
+	// ID is the identifier for the channel
+	ID string
+
+	// Direction is the direction of the unmute
+	Direction string
+}
+
+// ChannelVariables is the request type for channel variable operations
+type ChannelVariables struct {
+	// ChannelVariables is the signature field for this request
+	ChannelVariables struct{}
+
+	// Name is the name of the channel
+	ID string
+
+	// Name is the name of the variable
+	Name string
+
+	// Get is the Get variable request
+	Get *VariablesGet
+
+	// Set is the Set variable request
+	Set *VariablesSet
 }

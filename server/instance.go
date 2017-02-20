@@ -133,52 +133,55 @@ func (s *Server) listen(ctx context.Context) error {
 	}
 	defer pingSub.Unsubscribe()
 
+	// get a contextualized request handler
+	requestHandler := s.newRequestHandler(ctx)
+
 	// get handlers
-	allGet, err := s.nats.Subscribe(fmt.Sprintf("%sget", s.NATSPrefix), s.requestHandler)
+	allGet, err := s.nats.Subscribe(fmt.Sprintf("%sget", s.NATSPrefix), requestHandler)
 	if err != nil {
 		return errors.Wrap(err, "failed to create get-all subscription")
 	}
 	defer allGet.Unsubscribe()
-	appGet, err := s.nats.Subscribe(fmt.Sprintf("%sget.%s", s.NATSPrefix, s.Application), s.requestHandler)
+	appGet, err := s.nats.Subscribe(fmt.Sprintf("%sget.%s", s.NATSPrefix, s.Application), requestHandler)
 	if err != nil {
 		return errors.Wrap(err, "failed to create get-app subscription")
 	}
 	defer appGet.Unsubscribe()
-	idGet, err := s.nats.Subscribe(fmt.Sprintf("%sget.%s.%s", s.NATSPrefix, s.Application, s.AsteriskID), s.requestHandler)
+	idGet, err := s.nats.Subscribe(fmt.Sprintf("%sget.%s.%s", s.NATSPrefix, s.Application, s.AsteriskID), requestHandler)
 	if err != nil {
 		return errors.Wrap(err, "failed to create get-id subscription")
 	}
 	defer idGet.Unsubscribe()
 
 	// command handlers
-	allCommand, err := s.nats.Subscribe(fmt.Sprintf("%scommand", s.NATSPrefix), s.requestHandler)
+	allCommand, err := s.nats.Subscribe(fmt.Sprintf("%scommand", s.NATSPrefix), requestHandler)
 	if err != nil {
 		return errors.Wrap(err, "failed to create command-all subscription")
 	}
 	defer allCommand.Unsubscribe()
-	appCommand, err := s.nats.Subscribe(fmt.Sprintf("%scommand.%s", s.NATSPrefix, s.Application), s.requestHandler)
+	appCommand, err := s.nats.Subscribe(fmt.Sprintf("%scommand.%s", s.NATSPrefix, s.Application), requestHandler)
 	if err != nil {
 		return errors.Wrap(err, "failed to create command-app subscription")
 	}
 	defer appCommand.Unsubscribe()
-	idCommand, err := s.nats.Subscribe(fmt.Sprintf("%scommand.%s.%s", s.NATSPrefix, s.Application, s.AsteriskID), s.requestHandler)
+	idCommand, err := s.nats.Subscribe(fmt.Sprintf("%scommand.%s.%s", s.NATSPrefix, s.Application, s.AsteriskID), requestHandler)
 	if err != nil {
 		return errors.Wrap(err, "failed to create command-id subscription")
 	}
 	defer idCommand.Unsubscribe()
 
 	// create handlers
-	allCreate, err := s.nats.QueueSubscribe(fmt.Sprintf("%screate", s.NATSPrefix), "ariproxy", s.requestHandler)
+	allCreate, err := s.nats.QueueSubscribe(fmt.Sprintf("%screate", s.NATSPrefix), "ariproxy", requestHandler)
 	if err != nil {
 		return errors.Wrap(err, "failed to create create-all subscription")
 	}
 	defer allCreate.Unsubscribe()
-	appCreate, err := s.nats.QueueSubscribe(fmt.Sprintf("%screate.%s", s.NATSPrefix, s.Application), "ariproxy", s.requestHandler)
+	appCreate, err := s.nats.QueueSubscribe(fmt.Sprintf("%screate.%s", s.NATSPrefix, s.Application), "ariproxy", requestHandler)
 	if err != nil {
 		return errors.Wrap(err, "failed to create create-app subscription")
 	}
 	defer appCreate.Unsubscribe()
-	idCreate, err := s.nats.QueueSubscribe(fmt.Sprintf("%screate.%s.%s", s.NATSPrefix, s.Application, s.AsteriskID), "ariproxy", s.requestHandler)
+	idCreate, err := s.nats.QueueSubscribe(fmt.Sprintf("%screate.%s.%s", s.NATSPrefix, s.Application, s.AsteriskID), "ariproxy", requestHandler)
 	if err != nil {
 		return errors.Wrap(err, "failed to create create-id subscription")
 	}
@@ -259,12 +262,15 @@ func (s *Server) pingHandler(m *nats.Msg) {
 	s.announce()
 }
 
-func (s *Server) requestHandler(subject string, reply string, req *proxy.Request) {
-	go s.dispatchRequest(reply, req)
+// newRequestHandler returns a context-wrapped nats.Handler to handle requests
+func (s *Server) newRequestHandler(ctx context.Context) func(subject string, reply string, req *proxy.Request) {
+	return func(subject string, reply string, req *proxy.Request) {
+		go s.dispatchRequest(ctx, reply, req)
+	}
 }
 
-func (s *Server) dispatchRequest(reply string, req *proxy.Request) {
-	f := func(reply string, req *proxy.Request) {
+func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.Request) {
+	f := func(ctx context.Context, reply string, req *proxy.Request) {
 		s.sendError(reply, errors.New("Not implemented"))
 	}
 
@@ -281,7 +287,7 @@ func (s *Server) dispatchRequest(reply string, req *proxy.Request) {
 		f = s.applicationUnsubscribe
 	}
 
-	f(reply, req)
+	f(ctx, reply, req)
 }
 
 func (s *Server) sendError(reply string, err error) {

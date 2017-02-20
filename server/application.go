@@ -1,13 +1,14 @@
 package ariproxy
 
 import (
+	"context"
 	"errors"
 	"strings"
 
 	"github.com/CyCoreSystems/ari-proxy/proxy"
 )
 
-func (s *Server) applicationData(reply string, req *proxy.Request) {
+func (s *Server) applicationData(ctx context.Context, reply string, req *proxy.Request) {
 	app, err := s.ari.Application.Data(req.ApplicationData.Name)
 	if err != nil {
 		s.sendError(reply, err)
@@ -21,7 +22,7 @@ func (s *Server) applicationData(reply string, req *proxy.Request) {
 	s.nats.Publish(reply, &app)
 }
 
-func (s *Server) applicationList(reply string, req *proxy.Request) {
+func (s *Server) applicationList(ctx context.Context, reply string, req *proxy.Request) {
 	list, err := s.ari.Application.List()
 	if err != nil {
 		s.sendError(reply, err)
@@ -38,7 +39,7 @@ func (s *Server) applicationList(reply string, req *proxy.Request) {
 	s.nats.Publish(reply, &resp)
 }
 
-func (s *Server) applicationGet(reply string, req *proxy.Request) {
+func (s *Server) applicationGet(ctx context.Context, reply string, req *proxy.Request) {
 	app, err := s.ari.Application.Data(req.ApplicationGet.Name)
 	if err != nil {
 		s.sendError(reply, err)
@@ -74,7 +75,7 @@ func parseEventSource(src string) (string, string, error) {
 	return pieces[0], pieces[1], err
 }
 
-func (s *Server) applicationSubscribe(reply string, req *proxy.Request) {
+func (s *Server) applicationSubscribe(ctx context.Context, reply string, req *proxy.Request) {
 	err := s.ari.Application.Subscribe(req.ApplicationSubscribe.Name, req.ApplicationSubscribe.EventSource)
 	if err != nil {
 		s.sendError(reply, err)
@@ -93,12 +94,7 @@ func (s *Server) applicationSubscribe(reply string, req *proxy.Request) {
 	s.sendError(reply, nil)
 }
 
-func (s *Server) applicationUnsubscribe(reply string, req *proxy.Request) {
-	err := s.ari.Application.Subscribe(req.ApplicationSubscribe.Name, req.ApplicationSubscribe.EventSource)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-
-	s.sendError(reply, nil)
+func (s *Server) applicationUnsubscribe(ctx context.Context, reply string, req *proxy.Request) {
+	err := s.ari.Application.Unsubscribe(req.ApplicationSubscribe.Name, req.ApplicationSubscribe.EventSource)
+	s.sendError(reply, err)
 }

@@ -100,7 +100,7 @@ type Request struct {
 	BridgePlay          *BridgePlay
 	BridgeRecord        *BridgeRecord
 	BridgeRemoveChannel *BridgeRemoveChannel
-	//BridgeSubscribe     *BridgeSubscribe
+	BridgeSubscribe     *BridgeSubscribe
 
 	/*
 		ChannelAnswer       *ChannelAnswer
@@ -348,4 +348,13 @@ type BridgeRemoveChannel struct {
 
 	// Channel is the name of the channel to remove
 	Channel string
+}
+
+// BridgeSubscribe describes a request to subscribe a particular ARI application to an EventSource
+type BridgeSubscribe struct {
+	// ApplicationSubscribe is the signature field for this request
+	BridgeSubscribe struct{}
+
+	// ID is the identifier of the bridge
+	ID string
 }

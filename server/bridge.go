@@ -124,8 +124,19 @@ func (s *Server) bridgeRemoveChannel(ctx context.Context, reply string, req *pro
 	s.nats.Publish(reply, Ok)
 }
 
-/*
 func (s *Server) bridgeSubscribe(ctx context.Context, reply string, req *proxy.Request) {
 
+	// check for existence
+	_, err := s.ari.Bridge.Data(req.BridgeSubscribe.ID)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	// bind dialog
+	if req.Metadata.Dialog != "" {
+		s.Dialog.Bind(req.Metadata.Dialog, "bridge", req.BridgeSubscribe.ID)
+	}
+
+	s.sendError(reply, nil)
 }
-*/

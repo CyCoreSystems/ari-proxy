@@ -328,6 +328,9 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 	if req.BridgeRemoveChannel != nil {
 		f = s.bridgeRemoveChannel
 	}
+	if req.BridgeSubscribe != nil {
+		f = s.bridgeSubscribe
+	}
 
 	f(ctx, reply, req)
 }

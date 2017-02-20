@@ -11,6 +11,13 @@ import (
 func (s *Server) bridgeAddChannel(ctx context.Context, reply string, req *proxy.Request) {
 	id := req.BridgeAddChannel.ID
 	channel := req.BridgeAddChannel.Channel
+
+	// bind dialog
+	if req.Metadata.Dialog != "" {
+		s.Dialog.Bind(req.Metadata.Dialog, "bridge", id)
+		s.Dialog.Bind(req.Metadata.Dialog, "channel", channel)
+	}
+
 	err := s.ari.Bridge.AddChannel(id, channel)
 	if err != nil {
 		s.sendError(reply, err)
@@ -23,6 +30,12 @@ func (s *Server) bridgeAddChannel(ctx context.Context, reply string, req *proxy.
 func (s *Server) bridgeCreate(ctx context.Context, reply string, req *proxy.Request) {
 
 	create := req.BridgeCreate.CreateBridgeRequest
+
+	// bind dialog
+	if req.Metadata.Dialog != "" {
+		s.Dialog.Bind(req.Metadata.Dialog, "bridge", create.ID)
+	}
+
 	bh, err := s.ari.Bridge.Create(create.ID, create.Type, create.ID)
 	if err != nil {
 		s.sendError(reply, err)
@@ -47,6 +60,11 @@ func (s *Server) bridgeData(ctx context.Context, reply string, req *proxy.Reques
 }
 
 func (s *Server) bridgeDelete(ctx context.Context, reply string, req *proxy.Request) {
+	// bind dialog
+	if req.Metadata.Dialog != "" {
+		s.Dialog.Bind(req.Metadata.Dialog, "bridge", req.BridgeDelete.ID)
+	}
+
 	err := s.ari.Bridge.Delete(req.BridgeDelete.ID)
 	if err != nil {
 		s.sendError(reply, err)
@@ -74,6 +92,13 @@ func (s *Server) bridgeList(ctx context.Context, reply string, req *proxy.Reques
 func (s *Server) bridgePlay(ctx context.Context, reply string, req *proxy.Request) {
 
 	pr := req.BridgePlay.PlayRequest
+
+	// bind dialog
+	if req.Metadata.Dialog != "" {
+		s.Dialog.Bind(req.Metadata.Dialog, "bridge", req.BridgePlay.ID)
+		s.Dialog.Bind(req.Metadata.Dialog, "playback", pr.PlaybackID)
+	}
+
 	obj, err := s.ari.Bridge.Play(req.BridgePlay.ID, pr.PlaybackID, pr.MediaURI)
 	if err != nil {
 		s.sendError(reply, err)
@@ -101,6 +126,12 @@ func (s *Server) bridgeRecord(ctx context.Context, reply string, req *proxy.Requ
 	opts.Beep = rr.Beep
 	opts.Terminate = rr.TerminateOn
 
+	// bind dialog
+	if req.Metadata.Dialog != "" {
+		s.Dialog.Bind(req.Metadata.Dialog, "bridge", id)
+		s.Dialog.Bind(req.Metadata.Dialog, "recording", rr.Name)
+	}
+
 	obj, err := s.ari.Bridge.Record(id, rr.Name, &opts)
 	if err != nil {
 		s.sendError(reply, err)
@@ -114,6 +145,12 @@ func (s *Server) bridgeRecord(ctx context.Context, reply string, req *proxy.Requ
 func (s *Server) bridgeRemoveChannel(ctx context.Context, reply string, req *proxy.Request) {
 	id := req.BridgeRemoveChannel.ID
 	channel := req.BridgeRemoveChannel.Channel
+
+	// bind dialog
+	if req.Metadata.Dialog != "" {
+		s.Dialog.Bind(req.Metadata.Dialog, "bridge", id)
+		s.Dialog.Bind(req.Metadata.Dialog, "channel", channel) //TODO: do we unbind here? probably not
+	}
 
 	err := s.ari.Bridge.RemoveChannel(id, channel)
 	if err != nil {

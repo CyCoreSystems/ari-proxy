@@ -275,7 +275,7 @@ type BridgeAddChannel struct {
 	BridgeAddChannel struct{}
 
 	// Name is the name of the bridge
-	Name string
+	ID string
 
 	// Channel is the channel to add to the bridge
 	Channel string
@@ -295,8 +295,8 @@ type BridgeData struct {
 	// BridgeData is the signature field for the request
 	BridgeData struct{}
 
-	// Name is the name of the bridge to get
-	Name string
+	// ID is the identifier of the bridge to get
+	ID string
 }
 
 // BridgeDelete is the request type for deleting a bridge
@@ -304,8 +304,8 @@ type BridgeDelete struct {
 	// BridgeDelete is the signature field for the request
 	BridgeDelete struct{}
 
-	// Name is the name of the bridge
-	Name string
+	// ID is the identifier of the bridge
+	ID string
 }
 
 // BridgeList is the request type for listing the bridges
@@ -319,8 +319,8 @@ type BridgePlay struct {
 	// BridgePlay is the signature field for the request
 	BridgePlay struct{}
 
-	// Name is the name of the bridge
-	Name string
+	// ID is the identifier of the bridge
+	ID string
 
 	// PlayRequest is the request for the playing of audio
 	PlayRequest client.PlayRequest
@@ -331,8 +331,8 @@ type BridgeRecord struct {
 	// BridgeRecord is the signature field for this request
 	BridgeRecord struct{}
 
-	// Name is the name of the bridge
-	Name string
+	// ID is the identifier of the bridge
+	ID string
 
 	// RecordRequest is the request for recording audio
 	RecordRequest client.RecordRequest
@@ -343,8 +343,8 @@ type BridgeRemoveChannel struct {
 	// BridgeRemoveChannel is the signature field for this request
 	BridgeRemoveChannel struct{}
 
-	// Name is the name of the bridge
-	Name string
+	// ID is the identifier of the bridge
+	ID string
 
 	// Channel is the name of the channel to remove
 	Channel string

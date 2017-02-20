@@ -9,9 +9,9 @@ import (
 )
 
 func (s *Server) bridgeAddChannel(ctx context.Context, reply string, req *proxy.Request) {
-	name := req.BridgeAddChannel.Name
+	id := req.BridgeAddChannel.ID
 	channel := req.BridgeAddChannel.Channel
-	err := s.ari.Bridge.AddChannel(name, channel)
+	err := s.ari.Bridge.AddChannel(id, channel)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -23,7 +23,7 @@ func (s *Server) bridgeAddChannel(ctx context.Context, reply string, req *proxy.
 func (s *Server) bridgeCreate(ctx context.Context, reply string, req *proxy.Request) {
 
 	create := req.BridgeCreate.CreateBridgeRequest
-	bh, err := s.ari.Bridge.Create(create.ID, create.Type, create.Name)
+	bh, err := s.ari.Bridge.Create(create.ID, create.Type, create.ID)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -37,7 +37,7 @@ func (s *Server) bridgeCreate(ctx context.Context, reply string, req *proxy.Requ
 }
 
 func (s *Server) bridgeData(ctx context.Context, reply string, req *proxy.Request) {
-	bd, err := s.ari.Bridge.Data(req.BridgeData.Name)
+	bd, err := s.ari.Bridge.Data(req.BridgeData.ID)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -47,7 +47,7 @@ func (s *Server) bridgeData(ctx context.Context, reply string, req *proxy.Reques
 }
 
 func (s *Server) bridgeDelete(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Bridge.Delete(req.BridgeDelete.Name)
+	err := s.ari.Bridge.Delete(req.BridgeDelete.ID)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -74,7 +74,7 @@ func (s *Server) bridgeList(ctx context.Context, reply string, req *proxy.Reques
 func (s *Server) bridgePlay(ctx context.Context, reply string, req *proxy.Request) {
 
 	pr := req.BridgePlay.PlayRequest
-	obj, err := s.ari.Bridge.Play(req.BridgePlay.Name, pr.PlaybackID, pr.MediaURI)
+	obj, err := s.ari.Bridge.Play(req.BridgePlay.ID, pr.PlaybackID, pr.MediaURI)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -87,7 +87,7 @@ func (s *Server) bridgePlay(ctx context.Context, reply string, req *proxy.Reques
 func (s *Server) bridgeRecord(ctx context.Context, reply string, req *proxy.Request) {
 
 	rr := req.BridgeRecord.RecordRequest
-	name := req.BridgeRecord.Name
+	id := req.BridgeRecord.ID
 
 	//TODO: evaluate whether this is needed
 	//ins.server.cache.Add(rr.Name, ins)
@@ -101,7 +101,7 @@ func (s *Server) bridgeRecord(ctx context.Context, reply string, req *proxy.Requ
 	opts.Beep = rr.Beep
 	opts.Terminate = rr.TerminateOn
 
-	obj, err := s.ari.Bridge.Record(name, rr.Name, &opts)
+	obj, err := s.ari.Bridge.Record(id, rr.Name, &opts)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -112,10 +112,10 @@ func (s *Server) bridgeRecord(ctx context.Context, reply string, req *proxy.Requ
 }
 
 func (s *Server) bridgeRemoveChannel(ctx context.Context, reply string, req *proxy.Request) {
-	name := req.BridgeRemoveChannel.Name
+	id := req.BridgeRemoveChannel.ID
 	channel := req.BridgeRemoveChannel.Channel
 
-	err := s.ari.Bridge.RemoveChannel(name, channel)
+	err := s.ari.Bridge.RemoveChannel(id, channel)
 	if err != nil {
 		s.sendError(reply, err)
 		return

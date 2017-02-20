@@ -1,118 +1,131 @@
 package ariproxy
 
-/*
-func (ins *Instance) bridge() {
+import (
+	"context"
+	"time"
 
-	ins.subscribe("ari.bridges.all", func(msg *session.Message, reply Reply) {
+	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari-proxy/proxy"
+)
 
-		bx, err := ins.upstream.Bridge.List()
-		if err != nil {
-			reply(nil, err)
-			return
-		}
-
-		var bridges []string
-		for _, bridge := range bx {
-			bridges = append(bridges, bridge.ID())
-		}
-
-		reply(bridges, nil)
-	})
-
-	ins.subscribe("ari.bridges.data", func(msg *session.Message, reply Reply) {
-		name := msg.Object
-		bd, err := ins.upstream.Bridge.Data(name)
-		reply(&bd, err)
+func (s *Server) bridgeAddChannel(ctx context.Context, reply string, req *proxy.Request) {
+	name := req.BridgeAddChannel.Name
+	channel := req.BridgeAddChannel.Channel
+	err := s.ari.Bridge.AddChannel(name, channel)
+	if err != nil {
+		s.sendError(reply, err)
 		return
-	})
+	}
 
-	ins.subscribe("ari.bridges.create", func(msg *session.Message, reply Reply) {
+	s.nats.Publish(reply, Ok)
+}
 
-		var req client.CreateBridgeRequest
-		if err := json.Unmarshal(msg.Payload, &req); err != nil {
-			reply(nil, &decodingError{msg.Command, err})
-			return
-		}
+func (s *Server) bridgeCreate(ctx context.Context, reply string, req *proxy.Request) {
 
-		bh, err := ins.upstream.Bridge.Create(req.ID, req.Type, req.Name)
+	create := req.BridgeCreate.CreateBridgeRequest
+	bh, err := s.ari.Bridge.Create(create.ID, create.Type, create.Name)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
 
-		if err != nil {
-			reply(nil, err)
-			return
-		}
+	//TODO: evaluate how to perform this
+	// and if we need it
+	//s.cache.Add(create.ID, ins)
 
-		ins.server.cache.Add(req.ID, ins)
+	s.nats.Publish(reply, bh.ID())
+}
 
-		reply(bh.ID(), err)
-	})
+func (s *Server) bridgeData(ctx context.Context, reply string, req *proxy.Request) {
+	bd, err := s.ari.Bridge.Data(req.BridgeData.Name)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
 
-	ins.subscribe("ari.bridges.addChannel", func(msg *session.Message, reply Reply) {
-		name := msg.Object
+	s.nats.Publish(reply, &bd)
+}
 
-		var channelID string
-		if err := json.Unmarshal(msg.Payload, &channelID); err != nil {
-			reply(nil, &decodingError{msg.Command, err})
-			return
-		}
+func (s *Server) bridgeDelete(ctx context.Context, reply string, req *proxy.Request) {
+	err := s.ari.Bridge.Delete(req.BridgeDelete.Name)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
 
-		err := ins.upstream.Bridge.AddChannel(name, channelID)
-		reply(nil, err)
-	})
+	s.nats.Publish(reply, Ok)
+}
 
-	ins.subscribe("ari.bridges.removeChannel", func(msg *session.Message, reply Reply) {
-		name := msg.Object
+func (s *Server) bridgeList(ctx context.Context, reply string, req *proxy.Request) {
+	bx, err := s.ari.Bridge.List()
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
 
-		var channelID string
-		if err := json.Unmarshal(msg.Payload, &channelID); err != nil {
-			reply(nil, &decodingError{msg.Command, err})
-			return
-		}
+	var bridges []string
+	for _, bridge := range bx {
+		bridges = append(bridges, bridge.ID())
+	}
 
-		err := ins.upstream.Bridge.RemoveChannel(name, channelID)
-		reply(nil, err)
-	})
+	s.nats.Publish(reply, &bridges)
+}
 
-	ins.subscribe("ari.bridges.delete", func(msg *session.Message, reply Reply) {
-		name := msg.Object
-		err := ins.upstream.Bridge.Delete(name)
-		reply(nil, err)
-	})
+func (s *Server) bridgePlay(ctx context.Context, reply string, req *proxy.Request) {
 
-	ins.subscribe("ari.bridges.play", func(msg *session.Message, reply Reply) {
-		name := msg.Object
+	pr := req.BridgePlay.PlayRequest
+	obj, err := s.ari.Bridge.Play(req.BridgePlay.Name, pr.PlaybackID, pr.MediaURI)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
 
-		var pr client.PlayRequest
-		if err := json.Unmarshal(msg.Payload, &pr); err != nil {
-			reply(nil, &decodingError{msg.Command, err})
-			return
-		}
+	//NOTE: this originally returned a nil
+	s.nats.Publish(reply, &obj)
+}
 
-		_, err := ins.upstream.Bridge.Play(name, pr.PlaybackID, pr.MediaURI)
-		reply(nil, err)
-	})
+func (s *Server) bridgeRecord(ctx context.Context, reply string, req *proxy.Request) {
 
-	ins.subscribe("ari.bridges.record", func(msg *session.Message, reply Reply) {
-		name := msg.Object
+	rr := req.BridgeRecord.RecordRequest
+	name := req.BridgeRecord.Name
 
-		var rr client.RecordRequest
-		if err := json.Unmarshal(msg.Payload, &rr); err != nil {
-			reply(nil, &decodingError{msg.Command, err})
-			return
-		}
+	//TODO: evaluate whether this is needed
+	//ins.server.cache.Add(rr.Name, ins)
 
-		ins.server.cache.Add(rr.Name, ins)
+	var opts ari.RecordingOptions
 
-		var opts ari.RecordingOptions
+	opts.Format = rr.Format
+	opts.MaxDuration = time.Duration(rr.MaxDuration) * time.Second
+	opts.MaxSilence = time.Duration(rr.MaxSilence) * time.Second
+	opts.Exists = rr.IfExists
+	opts.Beep = rr.Beep
+	opts.Terminate = rr.TerminateOn
 
-		opts.Format = rr.Format
-		opts.MaxDuration = time.Duration(rr.MaxDuration) * time.Second
-		opts.MaxSilence = time.Duration(rr.MaxSilence) * time.Second
-		opts.Exists = rr.IfExists
-		opts.Beep = rr.Beep
-		opts.Terminate = rr.TerminateOn
+	obj, err := s.ari.Bridge.Record(name, rr.Name, &opts)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
 
-		_, err := ins.upstream.Bridge.Record(name, rr.Name, &opts)
-		reply(nil, err)
-	})
+	//NOTE: this originally returned a nil
+	s.nats.Publish(reply, &obj)
+}
+
+func (s *Server) bridgeRemoveChannel(ctx context.Context, reply string, req *proxy.Request) {
+	name := req.BridgeRemoveChannel.Name
+	channel := req.BridgeRemoveChannel.Channel
+
+	err := s.ari.Bridge.RemoveChannel(name, channel)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	s.nats.Publish(reply, Ok)
+}
+
+/*
+func (s *Server) bridgeSubscribe(ctx context.Context, reply string, req *proxy.Request) {
+
 }
 */

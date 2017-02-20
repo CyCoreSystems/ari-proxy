@@ -307,6 +307,28 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		}
 	}
 
+	if req.BridgeAddChannel != nil {
+		f = s.bridgeAddChannel
+	}
+	if req.BridgeCreate != nil {
+		f = s.bridgeCreate
+	}
+	if req.BridgeData != nil {
+		f = s.bridgeData
+	}
+	if req.BridgeList != nil {
+		f = s.bridgeList
+	}
+	if req.BridgePlay != nil {
+		f = s.bridgePlay
+	}
+	if req.BridgeRecord != nil {
+		f = s.bridgeRecord
+	}
+	if req.BridgeRemoveChannel != nil {
+		f = s.bridgeRemoveChannel
+	}
+
 	f(ctx, reply, req)
 }
 

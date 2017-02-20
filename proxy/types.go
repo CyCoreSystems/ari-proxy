@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari-proxy/client"
 )
 
 // AnnouncementInterval is the amount of time to wait between periodic service availability announcements
@@ -91,17 +92,17 @@ type Request struct {
 	//AsteriskLogging      *AsteriskLogging
 	//AsteriskModules      *AsteriskModules
 
-	/*
-		BridgeAddChannel    *BridgeAddChannel
-		BridgeCreate        *BridgeCreate
-		BridgeData          *BridgeData
-		BridgeDelete        *BridgeDelete
-		BridgeList          *BridgeList
-		BridgePlay          *BridgePlay
-		BridgeRecord        *BridgeRecord
-		BridgeRemoveChannel *BridgeRemoveChannel
-		BridgeSubscribe     *BridgeSubscribe
+	BridgeAddChannel    *BridgeAddChannel
+	BridgeCreate        *BridgeCreate
+	BridgeData          *BridgeData
+	BridgeDelete        *BridgeDelete
+	BridgeList          *BridgeList
+	BridgePlay          *BridgePlay
+	BridgeRecord        *BridgeRecord
+	BridgeRemoveChannel *BridgeRemoveChannel
+	//BridgeSubscribe     *BridgeSubscribe
 
+	/*
 		ChannelAnswer       *ChannelAnswer
 		ChannelBusy         *ChannelBusy
 		ChannelCongestion   *ChannelCongestion
@@ -266,4 +267,85 @@ type AsteriskVariablesSet struct {
 
 	// Value is the value to set
 	Value string
+}
+
+// BridgeAddChannel is the request type for adding a channel to a bridge
+type BridgeAddChannel struct {
+	// BridgeAddChannel is the signature field for this request
+	BridgeAddChannel struct{}
+
+	// Name is the name of the bridge
+	Name string
+
+	// Channel is the channel to add to the bridge
+	Channel string
+}
+
+// BridgeCreate is the request type for creating a bridge
+type BridgeCreate struct {
+	// BridgeCreate is the signature field for the request
+	BridgeCreate struct{}
+
+	// ID is the id of the bridge
+	CreateBridgeRequest client.CreateBridgeRequest
+}
+
+// BridgeData is the request type for getting the bridge data
+type BridgeData struct {
+	// BridgeData is the signature field for the request
+	BridgeData struct{}
+
+	// Name is the name of the bridge to get
+	Name string
+}
+
+// BridgeDelete is the request type for deleting a bridge
+type BridgeDelete struct {
+	// BridgeDelete is the signature field for the request
+	BridgeDelete struct{}
+
+	// Name is the name of the bridge
+	Name string
+}
+
+// BridgeList is the request type for listing the bridges
+type BridgeList struct {
+	// BridgeList is the signature field for the request
+	BridgeList struct{}
+}
+
+// BridgePlay is the request type for playing audio on the bridge
+type BridgePlay struct {
+	// BridgePlay is the signature field for the request
+	BridgePlay struct{}
+
+	// Name is the name of the bridge
+	Name string
+
+	// PlayRequest is the request for the playing of audio
+	PlayRequest client.PlayRequest
+}
+
+// BridgeRecord is the request for recording a bridge
+type BridgeRecord struct {
+	// BridgeRecord is the signature field for this request
+	BridgeRecord struct{}
+
+	// Name is the name of the bridge
+	Name string
+
+	// RecordRequest is the request for recording audio
+	RecordRequest client.RecordRequest
+}
+
+// BridgeRemoveChannel is the request for removing a channel on the bridge
+type BridgeRemoveChannel struct {
+	// BridgeRemoveChannel is the signature field for this request
+	BridgeRemoveChannel struct{}
+
+	// Name is the name of the bridge
+	Name string
+
+	// Channel is the name of the channel to remove
+	Channel string
 }

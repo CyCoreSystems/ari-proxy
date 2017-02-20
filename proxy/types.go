@@ -143,12 +143,12 @@ type Request struct {
 	MailboxList   *MailboxList
 	MailboxUpdate *MailboxUpdate
 
-	/*
-	   PlaybackControl   *PlaybackControl
-	   PlaybackData      *PlaybackData
-	   PlaybackStop      *PlaybackStop
-	   PlaybackSubscribe *PlaybackSubscribe
+	PlaybackControl   *PlaybackControl
+	PlaybackData      *PlaybackData
+	PlaybackStop      *PlaybackStop
+	PlaybackSubscribe *PlaybackSubscribe
 
+	/*
 	   RecordingStoredCopy   *RecordingStoredCopy
 	   RecordingStoredData   *RecordingStoredData
 	   RecordingStoredDelete *RecordingStoredDelete
@@ -738,4 +738,43 @@ type MailboxUpdate struct {
 
 	// Old ??? TODO
 	Old int
+}
+
+//PlaybackControl TODO
+type PlaybackControl struct {
+	// PlaybackControl is the signature type for this request
+	PlaybackControl struct{}
+
+	// ID is the playback identifier
+	ID string
+
+	// Command is the playback control command to run
+	Command string
+}
+
+//PlaybackData TODO
+type PlaybackData struct {
+	// PlaybackData is the signature type for this request
+	PlaybackData struct{}
+
+	// ID is the playback identifier
+	ID string
+}
+
+//PlaybackStop TODO
+type PlaybackStop struct {
+	// PlaybackStop is the signature type for this request
+	PlaybackStop struct{}
+
+	// ID is the playback identifier
+	ID string
+}
+
+//PlaybackSubscribe TODO
+type PlaybackSubscribe struct {
+	// PlaybackSubscribe is the signature type for this request
+	PlaybackSubscribe struct{}
+
+	// ID is the playback identifier
+	ID string
 }

@@ -449,6 +449,19 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		f = s.mailboxUpdate
 	}
 
+	if req.PlaybackControl != nil {
+		f = s.playbackControl
+	}
+	if req.PlaybackData != nil {
+		f = s.playbackData
+	}
+	if req.PlaybackStop != nil {
+		f = s.playbackStop
+	}
+	if req.PlaybackSubscribe != nil {
+		f = s.playbackSubscribe
+	}
+
 	f(ctx, reply, req)
 }
 

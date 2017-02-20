@@ -187,6 +187,9 @@ func (s *Server) listen(ctx context.Context) error {
 	// Run the periodic announcer
 	go s.runAnnouncer(ctx)
 
+	// Run the event handler
+	go s.runEventHandler(ctx)
+
 	// TODO: run the dialog cleanup routine (remove bindings for entities which no longer exist)
 	//go s.runDialogCleaner(ctx)
 
@@ -221,6 +224,34 @@ func (s *Server) announce() {
 		Asterisk:    s.AsteriskID,
 		Application: s.Application,
 	})
+}
+
+// runEventHandler processes events which are received from ARI
+func (s *Server) runEventHandler(ctx context.Context) {
+	sub := s.ari.Bus.Subscribe(ari.Events.All)
+	defer sub.Cancel()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case e := <-sub.Events():
+			pubEvent := proxy.Event{
+				Metadata: s.Metadata(""),
+				Event:    e,
+			}
+
+			// Publish event to canonical destination
+			s.nats.Publish(fmt.Sprintf("%sevent.%s.%s", s.NATSPrefix, s.Application, s.AsteriskID), &pubEvent)
+
+			// Publish event to any associated dialogs
+			for _, d := range s.dialogsForEvent(e) {
+				dlgEvent := pubEvent
+				dlgEvent.Metadata = s.Metadata(d)
+				s.nats.Publish(fmt.Sprintf("%sdialogevent.%s", s.NATSPrefix, d), &dlgEvent)
+			}
+		}
+	}
 }
 
 // pingHandler publishes the server's presence

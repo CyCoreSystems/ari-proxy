@@ -102,10 +102,10 @@ type Request struct {
 	BridgeRemoveChannel *BridgeRemoveChannel
 	BridgeSubscribe     *BridgeSubscribe
 
+	ChannelAnswer     *ChannelAnswer
+	ChannelBusy       *ChannelBusy
+	ChannelCongestion *ChannelCongestion
 	/*
-		ChannelAnswer       *ChannelAnswer
-		ChannelBusy         *ChannelBusy
-		ChannelCongestion   *ChannelCongestion
 		ChannelCreate       *ChannelCreate
 		ChannelDataContinue *ChannelDataContinue
 		ChannelDial         *ChannelDial
@@ -356,5 +356,32 @@ type BridgeSubscribe struct {
 	BridgeSubscribe struct{}
 
 	// ID is the identifier of the bridge
+	ID string
+}
+
+// ChannelAnswer describes a request to answer a channel
+type ChannelAnswer struct {
+	// ChannelAnswer is the signature field for the request
+	ChannelAnswer struct{}
+
+	// ID is the identifier for the channel
+	ID string
+}
+
+// ChannelBusy describes a request to send a busy signal to a channel
+type ChannelBusy struct {
+	// ChannelBusy is the signature field for the request
+	ChannelBusy struct{}
+
+	// ID is the identifier for the channel
+	ID string
+}
+
+// ChannelCongestion describes a request to send a congestion signal to a channel
+type ChannelCongestion struct {
+	// ChannelCongestion is the signature field for the request
+	ChannelCongestion struct{}
+
+	// ID is the identifier for the channel
 	ID string
 }

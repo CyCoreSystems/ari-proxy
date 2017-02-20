@@ -328,6 +328,16 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		f = s.bridgeSubscribe
 	}
 
+	if req.ChannelAnswer != nil {
+		f = s.channelAnswer
+	}
+	if req.ChannelBusy != nil {
+		f = s.channelBusy
+	}
+	if req.ChannelCongestion != nil {
+		f = s.channelCongestion
+	}
+
 	f(ctx, reply, req)
 }
 

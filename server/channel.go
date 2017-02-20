@@ -1,5 +1,128 @@
 package ariproxy
 
+import (
+	"context"
+
+	"github.com/CyCoreSystems/ari-proxy/proxy"
+)
+
+func (s *Server) channelAnswer(ctx context.Context, reply string, req *proxy.Request) {
+	ID := req.ChannelAnswer.ID
+	err := s.ari.Channel.Answer(ID)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	s.sendError(reply, nil)
+}
+
+func (s *Server) channelBusy(ctx context.Context, reply string, req *proxy.Request) {
+	ID := req.ChannelBusy.ID
+	err := s.ari.Channel.Busy(ID)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	s.sendError(reply, nil)
+}
+
+func (s *Server) channelCongestion(ctx context.Context, reply string, req *proxy.Request) {
+	ID := req.ChannelBusy.ID
+	err := s.ari.Channel.Congestion(ID)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	s.sendError(reply, nil)
+}
+
+func (s *Server) channelCreate(ctx context.Context, reply string, req *proxy.Request) {
+
+}
+
+func (s *Server) channelDataContinue(ctx context.Context, reply string, req *proxy.Request) {
+
+}
+
+func (s *Server) channelDial(ctx context.Context, reply string, req *proxy.Request) {
+
+}
+
+func (s *Server) channelHangup(ctx context.Context, reply string, req *proxy.Request) {
+
+}
+
+func (s *Server) channelHold(ctx context.Context, reply string, req *proxy.Request) {
+
+}
+
+func (s *Server) channelList(ctx context.Context, reply string, req *proxy.Request) {
+
+}
+
+func (s *Server) channelMOH(ctx context.Context, reply string, req *proxy.Request) {
+
+}
+
+func (s *Server) channelMute(ctx context.Context, reply string, req *proxy.Request) {
+
+}
+
+func (s *Server) channelOriginate(ctx context.Context, reply string, req *proxy.Request) {
+
+}
+
+func (s *Server) channelPlay(ctx context.Context, reply string, req *proxy.Request) {
+
+}
+
+func (s *Server) channelRecord(ctx context.Context, reply string, req *proxy.Request) {
+
+}
+
+func (s *Server) channeRing(ctx context.Context, reply string, req *proxy.Request) {
+
+}
+
+func (s *Server) channelSendDTMF(ctx context.Context, reply string, req *proxy.Request) {
+
+}
+
+func (s *Server) channelSilence(ctx context.Context, reply string, req *proxy.Request) {
+
+}
+
+func (s *Server) channelSnoop(ctx context.Context, reply string, req *proxy.Request) {
+
+}
+
+func (s *Server) channelStopHold(ctx context.Context, reply string, req *proxy.Request) {
+
+}
+
+func (s *Server) channelStopMOH(ctx context.Context, reply string, req *proxy.Request) {
+
+}
+
+func (s *Server) channelStopRing(ctx context.Context, reply string, req *proxy.Request) {
+
+}
+
+func (s *Server) channelStopSilence(ctx context.Context, reply string, req *proxy.Request) {
+
+}
+
+func (s *Server) channelSubscribe(ctx context.Context, reply string, req *proxy.Request) {
+
+}
+
+func (s *Server) channelUnmute(ctx context.Context, reply string, req *proxy.Request) {
+
+}
+
 /*
 func (ins *Instance) channel() {
 

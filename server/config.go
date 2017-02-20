@@ -1,51 +1,53 @@
 package ariproxy
 
-/*
-func (ins *Instance) config() {
-	ins.subscribe("ari.asterisk.config.data", func(msg *session.Message, reply Reply) {
-		name := msg.Object
+import (
+	"context"
 
-		items := strings.Split(name, ".")
-		if len(items) != 3 {
-			reply(nil, errors.New("Malformed config ID in request"))
-			return
-		}
+	"github.com/CyCoreSystems/ari-proxy/proxy"
+)
 
-		cd, err := ins.upstream.Asterisk.Config().Data(items[0], items[1], items[2])
-		reply(&cd.Fields, err)
-	})
+func (s *Server) asteriskConfigData(ctx context.Context, reply string, req *proxy.Request) {
 
-	ins.subscribe("ari.asterisk.config.delete", func(msg *session.Message, reply Reply) {
-		name := msg.Object
+	cd, err := s.ari.Asterisk.Config().Data(
+		req.AsteriskConfig.ConfigClass,
+		req.AsteriskConfig.ObjectType,
+		req.AsteriskConfig.ID,
+	)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
 
-		items := strings.Split(name, ".")
-		if len(items) != 3 {
-			reply(nil, errors.New("Malformed config ID in request"))
-			return
-		}
-
-		err := ins.upstream.Asterisk.Config().Delete(items[0], items[1], items[2])
-		reply(nil, err)
-	})
-
-	ins.subscribe("ari.asterisk.config.update", func(msg *session.Message, reply Reply) {
-		name := msg.Object
-
-		items := strings.Split(name, ".")
-		if len(items) != 3 {
-			reply(nil, errors.New("Malformed config ID in request"))
-			return
-		}
-
-		var fl []ari.ConfigTuple
-		if err := json.Unmarshal(msg.Payload, &fl); err != nil {
-			reply(nil, &decodingError{msg.Command, err})
-			return
-		}
-
-		err := ins.upstream.Asterisk.Config().Update(items[0], items[1], items[2], fl)
-		reply(nil, err)
-	})
-
+	s.nats.Publish(reply, &cd)
 }
-*/
+
+func (s *Server) asteriskConfigDelete(ctx context.Context, reply string, req *proxy.Request) {
+
+	err := s.ari.Asterisk.Config().Delete(
+		req.AsteriskConfig.ConfigClass,
+		req.AsteriskConfig.ObjectType,
+		req.AsteriskConfig.ID,
+	)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	s.sendError(reply, nil)
+}
+
+func (s *Server) asteriskConfigUpdate(ctx context.Context, reply string, req *proxy.Request) {
+
+	err := s.ari.Asterisk.Config().Update(
+		req.AsteriskConfig.ConfigClass,
+		req.AsteriskConfig.ObjectType,
+		req.AsteriskConfig.ID,
+		req.AsteriskConfig.Update.Tuples,
+	)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	s.sendError(reply, nil)
+}

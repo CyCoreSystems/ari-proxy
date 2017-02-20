@@ -88,7 +88,7 @@ type Request struct {
 	AsteriskInfo         *AsteriskInfo
 	AsteriskReloadModule *AsteriskReloadModule
 	AsteriskVariables    *AsteriskVariables
-	//AsteriskConfig       *AsteriskConfig
+	AsteriskConfig       *AsteriskConfig
 	//AsteriskLogging      *AsteriskLogging
 	//AsteriskModules      *AsteriskModules
 
@@ -904,4 +904,49 @@ type SoundList struct {
 
 	// Filters are the filters to apply when listing the sounds
 	Filters map[string]string
+}
+
+// AsteriskConfig describes the requests for asterisk configuration
+type AsteriskConfig struct {
+	// AsteriskConfig is the signature type for this request
+	AsteriskConfig struct{}
+
+	// ConfigClass is the class of the configuration
+	ConfigClass string
+
+	// ObjectType is the type of the configuration object
+	ObjectType string
+
+	// ID is the configuration identifier
+	ID string
+
+	// Data is the asterisk config get data request
+	Data *AsteriskConfigData
+
+	// Delete is the asterisk delete config request
+	Delete *AsteriskConfigDelete
+
+	// Update is the asterisk update config request
+	Update *AsteriskConfigUpdate
+}
+
+// AsteriskConfigData describes the request for getting asterisk configuration data
+type AsteriskConfigData struct {
+	// AsteriskConfigData is the signature type for this request
+	AsteriskConfigData struct{}
+}
+
+// AsteriskConfigUpdate describes the request for updating asterisk configuration data
+type AsteriskConfigUpdate struct {
+	// AsteriskConfigUpdate is the signature type for this request
+	AsteriskConfigUpdate struct{}
+
+	// Tuples is the list of configuration tuples to update
+	Tuples []ari.ConfigTuple
+}
+
+// AsteriskConfigDelete describes the request for deleting asterisk configuration data
+type AsteriskConfigDelete struct {
+	// AsteriskConfigDelete is the signature type for this request
+	AsteriskConfigDelete struct{}
 }

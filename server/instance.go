@@ -507,6 +507,20 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		f = s.soundList
 	}
 
+	if req.AsteriskConfig != nil {
+		if req.AsteriskConfig.Data != nil {
+			f = s.asteriskConfigData
+		}
+
+		if req.AsteriskConfig.Delete != nil {
+			f = s.asteriskConfigDelete
+		}
+
+		if req.AsteriskConfig.Update != nil {
+			f = s.asteriskConfigUpdate
+		}
+	}
+
 	f(ctx, reply, req)
 }
 

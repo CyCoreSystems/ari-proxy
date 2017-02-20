@@ -1,11 +1,6 @@
 package ariproxy
 
-import (
-	"encoding/json"
-
-	"github.com/CyCoreSystems/ari-proxy/session"
-)
-
+/*
 func (ins *Instance) playback() {
 
 	ins.subscribe("ari.playback.data", func(msg *session.Message, reply Reply) {
@@ -34,3 +29,4 @@ func (ins *Instance) playback() {
 	})
 
 }
+*/

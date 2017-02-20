@@ -1,11 +1,6 @@
 package ariproxy
 
-import (
-	"encoding/json"
-
-	"github.com/CyCoreSystems/ari-proxy/session"
-)
-
+/*
 func (ins *Instance) storedRecording() {
 	ins.subscribe("ari.recording.stored.all", func(msg *session.Message, reply Reply) {
 		handles, err := ins.upstream.Recording.Stored.List()
@@ -48,3 +43,4 @@ func (ins *Instance) storedRecording() {
 	})
 
 }
+*/

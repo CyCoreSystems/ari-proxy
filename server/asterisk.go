@@ -1,11 +1,6 @@
 package ariproxy
 
-import (
-	"encoding/json"
-
-	"github.com/CyCoreSystems/ari-proxy/session"
-)
-
+/*
 func (ins *Instance) asterisk() {
 
 	ins.subscribe("ari.asterisk.reload", func(msg *session.Message, reply Reply) {
@@ -35,3 +30,4 @@ func (ins *Instance) asterisk() {
 	})
 
 }
+*/

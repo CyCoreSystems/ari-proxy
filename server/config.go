@@ -1,14 +1,6 @@
 package ariproxy
 
-import (
-	"encoding/json"
-	"errors"
-	"strings"
-
-	"github.com/CyCoreSystems/ari"
-	"github.com/CyCoreSystems/ari-proxy/session"
-)
-
+/*
 func (ins *Instance) config() {
 	ins.subscribe("ari.asterisk.config.data", func(msg *session.Message, reply Reply) {
 		name := msg.Object
@@ -56,3 +48,4 @@ func (ins *Instance) config() {
 	})
 
 }
+*/

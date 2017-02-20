@@ -8,7 +8,6 @@ import (
 	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/proxy"
 	"github.com/CyCoreSystems/ari-proxy/server/dialog"
-	"github.com/CyCoreSystems/ari-proxy/session"
 	"github.com/CyCoreSystems/ari/client/native"
 	"github.com/nats-io/nats"
 	"github.com/pkg/errors"
@@ -24,7 +23,7 @@ var Log log15.Logger
 func init() {
 	// Set up default (no-op) logger
 	Log = log15.New()
-	Log.SetHandler(log.DiscardHandler())
+	Log.SetHandler(log15.DiscardHandler())
 }
 
 // Server describes the asterisk-facing ARI proxy server
@@ -76,7 +75,7 @@ func (s *Server) Listen(ctx context.Context, ariOpts native.Options, natsURI str
 	defer s.ari.Close()
 
 	// Connect to NATS
-	nc, err := nats.Connect(url)
+	nc, err := nats.Connect(natsURI)
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to NATS")
 	}
@@ -97,7 +96,7 @@ func (s *Server) ListenOn(ctx context.Context, a *ari.Client, n *nats.EncodedCon
 	s.ari = a
 	s.nats = n
 
-	s.listen(ctx)
+	return s.listen(ctx)
 }
 
 // Ready returns a channel which is closed when the Server is ready
@@ -188,6 +187,9 @@ func (s *Server) listen(ctx context.Context) error {
 	// Run the periodic announcer
 	go s.runAnnouncer(ctx)
 
+	// TODO: run the dialog cleanup routine (remove bindings for entities which no longer exist)
+	//go s.runDialogCleaner(ctx)
+
 	// Close the readyChannel to indicate that we are operational
 	if s.readyCh != nil {
 		close(s.readyCh)
@@ -222,18 +224,17 @@ func (s *Server) announce() {
 }
 
 // pingHandler publishes the server's presence
-func (s *Server) pingHandler(m *Msg) {
+func (s *Server) pingHandler(m *nats.Msg) {
 	s.announce()
 }
 
 func (s *Server) requestHandler(subject string, reply string, req *proxy.Request) {
-	go s.dispatchRequest(req, reply)
+	go s.dispatchRequest(reply, req)
 }
 
 func (s *Server) dispatchRequest(reply string, req *proxy.Request) {
-	var f func(string, *proxy.Request)
 	f := func(reply string, req *proxy.Request) {
-		s.nats.Publish(reply, &proxy.ErrorResponse{Error: "Not implemented"})
+		s.sendError(reply, errors.New("Not implemented"))
 	}
 
 	if req.ApplicationList != nil {
@@ -249,7 +250,7 @@ func (s *Server) dispatchRequest(reply string, req *proxy.Request) {
 		f = s.applicationUnsubscribe
 	}
 
-	return f(reply, req)
+	f(reply, req)
 }
 
 func (s *Server) sendError(reply string, err error) {
@@ -257,7 +258,7 @@ func (s *Server) sendError(reply string, err error) {
 }
 
 func (s *Server) sendNotFound(reply string) {
-	s.nats.Publish(reply, proxy.NewErrorResponse(ErrNotFound))
+	s.nats.Publish(reply, proxy.NewErrorResponse(proxy.ErrNotFound))
 }
 
 // Metadata returns the metadata for this server.  The dialog parameter is
@@ -270,18 +271,7 @@ func (s *Server) Metadata(dialog string) *proxy.Metadata {
 	}
 }
 
-func (s *Server) newInstance(id string, transport session.Transport) *Instance {
-	return &Instance{
-		Dialog:     session.NewDialog(id, transport),
-		readyCh:    make(chan struct{}),
-		server:     srv,
-		upstream:   srv.upstream,
-		conn:       srv.conn,
-		log:        srv.log.New("dialog", id),
-		dispatcher: make(map[string]Handler2),
-	}
-}
-
+/*
 // Start runs the server side instance
 func (i *Instance) Start(ctx context.Context) {
 	i.ctx, i.cancel = context.WithCancel(ctx)
@@ -325,3 +315,4 @@ func (i *Instance) Stop() {
 func (i *Instance) String() string {
 	return fmt.Sprintf("Instance{%s}", i.Dialog.ID)
 }
+*/

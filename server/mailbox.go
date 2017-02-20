@@ -1,11 +1,6 @@
 package ariproxy
 
-import (
-	"encoding/json"
-
-	"github.com/CyCoreSystems/ari-proxy/session"
-)
-
+/*
 func (ins *Instance) mailbox() {
 	ins.subscribe("ari.mailboxes.all", func(msg *session.Message, reply Reply) {
 		mx, err := ins.upstream.Mailbox.List()
@@ -53,3 +48,4 @@ func (ins *Instance) mailbox() {
 	})
 
 }
+*/

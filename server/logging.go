@@ -1,11 +1,6 @@
 package ariproxy
 
-import (
-	"encoding/json"
-
-	"github.com/CyCoreSystems/ari-proxy/session"
-)
-
+/*
 func (ins *Instance) logging() {
 	ins.subscribe("ari.logging.create", func(msg *session.Message, reply Reply) {
 		name := msg.Object
@@ -39,3 +34,4 @@ func (ins *Instance) logging() {
 	})
 
 }
+*/

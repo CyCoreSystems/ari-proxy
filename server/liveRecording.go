@@ -1,7 +1,6 @@
 package ariproxy
 
-import "github.com/CyCoreSystems/ari-proxy/session"
-
+/*
 func (ins *Instance) liveRecording() {
 	ins.subscribe("ari.recording.live.data", func(msg *session.Message, reply Reply) {
 		name := msg.Object
@@ -52,3 +51,4 @@ func (ins *Instance) liveRecording() {
 	})
 
 }
+*/

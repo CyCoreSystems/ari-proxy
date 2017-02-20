@@ -1,11 +1,6 @@
 package ariproxy
 
-import (
-	"encoding/json"
-
-	"github.com/CyCoreSystems/ari-proxy/session"
-)
-
+/*
 func (ins *Instance) sound() {
 	ins.subscribe("ari.sounds.all", func(msg *session.Message, reply Reply) {
 
@@ -40,3 +35,4 @@ func (ins *Instance) sound() {
 	})
 
 }
+*/

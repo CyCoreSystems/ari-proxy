@@ -1,14 +1,6 @@
 package ariproxy
 
-import (
-	"encoding/json"
-	"time"
-
-	"github.com/CyCoreSystems/ari"
-	"github.com/CyCoreSystems/ari-proxy/client"
-	"github.com/CyCoreSystems/ari-proxy/session"
-)
-
+/*
 func (ins *Instance) bridge() {
 
 	ins.subscribe("ari.bridges.all", func(msg *session.Message, reply Reply) {
@@ -123,3 +115,4 @@ func (ins *Instance) bridge() {
 		reply(nil, err)
 	})
 }
+*/

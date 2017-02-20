@@ -1,14 +1,6 @@
 package ariproxy
 
-import (
-	"encoding/json"
-	"errors"
-
-	"github.com/CyCoreSystems/ari-proxy/client"
-	"github.com/CyCoreSystems/ari-proxy/session"
-	"github.com/nats-io/nats"
-)
-
+/*
 func (ins *Instance) subscribe(endpoint string, h Handler2) {
 	ins.log.Debug("Registering command", "endpoint", endpoint)
 	ins.dispatcherLock.Lock()
@@ -92,3 +84,4 @@ func (ins *Instance) commands() {
 		sub.Unsubscribe()
 	}()
 }
+*/

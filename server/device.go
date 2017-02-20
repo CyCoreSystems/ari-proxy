@@ -1,11 +1,6 @@
 package ariproxy
 
-import (
-	"encoding/json"
-
-	"github.com/CyCoreSystems/ari-proxy/session"
-)
-
+/*
 func (ins *Instance) device() {
 	ins.subscribe("ari.devices.all", func(msg *session.Message, reply Reply) {
 
@@ -49,3 +44,4 @@ func (ins *Instance) device() {
 	})
 
 }
+*/

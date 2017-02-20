@@ -1,16 +1,6 @@
 package ariproxy
 
-import (
-	"encoding/json"
-	"errors"
-	"time"
-
-	"github.com/CyCoreSystems/ari"
-	"github.com/CyCoreSystems/ari-proxy/session"
-	"github.com/nats-io/nats"
-	uuid "github.com/satori/go.uuid"
-)
-
+/*
 type creator interface {
 	Created() (string, string)
 }
@@ -234,3 +224,4 @@ func (srv *Server) tryStasisEnd(evt ari.Event) (il []*Instance) {
 
 	return
 }
+*/

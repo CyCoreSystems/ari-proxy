@@ -1,7 +1,6 @@
 package ariproxy
 
-import "github.com/CyCoreSystems/ari-proxy/session"
-
+/*
 func (ins *Instance) modules() {
 	ins.subscribe("ari.modules.all", func(msg *session.Message, reply Reply) {
 		mx, err := ins.upstream.Asterisk.Modules().List()
@@ -43,3 +42,4 @@ func (ins *Instance) modules() {
 	})
 
 }
+*/

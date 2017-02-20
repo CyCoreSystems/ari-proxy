@@ -1,14 +1,6 @@
 package ariproxy
 
-import (
-	"encoding/json"
-	"time"
-
-	"github.com/CyCoreSystems/ari"
-	"github.com/CyCoreSystems/ari-proxy/client"
-	"github.com/CyCoreSystems/ari-proxy/session"
-)
-
+/*
 func (ins *Instance) channel() {
 
 	ins.subscribe("ari.channels.all", func(msg *session.Message, reply Reply) {
@@ -297,3 +289,4 @@ func (ins *Instance) channel() {
 	})
 
 }
+*/

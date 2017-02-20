@@ -1,37 +1,44 @@
 package ariproxy
 
-/*
-func (ins *Instance) logging() {
-	ins.subscribe("ari.logging.create", func(msg *session.Message, reply Reply) {
-		name := msg.Object
+import (
+	"context"
 
-		var config string
-		if err := json.Unmarshal(msg.Payload, &config); err != nil {
-			reply(nil, &decodingError{msg.Command, err})
-			return
-		}
+	"github.com/CyCoreSystems/ari-proxy/proxy"
+)
 
-		err := ins.upstream.Asterisk.Logging().Create(name, config)
-		reply(nil, err)
+func (s *Server) asteriskLoggingList(ctx context.Context, reply string, req *proxy.Request) {
+	ld, err := s.ari.Asterisk.Logging().List()
+	if err != nil {
+		s.sendError(reply, err)
 		return
-	})
+	}
 
-	ins.subscribe("ari.logging.all", func(msg *session.Message, reply Reply) {
-		ld, err := ins.upstream.Asterisk.Logging().List()
-		reply(ld, err)
-	})
-
-	ins.subscribe("ari.logging.delete", func(msg *session.Message, reply Reply) {
-		name := msg.Object
-		err := ins.upstream.Asterisk.Logging().Delete(name)
-		reply(nil, err)
-	})
-
-	ins.subscribe("ari.logging.rotate", func(msg *session.Message, reply Reply) {
-		name := msg.Object
-		err := ins.upstream.Asterisk.Logging().Rotate(name)
-		reply(nil, err)
-	})
-
+	s.nats.Publish(reply, &ld)
 }
-*/
+
+func (s *Server) asteriskLoggingCreate(ctx context.Context, reply string, req *proxy.Request) {
+	err := s.ari.Asterisk.Logging().Create(req.AsteriskLogging.Create.ID, req.AsteriskLogging.Create.Config)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+	s.sendError(reply, nil)
+}
+
+func (s *Server) asteriskLoggingRotate(ctx context.Context, reply string, req *proxy.Request) {
+	err := s.ari.Asterisk.Logging().Rotate(req.AsteriskLogging.Rotate.ID)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+	s.sendError(reply, nil)
+}
+
+func (s *Server) asteriskLoggingDelete(ctx context.Context, reply string, req *proxy.Request) {
+	err := s.ari.Asterisk.Logging().Delete(req.AsteriskLogging.Delete.ID)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+	s.sendError(reply, nil)
+}

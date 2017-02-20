@@ -89,7 +89,7 @@ type Request struct {
 	AsteriskReloadModule *AsteriskReloadModule
 	AsteriskVariables    *AsteriskVariables
 	AsteriskConfig       *AsteriskConfig
-	//AsteriskLogging      *AsteriskLogging
+	AsteriskLogging      *AsteriskLogging
 	//AsteriskModules      *AsteriskModules
 
 	BridgeAddChannel    *BridgeAddChannel
@@ -949,4 +949,58 @@ type AsteriskConfigUpdate struct {
 type AsteriskConfigDelete struct {
 	// AsteriskConfigDelete is the signature type for this request
 	AsteriskConfigDelete struct{}
+}
+
+// AsteriskLogging describes the group of requests for asterisk logging operations
+type AsteriskLogging struct {
+	// AsteriskLogging is the signature type for this request
+	AsteriskLogging struct{}
+
+	// List is the asterisk logging list request
+	List *AsteriskLoggingList
+
+	// Create is the asterisk logging create request
+	Create *AsteriskLoggingCreate
+
+	// Rotate is the aterisk logging rotate request
+	Rotate *AsteriskLoggingRotate
+
+	// Delete is the asterisk logging delete request
+	Delete *AsteriskLoggingDelete
+}
+
+// AsteriskLoggingList describes the asterisk logging list request
+type AsteriskLoggingList struct {
+	// AsteriskLoggingList is the signature type for this request
+	AsteriskLoggingList struct{}
+}
+
+// AsteriskLoggingCreate describes the asterisk logging create request
+type AsteriskLoggingCreate struct {
+	// AsteriskLoggingCreate is the signature type for this request
+	AsteriskLoggingCreate struct{}
+
+	// ID is the identifier for this object
+	ID string
+
+	// Config is the config details for the logging object
+	Config string
+}
+
+// AsteriskLoggingDelete describes the asterisk logging delete request
+type AsteriskLoggingDelete struct {
+	// AsteriskLoggingDelete is the signature type for this request
+	AsteriskLoggingDelete struct{}
+
+	// ID is the identifier for this object
+	ID string
+}
+
+// AsteriskLoggingRotate describes the asterisk logging rotate request
+type AsteriskLoggingRotate struct {
+	// AsteriskLoggingRotate is the signature type for this request
+	AsteriskLoggingRotate struct{}
+
+	// ID is the identifier for this object
+	ID string
 }

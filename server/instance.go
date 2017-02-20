@@ -521,6 +521,24 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		}
 	}
 
+	if req.AsteriskLogging != nil {
+		if req.AsteriskLogging.List != nil {
+			f = s.asteriskLoggingList
+		}
+
+		if req.AsteriskLogging.Create != nil {
+			f = s.asteriskLoggingCreate
+		}
+
+		if req.AsteriskLogging.Rotate != nil {
+			f = s.asteriskLoggingRotate
+		}
+
+		if req.AsteriskLogging.Delete != nil {
+			f = s.asteriskLoggingDelete
+		}
+	}
+
 	f(ctx, reply, req)
 }
 

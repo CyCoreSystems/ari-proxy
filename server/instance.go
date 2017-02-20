@@ -7,6 +7,7 @@ import (
 
 	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/proxy"
+	"github.com/CyCoreSystems/ari-proxy/server/dialog"
 	"github.com/CyCoreSystems/ari-proxy/session"
 	"github.com/CyCoreSystems/ari/client/native"
 	"github.com/nats-io/nats"
@@ -44,6 +45,9 @@ type Server struct {
 	// nats is the JSON-encoded NATS connection
 	nats *nats.EncodedConn
 
+	// Dialog is the dialog manager
+	Dialog dialog.Manager
+
 	readyCh chan struct{}
 
 	// cancel is the context cancel function, by which all subtended subscriptions may be terminated
@@ -55,6 +59,7 @@ func New() *Server {
 	return &Server{
 		NATSPrefix: "ari.",
 		readyCh:    make(chan struct{}),
+		Dialog:     dialog.NewMemManager(),
 	}
 }
 

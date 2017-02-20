@@ -13,13 +13,13 @@ func TestEntitiesFromChannelEvent(t *testing.T) {
 			Application: "testApp",
 			Timestamp:   ari.DateTime(time.Now()),
 		},
-		Channel: ChannelData{
+		Channel: ari.ChannelData{
 			ID:   "testChannelEvent",
 			Name: "Local/testChannel",
 		},
 	}
 
-	list := entitiesFromEvent(e)
+	list := entitiesFromEvent(&e)
 	if len(list) != 1 {
 		t.Errorf("Incorrect number of entities: %d != 1", len(list))
 	}

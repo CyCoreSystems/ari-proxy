@@ -499,6 +499,14 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 	if req.RecordingLiveUnmute != nil {
 		f = s.recordingLiveUnmute
 	}
+
+	if req.SoundData != nil {
+		f = s.soundData
+	}
+	if req.SoundList != nil {
+		f = s.soundList
+	}
+
 	f(ctx, reply, req)
 }
 

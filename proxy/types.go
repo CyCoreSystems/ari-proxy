@@ -162,10 +162,8 @@ type Request struct {
 	RecordingLiveStop   *RecordingLiveStop
 	RecordingLiveUnmute *RecordingLiveUnmute
 
-	/*
-	   SoundData *SoundData
-	   SoundList *SoundList
-	*/
+	SoundData *SoundData
+	SoundList *SoundList
 }
 
 // ApplicationData describes a request to get the data for a particular ARI application
@@ -888,4 +886,22 @@ type RecordingLiveUnmute struct {
 
 	// ID is the live recording identifier
 	ID string
+}
+
+// SoundData describes the request for getting the sound data
+type SoundData struct {
+	// SoundData is the signature type for this request
+	SoundData struct{}
+
+	// Name is the name of the sound
+	Name string
+}
+
+// SoundList describes the request for listing the sounds
+type SoundList struct {
+	// SoundList is the signature type for this request
+	SoundList struct{}
+
+	// Filters are the filters to apply when listing the sounds
+	Filters map[string]string
 }

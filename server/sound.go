@@ -1,38 +1,39 @@
 package ariproxy
 
-/*
-func (ins *Instance) sound() {
-	ins.subscribe("ari.sounds.all", func(msg *session.Message, reply Reply) {
+import (
+	"context"
 
-		var filters map[string]string
-		if err := json.Unmarshal(msg.Payload, &filters); err != nil {
-			reply(nil, &decodingError{msg.Command, err})
-			return
-		}
+	"github.com/CyCoreSystems/ari-proxy/proxy"
+)
 
-		if len(filters) == 0 {
-			filters = nil // just send nil to upstream if empty. makes tests easier
-		}
+func (s *Server) soundData(ctx context.Context, reply string, req *proxy.Request) {
+	sd, err := s.ari.Sound.Data(req.SoundData.Name)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
 
-		sx, err := ins.upstream.Sound.List(filters)
-		if err != nil {
-			reply(nil, err)
-			return
-		}
-
-		var sounds []string
-		for _, sound := range sx {
-			sounds = append(sounds, sound.ID())
-		}
-
-		reply(sounds, nil)
-	})
-
-	ins.subscribe("ari.sounds.data", func(msg *session.Message, reply Reply) {
-		name := msg.Object
-		sd, err := ins.upstream.Sound.Data(name)
-		reply(&sd, err)
-	})
-
+	s.nats.Publish(reply, &sd)
 }
-*/
+
+func (s *Server) soundList(ctx context.Context, reply string, req *proxy.Request) {
+
+	filters := req.SoundList.Filters
+
+	if len(filters) == 0 {
+		filters = nil // just send nil to upstream if empty. makes tests easier
+	}
+
+	sx, err := s.ari.Sound.List(filters)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	var sounds []string
+	for _, sound := range sx {
+		sounds = append(sounds, sound.ID())
+	}
+
+	s.nats.Publish(reply, sounds)
+}

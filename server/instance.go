@@ -436,6 +436,19 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		f = s.endpointListByTech
 	}
 
+	if req.MailboxData != nil {
+		f = s.mailboxData
+	}
+	if req.MailboxDelete != nil {
+		f = s.mailboxDelete
+	}
+	if req.MailboxList != nil {
+		f = s.mailboxList
+	}
+	if req.MailboxUpdate != nil {
+		f = s.mailboxUpdate
+	}
+
 	f(ctx, reply, req)
 }
 

@@ -138,12 +138,12 @@ type Request struct {
 	EndpointList       *EndpointList
 	EndpointListByTech *EndpointListByTech
 
-	/*
-	   MailboxData   *MailboxData
-	   MailboxDelete *MailboxDelete
-	   MailboxList   *MailboxList
-	   MailboxUpdate *MailboxUpdate
+	MailboxData   *MailboxData
+	MailboxDelete *MailboxDelete
+	MailboxList   *MailboxList
+	MailboxUpdate *MailboxUpdate
 
+	/*
 	   PlaybackControl   *PlaybackControl
 	   PlaybackData      *PlaybackData
 	   PlaybackStop      *PlaybackStop
@@ -699,4 +699,43 @@ type EndpointListByTech struct {
 
 	// Tech is the technology for the endpoint
 	Tech string
+}
+
+// MailboxData describes the request for getting the mailbox data
+type MailboxData struct {
+	// MailboxData is the signature type for this request
+	MailboxData struct{}
+
+	// Name is the name of the mailbox
+	Name string
+}
+
+// MailboxDelete describes the request for deleting a mailbox
+type MailboxDelete struct {
+	// MailboxDelete is the signature type for this request
+	MailboxDelete struct{}
+
+	// Name is the name of the mailbox
+	Name string
+}
+
+// MailboxList describes the request for listing mailboxes
+type MailboxList struct {
+	// MailboxList is the signature type for this request
+	MailboxList struct{}
+}
+
+// MailboxUpdate describes the request for updating a mailbox
+type MailboxUpdate struct {
+	// MailboxUpdate is the signature type for this request
+	MailboxUpdate struct{}
+
+	// Name is the name of the mailbox
+	Name string
+
+	// New ??? TODO
+	New int
+
+	// Old ??? TODO
+	Old int
 }

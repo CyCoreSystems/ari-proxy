@@ -17,18 +17,6 @@ type Manager interface {
 	UnbindDialog(dialog string)
 }
 
-// Binding is a binding of a Dialog to an entity-type pair
-type Binding struct {
-	// Dialog is the dialog ID
-	Dialog string
-
-	// Type is the entity type
-	Type string
-
-	// ID is the unique identifier of the entity
-	ID string
-}
-
 func bindingHash(eType, id string) string {
 	return eType + ":" + id
 }
@@ -101,7 +89,5 @@ func (m *memManager) UnbindDialog(dialog string) {
 			v = v[:len(v)-1]
 		}
 	}
-	m.mu.Unlock()
-
 	m.mu.Unlock()
 }

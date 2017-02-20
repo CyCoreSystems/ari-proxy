@@ -24,7 +24,7 @@ func (s *Server) bridgeAddChannel(ctx context.Context, reply string, req *proxy.
 		return
 	}
 
-	s.nats.Publish(reply, Ok)
+	s.sendError(reply, nil)
 }
 
 func (s *Server) bridgeCreate(ctx context.Context, reply string, req *proxy.Request) {
@@ -71,7 +71,7 @@ func (s *Server) bridgeDelete(ctx context.Context, reply string, req *proxy.Requ
 		return
 	}
 
-	s.nats.Publish(reply, Ok)
+	s.sendError(reply, nil)
 }
 
 func (s *Server) bridgeList(ctx context.Context, reply string, req *proxy.Request) {
@@ -158,7 +158,7 @@ func (s *Server) bridgeRemoveChannel(ctx context.Context, reply string, req *pro
 		return
 	}
 
-	s.nats.Publish(reply, Ok)
+	s.sendError(reply, nil)
 }
 
 func (s *Server) bridgeSubscribe(ctx context.Context, reply string, req *proxy.Request) {

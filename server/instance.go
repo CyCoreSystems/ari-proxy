@@ -14,10 +14,6 @@ import (
 	log15 "gopkg.in/inconshreveable/log15.v2"
 )
 
-// Ok is the response to send for a successful operation that
-// returns no content (TODO: could be an empty string?)
-var Ok = "ok"
-
 // Log is the internal logger for the ARI proxy.  It defaults to a no-op
 // handler, but you may configure the handler at any time by calling
 // `ariproxy.Log.SetHandler()`.  See the log15 documentation for details about

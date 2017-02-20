@@ -23,7 +23,7 @@ func (s *Server) asteriskReloadModule(ctx context.Context, reply string, req *pr
 		return
 	}
 
-	s.nats.Publish(reply, Ok)
+	s.sendError(reply, nil)
 }
 
 func (s *Server) asteriskVariableGet(ctx context.Context, reply string, req *proxy.Request) {
@@ -43,5 +43,5 @@ func (s *Server) asteriskVariableSet(ctx context.Context, reply string, req *pro
 		return
 	}
 
-	s.nats.Publish(reply, Ok)
+	s.sendError(reply, nil)
 }

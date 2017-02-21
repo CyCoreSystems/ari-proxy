@@ -1,4 +1,4 @@
-package ariproxy
+package server
 
 import (
 	"context"

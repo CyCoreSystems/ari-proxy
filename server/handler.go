@@ -1,4 +1,4 @@
-package ariproxy
+package server
 
 import "github.com/CyCoreSystems/ari-proxy/session"
 

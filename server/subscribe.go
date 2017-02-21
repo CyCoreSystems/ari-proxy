@@ -1,4 +1,4 @@
-package ariproxy
+package server
 
 /*
 func (ins *Instance) subscribe(endpoint string, h Handler2) {

@@ -1,9 +1,63 @@
 package client
 
-import "github.com/CyCoreSystems/ari"
+import (
+	"fmt"
 
-type natsApplication struct {
-	conn *Conn
+	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari-proxy/proxy"
+	"github.com/nats-io/nats"
+)
+
+type application struct {
+	app    string
+	dialog string
+	prefix string
+	nats   *nats.EncodedConn
+
+	opts *Options
+}
+
+func newApplication(opts *Options) *application {
+	return &application{
+		app:    opts.Application,
+		dialog: opts.Dialog,
+		prefix: opts.NATSPrefix,
+		nats:   opts.NATS,
+		opts:   opts,
+	}
+
+}
+
+func (a *application) List() (ret []*ari.ApplicationHandle, err error) {
+	req := proxy.Request{
+		ApplicationList: &proxy.ApplicationList{},
+	}
+	var resp proxy.EntityList
+	err = a.nats.Request(fmt.Sprintf("%sget.%s", a.prefix, a.app), &req, &resp, a.opts.RequestTimeout)
+	if err != nil {
+		return
+	}
+
+	for _, i := range resp.List {
+		ret = append(ret, ari.NewApplicationHandle(i.ID(), a.app))
+	}
+	return
+}
+
+func (a *application) Get(name string) *ari.ApplicationHandle {
+	panic("not implemented")
+}
+
+func (a *application) Data(name string) (ari.ApplicationData, error) {
+	panic("not implemented")
+}
+
+func (a *application) Subscribe(name string, eventSource string) error {
+	panic("not implemented")
+}
+
+func (a *application) Unsubscribe(name string, eventSource string) error {
+	panic("not implemented")
 }
 
 func (a *natsApplication) Get(name string) *ari.ApplicationHandle {

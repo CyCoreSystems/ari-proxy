@@ -57,13 +57,13 @@ func (ins *Instance) bridge() {
 	ins.subscribe("ari.bridges.addChannel", func(msg *session.Message, reply Reply) {
 		name := msg.Object
 
-		var channelID string
-		if err := json.Unmarshal(msg.Payload, &channelID); err != nil {
+		var req client.BridgeAddRequest
+		if err := json.Unmarshal(msg.Payload, &req); err != nil {
 			reply(nil, &decodingError{msg.Command, err})
 			return
 		}
 
-		err := ins.upstream.Bridge.AddChannel(name, channelID)
+		err := ins.upstream.Bridge.AddChannel(name, req.Channel, req.Options)
 		reply(nil, err)
 	})
 

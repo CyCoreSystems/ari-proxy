@@ -13,6 +13,12 @@ type natsBridge struct {
 	liveRecording ari.LiveRecording
 }
 
+// BridgeAddRequest is a request to add a channel to a bridge
+type BridgeAddRequest struct {
+	Channel string
+	Options *ari.BridgeAddOptions
+}
+
 // CreateBridgeRequest is the request for creating bridges
 type CreateBridgeRequest struct {
 	ID   string `json:"bridgeId,omitempty"`
@@ -53,8 +59,11 @@ func (b *natsBridge) Data(id string) (d ari.BridgeData, err error) {
 	return
 }
 
-func (b *natsBridge) AddChannel(bridgeID string, channelID string) (err error) {
-	err = b.conn.StandardRequest("ari.bridges.addChannel", bridgeID, channelID, nil)
+func (b *natsBridge) AddChannel(bridgeID string, channelID string, opts *ari.BridgeAddOptions) (err error) {
+	err = b.conn.StandardRequest("ari.bridges.addChannel", bridgeID, &BridgeAddRequest{
+		Channel: channelID,
+		Options: opts,
+	}, nil)
 	return
 }
 

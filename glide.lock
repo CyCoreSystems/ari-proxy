@@ -1,15 +1,15 @@
-hash: 835cee624af02693c676f6331a94fad3bcdcd4d794fb53aff580a10e23624924
-updated: 2017-02-12T16:34:37.775454471-05:00
+hash: a4406a13b50bfcfb16e1afa98580fce8f5d5839ee390dae9fc12b3d5c210a919
+updated: 2017-02-21T21:56:03.976199939-05:00
 imports:
 - name: github.com/CyCoreSystems/ari
-  version: 3741a2d61b0b17f9e22b1919b3992a9903460018
+  version: f63d00179fdf22ea88aece5906d52068923e413f
   subpackages:
   - client/native
   - stdbus
 - name: github.com/fsnotify/fsnotify
   version: a904159b9206978bb6d53fcc7a769e5cd726c737
 - name: github.com/hashicorp/hcl
-  version: 372e8ddaa16fd67e371e9323807d056b799360af
+  version: 630949a3c5fa3c613328e1b8256052cbc2327c9b
   subpackages:
   - hcl/ast
   - hcl/parser
@@ -24,9 +24,9 @@ imports:
 - name: github.com/magiconair/properties
   version: b3b15ef068fd0b17ddf408a23669f20811d194d2
 - name: github.com/mattn/go-colorable
-  version: 5411d3eea5978e6cdc258b30de592b60df6aba96
+  version: d898aa9fb31c91f35dd28ca75db377eff023c076
 - name: github.com/mattn/go-isatty
-  version: 281032e84ae07510239465db46bf442aa44b953a
+  version: dda3de49cbfcec471bd7a70e6cc01fcc3ff90109
 - name: github.com/mitchellh/mapstructure
   version: db1efb556f84b25a0a13a04aad883943538ad2e0
 - name: github.com/nats-io/nats
@@ -39,36 +39,36 @@ imports:
 - name: github.com/pelletier/go-buffruneio
   version: df1e16fde7fc330a0ca68167c23bf7ed6ac31d6d
 - name: github.com/pelletier/go-toml
-  version: c9506ee96398e7571356462217b9e24d6a628d71
+  version: 22139eb5469018e7374b3e7ef653de37ffb44f72
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/satori/go.uuid
   version: 879c5887cd475cd7864858769793b2ceb0d44feb
 - name: github.com/spf13/afero
-  version: 72b31426848c6ef12a7a8e216708cb0d1530f074
+  version: 9be650865eab0c12963d8753212f4f9c66cdcf12
   subpackages:
   - mem
 - name: github.com/spf13/cast
-  version: d1139bab1c07d5ad390a65e7305876b3c1a8370b
+  version: f820543c3592e283e311a60d2a600a664e39f6f7
 - name: github.com/spf13/cobra
-  version: b5d8e8f46a2f829f755b6e33b454e25c61c935e1
+  version: ee4055870c2d5f7ce112642377e32c9929c3bbaf
 - name: github.com/spf13/jwalterweatherman
   version: fa7ca7e836cf3a8bb4ebf799f472c12d7e903d66
 - name: github.com/spf13/pflag
   version: 9ff6c6923cfffbcd502984b8e0c80539a94968b7
 - name: github.com/spf13/viper
-  version: 5ed0fc31f7f453625df314d8e66b9791e8d13003
+  version: 7538d73b4eb9511d85a9f1dfef202eeb8ac260f4
 - name: golang.org/x/net
-  version: 61557ac0112b576429a0df080e1c2cef5dfbb642
+  version: 6b27048ae5e6ad1ef927e72e437531493de612fe
   subpackages:
   - context
   - websocket
 - name: golang.org/x/sys
-  version: aaabbdc969c3935a2a7f61efac801e7163c73a2a
+  version: 075e574b89e4c2d22f2286a7e2b919519c6f3547
   subpackages:
   - unix
 - name: golang.org/x/text
-  version: 06d6eba81293389cafdff7fca90d75592194b2d9
+  version: 767daa157b4d460bba02409ff856ddeeb8e76ab7
   subpackages:
   - transform
   - unicode/norm

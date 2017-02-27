@@ -5,6 +5,7 @@ import "github.com/CyCoreSystems/ari"
 type natsSubscription struct {
 	m         ari.Matcher
 	closeChan chan struct{}
+	closed    bool
 	events    chan ari.Event
 }
 
@@ -19,19 +20,16 @@ func newSubscription(m ari.Matcher) *natsSubscription {
 func (ns *natsSubscription) Start(s ari.Subscriber, n ...string) {
 
 	sub := s.Subscribe(n...)
-	readyCh := make(chan struct{})
 
 	go func() {
 		defer sub.Cancel()
-		close(readyCh)
 		for {
 			select {
 			case <-ns.closeChan:
-				ns.closeChan = nil
 				return
 			case evt, ok := <-sub.Events():
 				if !ok {
-					close(ns.closeChan)
+					ns.Cancel()
 					continue
 				}
 				if ns.m == nil {
@@ -42,8 +40,6 @@ func (ns *natsSubscription) Start(s ari.Subscriber, n ...string) {
 			}
 		}
 	}()
-
-	<-readyCh
 }
 
 func (ns *natsSubscription) Events() chan ari.Event {
@@ -51,7 +47,8 @@ func (ns *natsSubscription) Events() chan ari.Event {
 }
 
 func (ns *natsSubscription) Cancel() {
-	if ns.closeChan != nil {
+	if !ns.closed && ns.closeChan != nil {
+		ns.closed = true
 		close(ns.closeChan)
 	}
 }

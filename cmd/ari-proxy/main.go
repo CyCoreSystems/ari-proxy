@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"os"
 	"strings"
 
@@ -21,6 +22,9 @@ var rootCmd = &cobra.Command{
 	Long: `ari-proxy is a proxy for working the Asterisk daemon over NATS.
 	ARI commands are exposed over NATS for operation.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
 		var handler = log15.StdoutHandler
 		if viper.GetBool("verbose") {
 			log.Info("Verbose logging enabled")
@@ -30,7 +34,7 @@ var rootCmd = &cobra.Command{
 		}
 		log.SetHandler(handler)
 
-		return runServer(log)
+		return runServer(ctx, log)
 	},
 }
 
@@ -81,7 +85,7 @@ func readConfig() {
 	viper.ReadInConfig()
 }
 
-func runServer(log log15.Logger) error {
+func runServer(ctx context.Context, log log15.Logger) error {
 
 	natsURL := viper.GetString("nats.url")
 	if os.Getenv("NATS_SERVICE_HOST") != "" {
@@ -102,7 +106,6 @@ func runServer(log log15.Logger) error {
 	if err != nil {
 		return err
 	}
-	srv.Close()
 
 	return nil
 }

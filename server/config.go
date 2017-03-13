@@ -8,7 +8,7 @@ import (
 
 func (s *Server) asteriskConfigData(ctx context.Context, reply string, req *proxy.Request) {
 
-	cd, err := s.ari.Asterisk.Config().Data(
+	cd, err := s.ari.Asterisk().Config().Data(
 		req.AsteriskConfig.ConfigClass,
 		req.AsteriskConfig.ObjectType,
 		req.AsteriskConfig.ID,
@@ -23,7 +23,7 @@ func (s *Server) asteriskConfigData(ctx context.Context, reply string, req *prox
 
 func (s *Server) asteriskConfigDelete(ctx context.Context, reply string, req *proxy.Request) {
 
-	err := s.ari.Asterisk.Config().Delete(
+	err := s.ari.Asterisk().Config().Delete(
 		req.AsteriskConfig.ConfigClass,
 		req.AsteriskConfig.ObjectType,
 		req.AsteriskConfig.ID,
@@ -38,7 +38,7 @@ func (s *Server) asteriskConfigDelete(ctx context.Context, reply string, req *pr
 
 func (s *Server) asteriskConfigUpdate(ctx context.Context, reply string, req *proxy.Request) {
 
-	err := s.ari.Asterisk.Config().Update(
+	err := s.ari.Asterisk().Config().Update(
 		req.AsteriskConfig.ConfigClass,
 		req.AsteriskConfig.ObjectType,
 		req.AsteriskConfig.ID,

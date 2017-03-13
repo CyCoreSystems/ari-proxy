@@ -8,7 +8,7 @@ import (
 
 func (s *Server) mailboxData(ctx context.Context, reply string, req *proxy.Request) {
 	name := req.MailboxData.Name
-	dd, err := s.ari.Mailbox.Data(name)
+	dd, err := s.ari.Mailbox().Data(name)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -19,7 +19,7 @@ func (s *Server) mailboxData(ctx context.Context, reply string, req *proxy.Reque
 
 func (s *Server) mailboxDelete(ctx context.Context, reply string, req *proxy.Request) {
 	name := req.MailboxDelete.Name
-	err := s.ari.Mailbox.Delete(name)
+	err := s.ari.Mailbox().Delete(name)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -29,7 +29,7 @@ func (s *Server) mailboxDelete(ctx context.Context, reply string, req *proxy.Req
 }
 
 func (s *Server) mailboxList(ctx context.Context, reply string, req *proxy.Request) {
-	mx, err := s.ari.Mailbox.List()
+	mx, err := s.ari.Mailbox().List()
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -44,7 +44,7 @@ func (s *Server) mailboxList(ctx context.Context, reply string, req *proxy.Reque
 }
 
 func (s *Server) mailboxUpdate(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Mailbox.Update(req.MailboxUpdate.Name, req.MailboxUpdate.Old, req.MailboxUpdate.New)
+	err := s.ari.Mailbox().Update(req.MailboxUpdate.Name, req.MailboxUpdate.Old, req.MailboxUpdate.New)
 	if err != nil {
 		s.sendError(reply, err)
 		return

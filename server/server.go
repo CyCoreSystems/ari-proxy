@@ -14,18 +14,6 @@ import (
 	log15 "gopkg.in/inconshreveable/log15.v2"
 )
 
-// Log is the internal logger for the ARI proxy.  It defaults to a no-op
-// handler, but you may configure the handler at any time by calling
-// `ariproxy.Log.SetHandler()`.  See the log15 documentation for details about
-// the handler.
-var Log log15.Logger
-
-func init() {
-	// Set up default (no-op) logger
-	Log = log15.New()
-	Log.SetHandler(log15.DiscardHandler())
-}
-
 // Server describes the asterisk-facing ARI proxy server
 type Server struct {
 	// Application is the name of the ARI application of this server
@@ -39,7 +27,7 @@ type Server struct {
 	NATSPrefix string
 
 	// ari is the native Asterisk ARI client by which this proxy is directly connected
-	ari *ari.Client
+	ari ari.Client
 
 	// nats is the JSON-encoded NATS connection
 	nats *nats.EncodedConn
@@ -51,14 +39,21 @@ type Server struct {
 
 	// cancel is the context cancel function, by which all subtended subscriptions may be terminated
 	cancel context.CancelFunc
+
+	// Log is the log15.Logger for the service.  You may replace or call SetHandler() on this at any time to change the logging of the service.
+	Log log15.Logger
 }
 
 // New returns a new Server
 func New() *Server {
+	log := log15.New()
+	log.SetHandler(log15.DiscardHandler())
+
 	return &Server{
 		NATSPrefix: "ari.",
 		readyCh:    make(chan struct{}),
 		Dialog:     dialog.NewMemManager(),
+		Log:        log,
 	}
 }
 
@@ -68,7 +63,7 @@ func (s *Server) Listen(ctx context.Context, ariOpts native.Options, natsURI str
 	s.cancel = cancel
 
 	// Connect to ARI
-	s.ari, err = native.New(ariOpts)
+	s.ari, err = native.Connect(ctx, ariOpts)
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to ARI")
 	}
@@ -89,7 +84,7 @@ func (s *Server) Listen(ctx context.Context, ariOpts native.Options, natsURI str
 }
 
 // ListenOn runs the given server, listening on the provided ARI and NATS connections
-func (s *Server) ListenOn(ctx context.Context, a *ari.Client, n *nats.EncodedConn) error {
+func (s *Server) ListenOn(ctx context.Context, a ari.Client, n *nats.EncodedConn) error {
 	ctx, cancel := context.WithCancel(ctx)
 	s.cancel = cancel
 
@@ -109,7 +104,7 @@ func (s *Server) Ready() <-chan struct{} {
 
 func (s *Server) listen(ctx context.Context) error {
 	// First, get the Asterisk ID
-	ret, err := s.ari.Asterisk.Info("")
+	ret, err := s.ari.Asterisk().Info("")
 	if err != nil {
 		return errors.Wrap(err, "failed to get Asterisk ID")
 	}
@@ -120,7 +115,7 @@ func (s *Server) listen(ctx context.Context) error {
 	}
 
 	// Store the ARI application name for top-level access
-	s.Application = s.ari.ApplicationName
+	s.Application = s.ari.ApplicationName()
 
 	//
 	// Listen on the initial NATS subjects
@@ -231,7 +226,7 @@ func (s *Server) announce() {
 
 // runEventHandler processes events which are received from ARI
 func (s *Server) runEventHandler(ctx context.Context) {
-	sub := s.ari.Bus.Subscribe(ari.Events.All)
+	sub := s.ari.Bus().Subscribe(ari.Events.All)
 	defer sub.Cancel()
 
 	for {

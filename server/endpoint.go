@@ -7,7 +7,7 @@ import (
 )
 
 func (s *Server) endpointData(ctx context.Context, reply string, req *proxy.Request) {
-	ed, err := s.ari.Endpoint.Data(req.EndpointData.Tech, req.EndpointData.Resource)
+	ed, err := s.ari.Endpoint().Data(req.EndpointData.Tech, req.EndpointData.Resource)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -17,7 +17,7 @@ func (s *Server) endpointData(ctx context.Context, reply string, req *proxy.Requ
 }
 
 func (s *Server) endpointList(ctx context.Context, reply string, req *proxy.Request) {
-	ex, err := s.ari.Endpoint.List()
+	ex, err := s.ari.Endpoint().List()
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -27,7 +27,7 @@ func (s *Server) endpointList(ctx context.Context, reply string, req *proxy.Requ
 }
 
 func (s *Server) endpointListByTech(ctx context.Context, reply string, req *proxy.Request) {
-	ex, err := s.ari.Endpoint.ListByTech(req.EndpointListByTech.Tech)
+	ex, err := s.ari.Endpoint().ListByTech(req.EndpointListByTech.Tech)
 	if err != nil {
 		s.sendError(reply, err)
 		return

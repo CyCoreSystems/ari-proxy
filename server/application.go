@@ -9,13 +9,9 @@ import (
 )
 
 func (s *Server) applicationData(ctx context.Context, reply string, req *proxy.Request) {
-	app, err := s.ari.Application.Data(req.ApplicationData.Name)
+	app, err := s.ari.Application().Data(req.ApplicationData.Name)
 	if err != nil {
 		s.sendError(reply, err)
-		return
-	}
-	if app.Name == "" {
-		s.sendNotFound(reply)
 		return
 	}
 
@@ -23,7 +19,7 @@ func (s *Server) applicationData(ctx context.Context, reply string, req *proxy.R
 }
 
 func (s *Server) applicationList(ctx context.Context, reply string, req *proxy.Request) {
-	list, err := s.ari.Application.List()
+	list, err := s.ari.Application().List()
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -40,13 +36,9 @@ func (s *Server) applicationList(ctx context.Context, reply string, req *proxy.R
 }
 
 func (s *Server) applicationGet(ctx context.Context, reply string, req *proxy.Request) {
-	app, err := s.ari.Application.Data(req.ApplicationGet.Name)
+	app, err := s.ari.Application().Data(req.ApplicationGet.Name)
 	if err != nil {
 		s.sendError(reply, err)
-		return
-	}
-	if app.Name == "" {
-		s.sendNotFound(reply)
 		return
 	}
 
@@ -76,7 +68,7 @@ func parseEventSource(src string) (string, string, error) {
 }
 
 func (s *Server) applicationSubscribe(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Application.Subscribe(req.ApplicationSubscribe.Name, req.ApplicationSubscribe.EventSource)
+	err := s.ari.Application().Subscribe(req.ApplicationSubscribe.Name, req.ApplicationSubscribe.EventSource)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -85,7 +77,7 @@ func (s *Server) applicationSubscribe(ctx context.Context, reply string, req *pr
 	if req.Metadata.Dialog != "" {
 		eType, eID, err := parseEventSource(req.ApplicationSubscribe.EventSource)
 		if err != nil {
-			Log.Warn("failed to parse event source", "error", err, "eventsource", req.ApplicationSubscribe.EventSource)
+			s.Log.Warn("failed to parse event source", "error", err, "eventsource", req.ApplicationSubscribe.EventSource)
 		} else {
 			s.Dialog.Bind(req.Metadata.Dialog, eType, eID)
 		}
@@ -95,6 +87,6 @@ func (s *Server) applicationSubscribe(ctx context.Context, reply string, req *pr
 }
 
 func (s *Server) applicationUnsubscribe(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Application.Unsubscribe(req.ApplicationSubscribe.Name, req.ApplicationSubscribe.EventSource)
+	err := s.ari.Application().Unsubscribe(req.ApplicationSubscribe.Name, req.ApplicationSubscribe.EventSource)
 	s.sendError(reply, err)
 }

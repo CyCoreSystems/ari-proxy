@@ -7,7 +7,7 @@ import (
 )
 
 func (s *Server) recordingLiveData(ctx context.Context, reply string, req *proxy.Request) {
-	lrd, err := s.ari.Recording.Live.Data(req.RecordingLiveData.ID)
+	lrd, err := s.ari.LiveRecording().Data(req.RecordingLiveData.ID)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -17,65 +17,29 @@ func (s *Server) recordingLiveData(ctx context.Context, reply string, req *proxy
 }
 
 func (s *Server) recordingLiveDelete(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Recording.Live.Delete(req.RecordingLiveDelete.ID)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.LiveRecording().Delete(req.RecordingLiveDelete.ID))
 }
 
 func (s *Server) recordingLiveMute(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Recording.Live.Mute(req.RecordingLiveMute.ID)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.LiveRecording().Mute(req.RecordingLiveMute.ID))
 }
 
 func (s *Server) recordingLivePause(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Recording.Live.Pause(req.RecordingLivePause.ID)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.LiveRecording().Pause(req.RecordingLivePause.ID))
 }
 
 func (s *Server) recordingLiveResume(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Recording.Live.Resume(req.RecordingLiveResume.ID)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.LiveRecording().Resume(req.RecordingLiveResume.ID))
 }
 
 func (s *Server) recordingLiveScrap(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Recording.Live.Scrap(req.RecordingLiveScrap.ID)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.LiveRecording().Scrap(req.RecordingLiveScrap.ID))
 }
 
 func (s *Server) recordingLiveStop(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Recording.Live.Stop(req.RecordingLiveStop.ID)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.LiveRecording().Stop(req.RecordingLiveStop.ID))
 }
 
 func (s *Server) recordingLiveUnmute(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Recording.Live.Unmute(req.RecordingLiveUnmute.ID)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-	s.sendError(reply, nil)
-
+	s.sendError(reply, s.ari.LiveRecording().Unmute(req.RecordingLiveUnmute.ID))
 }

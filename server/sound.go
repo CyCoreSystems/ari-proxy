@@ -7,7 +7,7 @@ import (
 )
 
 func (s *Server) soundData(ctx context.Context, reply string, req *proxy.Request) {
-	sd, err := s.ari.Sound.Data(req.SoundData.Name)
+	sd, err := s.ari.Sound().Data(req.SoundData.Name)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -24,7 +24,7 @@ func (s *Server) soundList(ctx context.Context, reply string, req *proxy.Request
 		filters = nil // just send nil to upstream if empty. makes tests easier
 	}
 
-	sx, err := s.ari.Sound.List(filters)
+	sx, err := s.ari.Sound().List(filters)
 	if err != nil {
 		s.sendError(reply, err)
 		return

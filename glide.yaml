@@ -1,7 +1,7 @@
 package: github.com/CyCoreSystems/ari-proxy
 import:
 - package: github.com/CyCoreSystems/ari
-  version: ^3.0.9
+  version: v4
   subpackages:
   - client/native
   - stdbus

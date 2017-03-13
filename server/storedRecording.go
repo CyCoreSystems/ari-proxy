@@ -10,7 +10,7 @@ func (s *Server) recordingStoredCopy(ctx context.Context, reply string, req *pro
 	id := req.RecordingStoredCopy.ID
 	dest := req.RecordingStoredCopy.Destination
 
-	srd, err := s.ari.Recording.Stored.Copy(id, dest)
+	srd, err := s.ari.StoredRecording().Copy(id, dest)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -20,7 +20,7 @@ func (s *Server) recordingStoredCopy(ctx context.Context, reply string, req *pro
 }
 
 func (s *Server) recordingStoredData(ctx context.Context, reply string, req *proxy.Request) {
-	data, err := s.ari.Recording.Stored.Data(req.RecordingStoredData.ID)
+	data, err := s.ari.StoredRecording().Data(req.RecordingStoredData.ID)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -30,7 +30,7 @@ func (s *Server) recordingStoredData(ctx context.Context, reply string, req *pro
 }
 
 func (s *Server) recordingStoredDelete(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Recording.Stored.Delete(req.RecordingStoredDelete.ID)
+	err := s.ari.StoredRecording().Delete(req.RecordingStoredDelete.ID)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -40,7 +40,7 @@ func (s *Server) recordingStoredDelete(ctx context.Context, reply string, req *p
 }
 
 func (s *Server) recordingStoredList(ctx context.Context, reply string, req *proxy.Request) {
-	handles, err := s.ari.Recording.Stored.List()
+	handles, err := s.ari.StoredRecording().List()
 	if err != nil {
 		s.sendError(reply, err)
 		return

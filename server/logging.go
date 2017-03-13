@@ -7,7 +7,7 @@ import (
 )
 
 func (s *Server) asteriskLoggingList(ctx context.Context, reply string, req *proxy.Request) {
-	ld, err := s.ari.Asterisk.Logging().List()
+	ld, err := s.ari.Asterisk().Logging().List()
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -17,7 +17,7 @@ func (s *Server) asteriskLoggingList(ctx context.Context, reply string, req *pro
 }
 
 func (s *Server) asteriskLoggingCreate(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Asterisk.Logging().Create(req.AsteriskLogging.Create.ID, req.AsteriskLogging.Create.Config)
+	err := s.ari.Asterisk().Logging().Create(req.AsteriskLogging.Create.ID, req.AsteriskLogging.Create.Config)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -26,7 +26,7 @@ func (s *Server) asteriskLoggingCreate(ctx context.Context, reply string, req *p
 }
 
 func (s *Server) asteriskLoggingRotate(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Asterisk.Logging().Rotate(req.AsteriskLogging.Rotate.ID)
+	err := s.ari.Asterisk().Logging().Rotate(req.AsteriskLogging.Rotate.ID)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -35,7 +35,7 @@ func (s *Server) asteriskLoggingRotate(ctx context.Context, reply string, req *p
 }
 
 func (s *Server) asteriskLoggingDelete(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Asterisk.Logging().Delete(req.AsteriskLogging.Delete.ID)
+	err := s.ari.Asterisk().Logging().Delete(req.AsteriskLogging.Delete.ID)
 	if err != nil {
 		s.sendError(reply, err)
 		return

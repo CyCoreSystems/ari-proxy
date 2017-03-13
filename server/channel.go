@@ -2,15 +2,14 @@ package server
 
 import (
 	"context"
-	"time"
 
-	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/proxy"
+	uuid "github.com/satori/go.uuid"
 )
 
 func (s *Server) channelAnswer(ctx context.Context, reply string, req *proxy.Request) {
 	ID := req.ChannelAnswer.ID
-	err := s.ari.Channel.Answer(ID)
+	err := s.ari.Channel().Answer(ID)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -21,7 +20,7 @@ func (s *Server) channelAnswer(ctx context.Context, reply string, req *proxy.Req
 
 func (s *Server) channelBusy(ctx context.Context, reply string, req *proxy.Request) {
 	ID := req.ChannelBusy.ID
-	err := s.ari.Channel.Busy(ID)
+	err := s.ari.Channel().Busy(ID)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -32,7 +31,7 @@ func (s *Server) channelBusy(ctx context.Context, reply string, req *proxy.Reque
 
 func (s *Server) channelCongestion(ctx context.Context, reply string, req *proxy.Request) {
 	ID := req.ChannelBusy.ID
-	err := s.ari.Channel.Congestion(ID)
+	err := s.ari.Channel().Congestion(ID)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -50,7 +49,7 @@ func (s *Server) channelCreate(ctx context.Context, reply string, req *proxy.Req
 		s.Dialog.Bind(req.Metadata.Dialog, "channel", create.OtherChannelID)
 	}
 
-	handle, err := s.ari.Channel.Create(create)
+	handle, err := s.ari.Channel().Create(create)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -65,7 +64,7 @@ func (s *Server) channelCreate(ctx context.Context, reply string, req *proxy.Req
 }
 
 func (s *Server) channelData(ctx context.Context, reply string, req *proxy.Request) {
-	d, err := s.ari.Channel.Data(req.ChannelData.ID)
+	d, err := s.ari.Channel().Data(req.ChannelData.ID)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -75,58 +74,23 @@ func (s *Server) channelData(ctx context.Context, reply string, req *proxy.Reque
 }
 
 func (s *Server) channelContinue(ctx context.Context, reply string, req *proxy.Request) {
-	id := req.ChannelContinue.ID
-
-	cont := req.ChannelContinue.ContinueRequest
-
-	err := s.ari.Channel.Continue(id, cont.Context, cont.Extension, cont.Priority)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.Channel().Continue(req.ChannelContinue.ID, req.ChannelContinue.Context, req.ChannelContinue.Extension, req.ChannelContinue.Priority))
 }
 
 func (s *Server) channelDial(ctx context.Context, reply string, req *proxy.Request) {
-	id := req.ChannelDial.ID
-	dial := req.ChannelDial.DialRequest
-
-	//TODO: confirm time is in Seconds, the ARI documentation does not list it for Dial
-	err := s.ari.Channel.Dial(id, dial.Caller, time.Duration(dial.Timeout)*time.Second)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.Channel().Dial(req.ChannelDial.ID, req.ChannelDial.Caller, req.ChannelDial.Timeout))
 }
 
 func (s *Server) channelHangup(ctx context.Context, reply string, req *proxy.Request) {
-	id := req.ChannelHangup.ID
-	reason := req.ChannelHangup.Reason
-	err := s.ari.Channel.Hangup(id, reason)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.Channel().Hangup(req.ChannelHangup.ID, req.ChannelHangup.Reason))
 }
 
 func (s *Server) channelHold(ctx context.Context, reply string, req *proxy.Request) {
-	id := req.ChannelHold.ID
-	err := s.ari.Channel.Hold(id)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.Channel().Hold(req.ChannelHold.ID))
 }
 
 func (s *Server) channelList(ctx context.Context, reply string, req *proxy.Request) {
-	cx, err := s.ari.Channel.List()
+	cx, err := s.ari.Channel().List()
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -143,7 +107,7 @@ func (s *Server) channelList(ctx context.Context, reply string, req *proxy.Reque
 func (s *Server) channelMOH(ctx context.Context, reply string, req *proxy.Request) {
 	id := req.ChannelMOH.ID
 	music := req.ChannelMOH.Music
-	err := s.ari.Channel.MOH(id, music)
+	err := s.ari.Channel().MOH(id, music)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -153,15 +117,7 @@ func (s *Server) channelMOH(ctx context.Context, reply string, req *proxy.Reques
 }
 
 func (s *Server) channelMute(ctx context.Context, reply string, req *proxy.Request) {
-	id := req.ChannelMute.ID
-	dir := req.ChannelMute.Direction
-	err := s.ari.Channel.Mute(id, dir)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.Channel().Mute(req.ChannelMute.ID, req.ChannelMute.Direction))
 }
 
 func (s *Server) channelOriginate(ctx context.Context, reply string, req *proxy.Request) {
@@ -173,7 +129,7 @@ func (s *Server) channelOriginate(ctx context.Context, reply string, req *proxy.
 		s.Dialog.Bind(req.Metadata.Dialog, "channel", orig.Originator)
 	}
 
-	handle, err := s.ari.Channel.Originate(orig)
+	handle, err := s.ari.Channel().Originate(orig)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -187,20 +143,19 @@ func (s *Server) channelOriginate(ctx context.Context, reply string, req *proxy.
 }
 
 func (s *Server) channelPlay(ctx context.Context, reply string, req *proxy.Request) {
-	id := req.ChannelPlay.ID
-	pr := req.ChannelPlay.PlayRequest
-	if req.Metadata.Dialog != "" {
-		s.Dialog.Bind(req.Metadata.Dialog, "channel", id)
-		s.Dialog.Bind(req.Metadata.Dialog, "playback", pr.PlaybackID)
+	if req.ChannelPlay.PlaybackID == "" {
+		req.ChannelPlay.PlaybackID = uuid.NewV1().String()
 	}
 
-	ph, err := s.ari.Channel.Play(id, pr.PlaybackID, pr.MediaURI)
+	if req.Metadata.Dialog != "" {
+		s.Dialog.Bind(req.Metadata.Dialog, "channel", req.ChannelPlay.ID)
+		s.Dialog.Bind(req.Metadata.Dialog, "playback", req.ChannelPlay.PlaybackID)
+	}
+
+	ph, err := s.ari.Channel().Play(req.ChannelPlay.ID, req.ChannelPlay.PlaybackID, req.ChannelPlay.MediaURI)
 	if err != nil {
 		s.sendError(reply, err)
 		return
-	}
-	if req.Metadata.Dialog != "" {
-		s.Dialog.Bind(req.Metadata.Dialog, "playback", ph.ID())
 	}
 
 	//NOTE: used to send nil
@@ -208,40 +163,27 @@ func (s *Server) channelPlay(ctx context.Context, reply string, req *proxy.Reque
 }
 
 func (s *Server) channelRecord(ctx context.Context, reply string, req *proxy.Request) {
-	id := req.ChannelRecord.ID
-	rr := req.ChannelRecord.RecordRequest
-
-	if req.Metadata.Dialog != "" {
-		s.Dialog.Bind(req.Metadata.Dialog, "channel", id)
-		s.Dialog.Bind(req.Metadata.Dialog, "recording", rr.Name)
+	if req.ChannelRecord.Name == "" {
+		req.ChannelRecord.Name = uuid.NewV1().String()
 	}
 
-	var opts ari.RecordingOptions
+	if req.Metadata.Dialog != "" {
+		s.Dialog.Bind(req.Metadata.Dialog, "channel", req.ChannelRecord.ID)
+		s.Dialog.Bind(req.Metadata.Dialog, "recording", req.ChannelRecord.Name)
+	}
 
-	opts.Format = rr.Format
-	opts.MaxDuration = time.Duration(rr.MaxDuration) * time.Second
-	opts.MaxSilence = time.Duration(rr.MaxSilence) * time.Second
-	opts.Exists = rr.IfExists
-	opts.Beep = rr.Beep
-	opts.Terminate = rr.TerminateOn
-
-	lr, err := s.ari.Channel.Record(id, rr.Name, &opts)
+	lr, err := s.ari.Channel().Record(req.ChannelRecord.ID, req.ChannelRecord.Name, req.ChannelRecord.Options)
 	if err != nil {
 		s.sendError(reply, err)
 		return
 	}
 
-	if req.Metadata.Dialog != "" {
-		s.Dialog.Bind(req.Metadata.Dialog, "recording", lr.ID())
-	}
-
-	//NOTE: used to send nil
 	s.nats.Publish(reply, lr.ID())
 }
 
 func (s *Server) channelRing(ctx context.Context, reply string, req *proxy.Request) {
 	id := req.ChannelRing.ID
-	err := s.ari.Channel.Ring(id)
+	err := s.ari.Channel().Ring(id)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -254,7 +196,7 @@ func (s *Server) channelSendDTMF(ctx context.Context, reply string, req *proxy.R
 	id := req.ChannelSendDTMF.ID
 	dtmf := req.ChannelSendDTMF.DTMF
 	opts := req.ChannelSendDTMF.Options
-	err := s.ari.Channel.SendDTMF(id, dtmf, opts)
+	err := s.ari.Channel().SendDTMF(id, dtmf, opts)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -265,7 +207,7 @@ func (s *Server) channelSendDTMF(ctx context.Context, reply string, req *proxy.R
 
 func (s *Server) channelSilence(ctx context.Context, reply string, req *proxy.Request) {
 	id := req.ChannelSilence.ID
-	err := s.ari.Channel.Silence(id)
+	err := s.ari.Channel().Silence(id)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -274,15 +216,7 @@ func (s *Server) channelSilence(ctx context.Context, reply string, req *proxy.Re
 }
 
 func (s *Server) channelSnoop(ctx context.Context, reply string, req *proxy.Request) {
-	id := req.ChannelSnoop.ID
-	snoop := req.ChannelSnoop.SnoopRequest
-
-	if req.Metadata.Dialog != "" {
-		//TODO: confirm that snoopID is a channel
-		s.Dialog.Bind(req.Metadata.Dialog, "channel", snoop.SnoopID)
-	}
-
-	ch, err := s.ari.Channel.Snoop(id, snoop.SnoopID, snoop.App, snoop.Options)
+	ch, err := s.ari.Channel().Snoop(req.ChannelSnoop.ID, req.ChannelSnoop.SnoopID, req.ChannelSnoop.Options)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -292,12 +226,11 @@ func (s *Server) channelSnoop(ctx context.Context, reply string, req *proxy.Requ
 		s.Dialog.Bind(req.Metadata.Dialog, "channel", ch.ID())
 	}
 
-	//NOTE: this used to send nil
 	s.nats.Publish(reply, ch.ID())
 }
 
 func (s *Server) channelStopHold(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Channel.StopHold(req.ChannelStopHold.ID)
+	err := s.ari.Channel().StopHold(req.ChannelStopHold.ID)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -306,7 +239,7 @@ func (s *Server) channelStopHold(ctx context.Context, reply string, req *proxy.R
 }
 
 func (s *Server) channelStopMOH(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Channel.StopMOH(req.ChannelStopMOH.ID)
+	err := s.ari.Channel().StopMOH(req.ChannelStopMOH.ID)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -316,7 +249,7 @@ func (s *Server) channelStopMOH(ctx context.Context, reply string, req *proxy.Re
 }
 
 func (s *Server) channelStopRing(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Channel.StopRing(req.ChannelStopRing.ID)
+	err := s.ari.Channel().StopRing(req.ChannelStopRing.ID)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -327,7 +260,7 @@ func (s *Server) channelStopRing(ctx context.Context, reply string, req *proxy.R
 
 func (s *Server) channelStopSilence(ctx context.Context, reply string, req *proxy.Request) {
 	id := req.ChannelStopSilence.ID
-	err := s.ari.Channel.StopSilence(id)
+	err := s.ari.Channel().StopSilence(id)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -338,7 +271,7 @@ func (s *Server) channelStopSilence(ctx context.Context, reply string, req *prox
 func (s *Server) channelSubscribe(ctx context.Context, reply string, req *proxy.Request) {
 
 	// check for existence
-	_, err := s.ari.Channel.Data(req.ChannelSubscribe.ID)
+	_, err := s.ari.Channel().Data(req.ChannelSubscribe.ID)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -353,18 +286,11 @@ func (s *Server) channelSubscribe(ctx context.Context, reply string, req *proxy.
 }
 
 func (s *Server) channelUnmute(ctx context.Context, reply string, req *proxy.Request) {
-
-	err := s.ari.Channel.Unmute(req.ChannelUnmute.ID, req.ChannelUnmute.Direction)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.Channel().Unmute(req.ChannelUnmute.ID, req.ChannelUnmute.Direction))
 }
 
 func (s *Server) channelVariableGet(ctx context.Context, reply string, req *proxy.Request) {
-	val, err := s.ari.Channel.Variables(req.ChannelVariables.ID).Get(req.ChannelVariables.Name)
+	val, err := s.ari.Channel().Variables(req.ChannelVariables.ID).Get(req.ChannelVariables.Name)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -374,7 +300,7 @@ func (s *Server) channelVariableGet(ctx context.Context, reply string, req *prox
 }
 
 func (s *Server) channelVariableSet(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Channel.Variables(req.ChannelVariables.ID).Set(req.ChannelVariables.Name, req.ChannelVariables.Set.Value)
+	err := s.ari.Channel().Variables(req.ChannelVariables.ID).Set(req.ChannelVariables.Name, req.ChannelVariables.Set.Value)
 	if err != nil {
 		s.sendError(reply, err)
 		return

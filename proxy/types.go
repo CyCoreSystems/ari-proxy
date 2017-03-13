@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/CyCoreSystems/ari"
-	"github.com/CyCoreSystems/ari-proxy/client"
 )
 
 // AnnouncementInterval is the amount of time to wait between periodic service availability announcements
@@ -46,24 +45,39 @@ type Entity struct {
 // EntityList is a response which returns a list of Entities, as described above.
 type EntityList struct {
 	// List is the list of entities
-	List []*Entity
+	List []*Entity `json:"list,omitempty"`
 }
 
 // ErrNotFound indicates that the operation did not return a result
 var ErrNotFound = errors.New("Not found")
 
-// ErrorResponse is a response sent when a request could not be processed;
-//
-// NOTE: this is not always a problem, and sometimes it is expected (such as for
-// a broadcast request for a particular channel, where only one proxy will have
-// details for it).
-type ErrorResponse struct {
-	Error error
+// Response is a response to a request.  This acts as a base type for more complicated responses, as well.
+type Response struct {
+	Error string `json:"error,omitempty"`
+
+	// Entity is the returned entity, if applicable
+	Entity *Entity `json:",inline,omitempty"`
+
+	// EntityList is the returned list of entities, if applicable
+	EntityList *EntityList `json:",inline,omitempty"`
+}
+
+// Err returns an error from the Response.  If the response's Error is empty, a nil error is returned.  Otherwise, the error will be filled with the value of response.Error.
+func (e *Response) Err() error {
+	if e.Error != "" {
+		return errors.New(e.Error)
+	}
+	return nil
+}
+
+// IsNotFound indicates that the retuned error response was a Not Found error response
+func (e *Response) IsNotFound() bool {
+	return e.Error == "Not found"
 }
 
 // NewErrorResponse wraps an error as an ErrorResponse
-func NewErrorResponse(err error) *ErrorResponse {
-	return &ErrorResponse{Error: err}
+func NewErrorResponse(err error) *Response {
+	return &Response{Error: err.Error()}
 }
 
 // Event describes an ARI event sent from the ARI proxy to any subscribed clients
@@ -285,7 +299,13 @@ type BridgeCreate struct {
 	BridgeCreate struct{}
 
 	// ID is the id of the bridge
-	CreateBridgeRequest client.CreateBridgeRequest
+	ID string
+
+	// Type is the comma-separated list of bridge type attributes (mixing, holding, dtmf_events, proxy_media)
+	Type string
+
+	// Name is the name to assign to the bridge (optional)
+	Name string
 }
 
 // BridgeData is the request type for getting the bridge data
@@ -320,8 +340,11 @@ type BridgePlay struct {
 	// ID is the identifier of the bridge
 	ID string
 
-	// PlayRequest is the request for the playing of audio
-	PlayRequest client.PlayRequest
+	// PlaybackID is the unique identifier for this playback
+	PlaybackID string
+
+	// MediaURI is the URI from which to obtain the playback media
+	MediaURI string
 }
 
 // BridgeRecord is the request for recording a bridge
@@ -332,8 +355,11 @@ type BridgeRecord struct {
 	// ID is the identifier of the bridge
 	ID string
 
-	// RecordRequest is the request for recording audio
-	RecordRequest client.RecordRequest
+	// Name is the name for the recording
+	Name string
+
+	// Options is the list of recording Options
+	Options *ari.RecordingOptions
 }
 
 // BridgeRemoveChannel is the request for removing a channel on the bridge
@@ -410,8 +436,14 @@ type ChannelContinue struct {
 	// ID is the channel ID
 	ID string
 
-	// ContinueRequest is the information for the continue request
-	ContinueRequest client.ContinueRequest
+	// Context is the context into which the channel should be continued
+	Context string
+
+	// Extension is the extension into which the channel should be continued
+	Extension string
+
+	// Priority is the priority at which the channel should be continued
+	Priority int
 }
 
 // ChannelDial describes a request to dial
@@ -422,8 +454,11 @@ type ChannelDial struct {
 	// ID is the channel ID
 	ID string
 
-	// DialRequest is the data for the dial operation
-	DialRequest client.DialRequest
+	// Caller is the channel ID of the "caller" channel; if specified, the media parameters of the dialing channel will be matched to the "caller" channel.
+	Caller string
+
+	// Timeout is the maximum time which should be allowed for the dial to complete
+	Timeout time.Duration
 }
 
 // ChannelHangup is the request for hanging up a channel
@@ -478,7 +513,7 @@ type ChannelMute struct {
 	ID string
 
 	// Direction is the direction to mute
-	Direction string
+	Direction ari.Direction
 }
 
 // ChannelOriginate is the request for creating a channel
@@ -498,8 +533,11 @@ type ChannelPlay struct {
 	// ID is the identifier for the channel
 	ID string
 
-	// PlayRequest is the request information for playing audio
-	PlayRequest client.PlayRequest
+	// PlaybackID is the unique identifier for this playback
+	PlaybackID string
+
+	// MediaURI is the URI from which to obtain the playback media
+	MediaURI string
 }
 
 // ChannelRecord is the request for recording a channel
@@ -510,8 +548,11 @@ type ChannelRecord struct {
 	// ID is the identifier for the channel
 	ID string
 
-	// RecordRequest is the recording request data
-	RecordRequest client.RecordRequest
+	// Name is the name for the recording
+	Name string
+
+	// Options is the list of recording Options
+	Options *ari.RecordingOptions
 }
 
 // ChannelRing is the request for playing a ringing noise on a channel
@@ -554,8 +595,11 @@ type ChannelSnoop struct {
 	// ID is the identifier for the channel
 	ID string
 
-	// SnoopRequest is the request information for the snoop
-	SnoopRequest client.SnoopRequest
+	// SnoopID is the ID to use for the snoop channel which will be created.
+	SnoopID string
+
+	// Options describe the parameters for the snoop session
+	Options *ari.SnoopOptions
 }
 
 // ChannelStopHold is the request for stopping the hold of a channel
@@ -612,7 +656,7 @@ type ChannelUnmute struct {
 	ID string
 
 	// Direction is the direction of the unmute
-	Direction string
+	Direction ari.Direction
 }
 
 // ChannelVariables is the request type for channel variable operations
@@ -731,10 +775,10 @@ type MailboxUpdate struct {
 	// Name is the name of the mailbox
 	Name string
 
-	// New ??? TODO
+	// New is the number of New (unread) messages in the mailbox
 	New int
 
-	// Old ??? TODO
+	// Old is the number of Old (read) messages in the mailbox
 	Old int
 }
 

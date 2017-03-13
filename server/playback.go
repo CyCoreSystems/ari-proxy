@@ -7,7 +7,7 @@ import (
 )
 
 func (s *Server) playbackControl(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Playback.Control(req.PlaybackControl.ID, req.PlaybackControl.Command)
+	err := s.ari.Playback().Control(req.PlaybackControl.ID, req.PlaybackControl.Command)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -17,7 +17,7 @@ func (s *Server) playbackControl(ctx context.Context, reply string, req *proxy.R
 }
 
 func (s *Server) playbackData(ctx context.Context, reply string, req *proxy.Request) {
-	d, err := s.ari.Playback.Data(req.PlaybackData.ID)
+	d, err := s.ari.Playback().Data(req.PlaybackData.ID)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -27,7 +27,7 @@ func (s *Server) playbackData(ctx context.Context, reply string, req *proxy.Requ
 }
 
 func (s *Server) playbackStop(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Playback.Stop(req.PlaybackStop.ID)
+	err := s.ari.Playback().Stop(req.PlaybackStop.ID)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -39,7 +39,7 @@ func (s *Server) playbackStop(ctx context.Context, reply string, req *proxy.Requ
 func (s *Server) playbackSubscribe(ctx context.Context, reply string, req *proxy.Request) {
 
 	// check for existence
-	_, err := s.ari.Playback.Data(req.PlaybackSubscribe.ID)
+	_, err := s.ari.Playback().Data(req.PlaybackSubscribe.ID)
 	if err != nil {
 		s.sendError(reply, err)
 		return

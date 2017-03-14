@@ -19,18 +19,6 @@ type Announcement struct {
 	Application string `json:"application"`
 }
 
-// Metadata describes the metadata and associations of a message
-type Metadata struct {
-	// Application describes the ARI application
-	Application string `json:"application,omitempty"`
-
-	// Asterisk describes the ID of the associated Asterisk instance
-	Asterisk string `json:"asterisk,omitempty"`
-
-	// Dialog describes the dialog, if present
-	Dialog string `json:"dialog,omitempty"`
-}
-
 // Entity is a response which returns a specific Entity, which is a stand-in for an entity Handler, containing the necessary descriptions to uniquely control the described entity.
 type Entity struct {
 	Metadata *Metadata
@@ -78,14 +66,6 @@ func (e *Response) IsNotFound() bool {
 // NewErrorResponse wraps an error as an ErrorResponse
 func NewErrorResponse(err error) *Response {
 	return &Response{Error: err.Error()}
-}
-
-// Event describes an ARI event sent from the ARI proxy to any subscribed clients
-type Event struct {
-	// Metadata is the metadata associated with the event
-	Metadata *Metadata
-
-	Event ari.Event
 }
 
 // Request describes a request which is sent from an ARI proxy Client to an ARI proxy Server

@@ -234,19 +234,24 @@ func (s *Server) runEventHandler(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case e := <-sub.Events():
-			pubEvent := proxy.Event{
-				Metadata: s.Metadata(""),
-				Event:    e,
+			raw, err := ari.EventToRaw(e)
+			if err != nil {
+				s.Log.Error("Failed to encode event to RawEvent", "error", err)
+				continue
 			}
 
+			// Add metadata
+			raw.Header.Set("application", s.Application)
+			raw.Header.Set("asterisk", s.AsteriskID)
+
 			// Publish event to canonical destination
-			s.nats.Publish(fmt.Sprintf("%sevent.%s.%s", s.NATSPrefix, s.Application, s.AsteriskID), &pubEvent)
+			s.nats.Publish(fmt.Sprintf("%sevent.%s.%s", s.NATSPrefix, s.Application, s.AsteriskID), raw)
 
 			// Publish event to any associated dialogs
 			for _, d := range s.dialogsForEvent(e) {
-				dlgEvent := pubEvent
-				dlgEvent.Metadata = s.Metadata(d)
-				s.nats.Publish(fmt.Sprintf("%sdialogevent.%s", s.NATSPrefix, d), &dlgEvent)
+				dRaw := raw
+				dRaw.Header.Set("dialog", d)
+				s.nats.Publish(fmt.Sprintf("%sdialogevent.%s", s.NATSPrefix, d), dRaw)
 			}
 		}
 	}
@@ -565,16 +570,6 @@ func (s *Server) sendError(reply string, err error) {
 
 func (s *Server) sendNotFound(reply string) {
 	s.nats.Publish(reply, proxy.NewErrorResponse(proxy.ErrNotFound))
-}
-
-// Metadata returns the metadata for this server.  The dialog parameter is
-// optional; set it to the empty string if one is not applicable or known.
-func (s *Server) Metadata(dialog string) *proxy.Metadata {
-	return &proxy.Metadata{
-		Application: s.Application,
-		Asterisk:    s.AsteriskID,
-		Dialog:      dialog,
-	}
 }
 
 /*

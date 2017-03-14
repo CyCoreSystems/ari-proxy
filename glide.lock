@@ -1,8 +1,8 @@
 hash: 73b6e7fc53cbbf9a4822b98f38d4ff45c4ad91719af4360d1ba101208f28784d
-updated: 2017-03-13T14:00:10.237152797-04:00
+updated: 2017-03-14T01:54:21.340102226-04:00
 imports:
 - name: github.com/CyCoreSystems/ari
-  version: 1e3129cb572d69e233d3ff5788061fd63f6f8971
+  version: 5540c9393aef9af18502e0ac9d52b3d2737ff607
   subpackages:
   - client/native
   - stdbus
@@ -39,7 +39,7 @@ imports:
 - name: github.com/pelletier/go-buffruneio
   version: c37440a7cf42ac63b919c752ca73a85067e05992
 - name: github.com/pelletier/go-toml
-  version: 13d49d4606eb801b8f01ae542b4afc4c6ee3d84a
+  version: 3b00596b2e9ee541bbd72dc50cc0c60e2b46c69c
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/satori/go.uuid

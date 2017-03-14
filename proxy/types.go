@@ -19,6 +19,18 @@ type Announcement struct {
 	Application string `json:"application"`
 }
 
+// Metadata describes the metadata and associations of a message
+type Metadata struct {
+	// Application describes the ARI application
+	Application string `json:"application,omitempty"`
+
+	// Asterisk describes the ID of the associated Asterisk instance
+	Asterisk string `json:"asterisk,omitempty"`
+
+	// Dialog describes the dialog, if present
+	Dialog string `json:"dialog,omitempty"`
+}
+
 // Entity is a response which returns a specific Entity, which is a stand-in for an entity Handler, containing the necessary descriptions to uniquely control the described entity.
 type Entity struct {
 	Metadata *Metadata

@@ -572,6 +572,16 @@ func (s *Server) sendNotFound(reply string) {
 	s.nats.Publish(reply, proxy.NewErrorResponse(proxy.ErrNotFound))
 }
 
+// Metadata returns the metadata for this server.  The dialog parameter is
+// optional; set it to the empty string if one is not applicable or known.
+func (s *Server) Metadata(dialog string) *proxy.Metadata {
+	return &proxy.Metadata{
+		Application: s.Application,
+		Asterisk:    s.AsteriskID,
+		Dialog:      dialog,
+	}
+}
+
 /*
 // Start runs the server side instance
 func (i *Instance) Start(ctx context.Context) {

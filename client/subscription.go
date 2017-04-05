@@ -1,11 +1,16 @@
 package client
 
-import "github.com/CyCoreSystems/ari"
+import (
+	"sync"
+
+	"github.com/CyCoreSystems/ari"
+)
 
 type natsSubscription struct {
 	m         ari.Matcher
 	closeChan chan struct{}
 	events    chan ari.Event
+	once      sync.Once
 }
 
 func newSubscription(m ari.Matcher) *natsSubscription {
@@ -19,20 +24,24 @@ func newSubscription(m ari.Matcher) *natsSubscription {
 func (ns *natsSubscription) Start(s ari.Subscriber, n ...string) {
 
 	sub := s.Subscribe(n...)
+	var wg sync.WaitGroup
+
 	readyCh := make(chan struct{})
 
+	wg.Add(1)
 	go func() {
 		defer sub.Cancel()
-		close(readyCh)
+		defer ns.Cancel()
+
+		wg.Done()
+
 		for {
 			select {
 			case <-ns.closeChan:
-				ns.closeChan = nil
 				return
 			case evt, ok := <-sub.Events():
 				if !ok {
-					close(ns.closeChan)
-					continue
+					return
 				}
 				if ns.m == nil {
 					ns.events <- evt
@@ -43,7 +52,7 @@ func (ns *natsSubscription) Start(s ari.Subscriber, n ...string) {
 		}
 	}()
 
-	<-readyCh
+	wg.Wait()
 }
 
 func (ns *natsSubscription) Events() chan ari.Event {
@@ -51,7 +60,7 @@ func (ns *natsSubscription) Events() chan ari.Event {
 }
 
 func (ns *natsSubscription) Cancel() {
-	if ns.closeChan != nil {
+	ns.Once(func() {
 		close(ns.closeChan)
-	}
+	})
 }

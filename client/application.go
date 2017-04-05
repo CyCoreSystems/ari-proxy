@@ -11,82 +11,96 @@ type application struct {
 	c *Client
 }
 
-func (a *application) List() ([]ari.ApplicationHandle, error) {
-	panic("not implemented")
-}
-
-func (a *application) Get(name string) ari.ApplicationHandle {
-	panic("not implemented")
-}
-
-func (a *application) Data(name string) (*ari.ApplicationData, error) {
-	panic("not implemented")
-}
-
-func (a *application) Subscribe(name string, eventSource string) error {
-	panic("not implemented")
-}
-
-func (a *application) Unsubscribe(name string, eventSource string) error {
-	panic("not implemented")
-}
-
-func (a *application) List() (ax []*ari.ApplicationHandle, err error) {
+func (a *application) List() (ret []ari.ApplicationHandle, err error) {
 	req := proxy.Request{
 		ApplicationList: &proxy.ApplicationList{},
 	}
 	var resp proxy.EntityList
-	err = a.nats.Request(fmt.Sprintf("%sget.%s", a.prefix, a.app), &req, &resp, a.opts.RequestTimeout)
+	err = a.c.nc.Request(proxy.GetSubject(a.c.prefix, a.c.appName, ""), &req, &resp, a.c.requestTimeout)
 	if err != nil {
 		return
 	}
 
 	for _, i := range resp.List {
-		ret = append(ret, ari.NewApplicationHandle(i.ID(), a.app))
+		ret = append(ret, a.Get(i.ID))
 	}
 	return
 }
 
-func (a *application) Get(name string) *ari.ApplicationHandle {
-	panic("not implemented")
+func (a *application) Data(name string) (d *ari.ApplicationData, err error) {
+	req := proxy.Request{
+		ApplicationData: &proxy.ApplicationData{
+			Name: name,
+		},
+	}
+	fmt.Printf("sending message on subjecT: %s\n", proxy.GetSubject(a.c.prefix, a.c.appName, ""))
+	var resp proxy.Entity
+	err = a.c.nc.Request(proxy.GetSubject(a.c.prefix, a.c.appName, ""), &req, &resp, a.c.requestTimeout)
+	if err != nil {
+		return
+	}
+
+	return
 }
 
-func (a *application) Data(name string) (ari.ApplicationData, error) {
-	panic("not implemented")
+func (a *application) Get(id string) (h ari.ApplicationHandle) {
+	return &applicationHandle{id: id, application: a}
 }
 
-func (a *application) Subscribe(name string, eventSource string) error {
-	panic("not implemented")
-}
-
-func (a *application) Unsubscribe(name string, eventSource string) error {
-	panic("not implemented")
-}
-
-func (a *natsApplication) Get(name string) *ari.ApplicationHandle {
-	return ari.NewApplicationHandle(name, a)
-}
-
-func (a *natsApplication) List() (ax []*ari.ApplicationHandle, err error) {
-	var apps []string
-	err = a.conn.ReadRequest("ari.applications.all", "", nil, &apps)
-	for _, app := range apps {
-		ax = append(ax, a.Get(app))
+func (a *application) Subscribe(name string, eventSource string) (err error) {
+	req := proxy.Request{
+		ApplicationSubscribe: &proxy.ApplicationSubscribe{
+			EventSource: eventSource,
+			Name:        name,
+		},
+	}
+	var resp proxy.Entity
+	err = a.c.nc.Request(proxy.CommandSubject(a.c.prefix, a.c.appName, ""), &req, &resp, a.c.requestTimeout)
+	if err != nil {
+		return
 	}
 	return
 }
 
-func (a *natsApplication) Data(name string) (d ari.ApplicationData, err error) {
-	err = a.conn.ReadRequest("ari.applications.data", name, nil, &d)
+func (a *application) Unsubscribe(name string, eventSource string) (err error) {
+	req := proxy.Request{
+		ApplicationUnsubscribe: &proxy.ApplicationUnsubscribe{
+			EventSource: eventSource,
+			Name:        name,
+		},
+	}
+	var resp proxy.Entity
+	err = a.c.nc.Request(proxy.CommandSubject(a.c.prefix, a.c.appName, ""), &req, &resp, a.c.requestTimeout)
+	if err != nil {
+		return
+	}
 	return
 }
 
-func (a *natsApplication) Subscribe(name string, eventSource string) (err error) {
-	err = a.conn.StandardRequest("ari.applications.subscribe", name, eventSource, nil)
+type applicationHandle struct {
+	id          string
+	application ari.Application
+}
+
+func (a *applicationHandle) ID() string {
+	return a.id
+}
+
+func (a *applicationHandle) Data() (ad *ari.ApplicationData, err error) {
+	ad, err = a.application.Data(a.id)
 	return
 }
 
-func (a *natsApplication) Unsubscribe(name string, eventSource string) (err error) {
-	err = a.conn.StandardRequest("ari.applications.unsubscribe", name, eventSource, nil)
+func (a *applicationHandle) Subscribe(eventSource string) (err error) {
+	err = a.application.Subscribe(a.id, eventSource)
+	return
+}
+
+func (a *applicationHandle) Unsubscribe(eventSource string) (err error) {
+	err = a.application.Unsubscribe(a.id, eventSource)
+	return
+}
+
+func (a *applicationHandle) Match(evt ari.Event) (ok bool) {
 	return
 }

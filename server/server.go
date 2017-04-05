@@ -234,9 +234,9 @@ func (s *Server) runEventHandler(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case e := <-sub.Events():
-			raw, err := ari.EventToRaw(e)
-			if err != nil {
-				s.Log.Error("Failed to encode event to RawEvent", "error", err)
+			raw := ari.EventToRaw(e)
+			if raw == nil {
+				s.Log.Error("Failed to encode event to RawEvent")
 				continue
 			}
 

@@ -5,30 +5,33 @@ import (
 
 	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/proxy"
-	"github.com/nats-io/nats"
 )
 
 type application struct {
-	app    string
-	dialog string
-	prefix string
-	nats   *nats.EncodedConn
-
-	opts *Options
+	c *Client
 }
 
-func newApplication(opts *Options) *application {
-	return &application{
-		app:    opts.Application,
-		dialog: opts.Dialog,
-		prefix: opts.NATSPrefix,
-		nats:   opts.NATS,
-		opts:   opts,
-	}
-
+func (a *application) List() ([]ari.ApplicationHandle, error) {
+	panic("not implemented")
 }
 
-func (a *application) List() (ret []*ari.ApplicationHandle, err error) {
+func (a *application) Get(name string) ari.ApplicationHandle {
+	panic("not implemented")
+}
+
+func (a *application) Data(name string) (*ari.ApplicationData, error) {
+	panic("not implemented")
+}
+
+func (a *application) Subscribe(name string, eventSource string) error {
+	panic("not implemented")
+}
+
+func (a *application) Unsubscribe(name string, eventSource string) error {
+	panic("not implemented")
+}
+
+func (a *application) List() (ax []*ari.ApplicationHandle, err error) {
 	req := proxy.Request{
 		ApplicationList: &proxy.ApplicationList{},
 	}

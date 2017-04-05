@@ -1,5 +1,6 @@
 
 all:
+	go build `go list ./... | grep -v /vendor/`
 	mkdir -p bin
 	go build -o bin/ari-proxy ./cmd/ari-proxy
 

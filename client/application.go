@@ -31,12 +31,13 @@ func (a *application) Data(name string) (d *ari.ApplicationData, err error) {
 			Name: name,
 		},
 	}
-	var resp proxy.Entity
+	var resp ari.ApplicationData
 	err = a.c.nc.Request(proxy.GetSubject(a.c.prefix, a.c.appName, ""), &req, &resp, a.c.requestTimeout)
 	if err != nil {
 		return
 	}
 
+	d = &resp
 	return
 }
 

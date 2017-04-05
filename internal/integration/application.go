@@ -46,10 +46,17 @@ func TestApplicationList(t *testing.T, s Server, clientFactory ClientFactory) {
 
 func TestApplicationData(t *testing.T, s Server, clientFactory ClientFactory) {
 	runTest("simple", t, s, clientFactory, func(m *mock, cl ari.Client) {
-		m.Application.On("Data", "1").Return(&ari.ApplicationData{}, nil)
+		ad := &ari.ApplicationData{}
+		ad.Name = "app1"
 
-		if _, err := cl.Application().Data("1"); err != nil {
+		m.Application.On("Data", "1").Return(ad, nil)
+
+		res, err := cl.Application().Data("1")
+		if err != nil {
 			t.Errorf("Unexpected error in remote Data call: %v", err)
+		}
+		if res == nil || res.Name != ad.Name {
+			t.Errorf("Expected application data name %s, got %s", ad, res)
 		}
 	})
 }

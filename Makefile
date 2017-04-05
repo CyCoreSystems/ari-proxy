@@ -7,4 +7,6 @@ docker: all
 	docker build -t cycoresystems/ari-proxy ./
 	docker push cycoresystems/ari-proxy
 
+test:
+	go test `go list ./... | grep -v /vendor/`
 

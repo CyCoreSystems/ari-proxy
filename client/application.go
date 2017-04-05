@@ -1,8 +1,6 @@
 package client
 
 import (
-	"fmt"
-
 	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/proxy"
 )
@@ -33,7 +31,6 @@ func (a *application) Data(name string) (d *ari.ApplicationData, err error) {
 			Name: name,
 		},
 	}
-	fmt.Printf("sending message on subjecT: %s\n", proxy.GetSubject(a.c.prefix, a.c.appName, ""))
 	var resp proxy.Entity
 	err = a.c.nc.Request(proxy.GetSubject(a.c.prefix, a.c.appName, ""), &req, &resp, a.c.requestTimeout)
 	if err != nil {

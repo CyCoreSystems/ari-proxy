@@ -30,7 +30,7 @@ type ClientFactory func(ctx context.Context) (ari.Client, error)
 
 // Server represents a generalized ari-proxy server
 type Server interface {
-	Start(ctx context.Context, t *testing.T, client ari.Client, nc *nats.EncodedConn)
+	Start(ctx context.Context, t *testing.T, client ari.Client, nc *nats.EncodedConn, completeCh chan struct{})
 	Ready() <-chan struct{}
 	Close() error
 }
@@ -49,7 +49,9 @@ func runTest(desc string, t *testing.T, s Server, clientFactory ClientFactory, f
 			t.Skipf("Error connecting to nats: %s", err)
 		}
 
-		s.Start(ctx, t, m.Client, nc)
+		completeCh := make(chan struct{})
+
+		s.Start(ctx, t, m.Client, nc, completeCh)
 
 		select {
 		case <-s.Ready():
@@ -66,5 +68,10 @@ func runTest(desc string, t *testing.T, s Server, clientFactory ClientFactory, f
 		defer cl.Close()
 
 		fn(m, cl)
+
+		s.Close()
+
+		cancel()
+		<-completeCh
 	})
 }

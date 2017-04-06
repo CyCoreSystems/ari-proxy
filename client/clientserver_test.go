@@ -18,7 +18,7 @@ type srv struct {
 	s *server.Server
 }
 
-func (s *srv) Start(ctx context.Context, t *testing.T, client ari.Client, nc *nats.EncodedConn) {
+func (s *srv) Start(ctx context.Context, t *testing.T, client ari.Client, nc *nats.EncodedConn, completeCh chan struct{}) {
 	s.s = server.New()
 
 	go func() {
@@ -27,6 +27,7 @@ func (s *srv) Start(ctx context.Context, t *testing.T, client ari.Client, nc *na
 				t.Errorf("Failed to start server: %s", err)
 			}
 		}
+		close(completeCh)
 	}()
 }
 

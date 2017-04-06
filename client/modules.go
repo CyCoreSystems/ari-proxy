@@ -1,7 +1,6 @@
 package client
 
-import "github.com/CyCoreSystems/ari"
-
+/*
 type natsModules struct {
 	conn *Conn
 }
@@ -38,3 +37,4 @@ func (m *natsModules) Data(name string) (md ari.ModuleData, err error) {
 	err = m.conn.ReadRequest("ari.modules.data", name, nil, &md)
 	return
 }
+*/

@@ -31,13 +31,15 @@ func (a *application) Data(name string) (d *ari.ApplicationData, err error) {
 			Name: name,
 		},
 	}
-	var resp ari.ApplicationData
+	var resp proxy.DataResponse
 	err = a.c.nc.Request(proxy.GetSubject(a.c.prefix, a.c.appName, ""), &req, &resp, a.c.requestTimeout)
 	if err != nil {
 		return
 	}
-
-	d = &resp
+	if err = resp.Err(); err != nil {
+		return
+	}
+	d = resp.ApplicationData
 	return
 }
 
@@ -52,11 +54,12 @@ func (a *application) Subscribe(name string, eventSource string) (err error) {
 			Name:        name,
 		},
 	}
-	var resp proxy.Entity
+	var resp proxy.Response
 	err = a.c.nc.Request(proxy.CommandSubject(a.c.prefix, a.c.appName, ""), &req, &resp, a.c.requestTimeout)
 	if err != nil {
 		return
 	}
+	err = resp.Err()
 	return
 }
 
@@ -67,11 +70,12 @@ func (a *application) Unsubscribe(name string, eventSource string) (err error) {
 			Name:        name,
 		},
 	}
-	var resp proxy.Entity
+	var resp proxy.Response
 	err = a.c.nc.Request(proxy.CommandSubject(a.c.prefix, a.c.appName, ""), &req, &resp, a.c.requestTimeout)
 	if err != nil {
 		return
 	}
+	err = resp.Err()
 	return
 }
 

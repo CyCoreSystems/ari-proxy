@@ -2,32 +2,64 @@ package client
 
 import "github.com/CyCoreSystems/ari"
 
-type natsPlayback struct {
-	conn       *Conn
-	subscriber ari.Subscriber
+type playback struct {
+	c *Client
 }
 
-func (p *natsPlayback) Get(id string) *ari.PlaybackHandle {
-	return ari.NewPlaybackHandle(id, p)
+func (p *playback) Get(id string) ari.PlaybackHandle {
+	return &playbackHandle{
+		id:       id,
+		playback: p,
+	}
 }
 
-func (p *natsPlayback) Data(id string) (d ari.PlaybackData, err error) {
-	err = p.conn.ReadRequest("ari.playback.data", id, nil, &d)
+func (p *playback) Data(id string) (d *ari.PlaybackData, err error) {
 	return
 }
 
-func (p *natsPlayback) Control(id string, op string) (err error) {
-	err = p.conn.StandardRequest("ari.playback.control", id, &op, nil)
+func (p *playback) Control(id string, op string) (err error) {
 	return
 }
 
-func (p *natsPlayback) Stop(id string) (err error) {
-	err = p.conn.StandardRequest("ari.playback.stop", id, nil, nil)
+func (p *playback) Stop(id string) (err error) {
 	return
 }
 
-func (p *natsPlayback) Subscribe(id string, nx ...string) ari.Subscription {
-	ns := newSubscription(p.Get(id))
-	ns.Start(p.subscriber, nx...)
-	return ns
+func (p *playback) Subscribe(id string, nx ...string) ari.Subscription {
+	//ns := newSubscription(p.Get(id))
+	//ns.Start(p.subscriber, nx...)
+	//return ns
+	return nil
+}
+
+type playbackHandle struct {
+	playback *playback
+	id       string
+}
+
+func (ph *playbackHandle) ID() string {
+	return ph.id
+}
+
+func (ph *playbackHandle) Control(op string) (err error) {
+	err = ph.playback.Control(ph.id, op)
+	return
+}
+
+func (ph *playbackHandle) Stop() (err error) {
+	err = ph.playback.Stop(ph.id)
+	return
+}
+
+func (ph *playbackHandle) Subscribe(nx ...string) ari.Subscription {
+	return ph.playback.Subscribe(ph.id, nx...)
+}
+
+func (ph *playbackHandle) Data() (d *ari.PlaybackData, err error) {
+	d, err = ph.playback.Data(ph.id)
+	return
+}
+
+func (ph *playbackHandle) Match(evt ari.Event) (ok bool) {
+	return
 }

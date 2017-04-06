@@ -1,7 +1,6 @@
 package client
 
-import "github.com/CyCoreSystems/ari"
-
+/*
 type natsStoredRecording struct {
 	conn *Conn
 }
@@ -43,3 +42,4 @@ func (sr *natsStoredRecording) Delete(name string) (err error) {
 	err = sr.conn.StandardRequest("ari.recording.stored.delete", name, nil, nil)
 	return
 }
+*/

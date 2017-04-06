@@ -1,7 +1,6 @@
 package client
 
-import "github.com/CyCoreSystems/ari"
-
+/*
 type natsLogging struct {
 	conn *Conn
 }
@@ -25,3 +24,4 @@ func (l *natsLogging) Delete(name string) (err error) {
 	err = l.conn.StandardRequest("ari.logging.delete", name, nil, nil)
 	return
 }
+*/

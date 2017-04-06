@@ -77,7 +77,29 @@ func (e *Response) IsNotFound() bool {
 
 // NewErrorResponse wraps an error as an ErrorResponse
 func NewErrorResponse(err error) *Response {
+	if err == nil {
+		return &Response{}
+	}
 	return &Response{Error: err.Error()}
+}
+
+// DataResponse is a response to a data request
+type DataResponse struct {
+	Error           string               `json:"error,omitempty"`
+	ApplicationData *ari.ApplicationData `json:",inline,omitempty"`
+	AsteriskInfo    *ari.AsteriskInfo    `json:",inline,omitempty"`
+	Variable        string               `json:"variable,omitempty"`
+	BridgeData      *ari.BridgeData      `json:",inline,omitempty"`
+	ChannelData     *ari.ChannelData     `json:",inline,omitempty"`
+}
+
+// Err returns an error from the DataResponse.
+// If the response's Error is empty, a nil error is returned.  Otherwise, the error will be filled with the value of dataResponse.Error.
+func (e *DataResponse) Err() error {
+	if e.Error != "" {
+		return errors.New(e.Error)
+	}
+	return nil
 }
 
 // Request describes a request which is sent from an ARI proxy Client to an ARI proxy Server

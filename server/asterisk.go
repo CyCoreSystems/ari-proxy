@@ -13,7 +13,9 @@ func (s *Server) asteriskInfo(ctx context.Context, reply string, req *proxy.Requ
 		return
 	}
 
-	s.nats.Publish(reply, &info)
+	s.nats.Publish(reply, &proxy.DataResponse{
+		AsteriskInfo: info,
+	})
 }
 
 func (s *Server) asteriskReloadModule(ctx context.Context, reply string, req *proxy.Request) {
@@ -33,7 +35,9 @@ func (s *Server) asteriskVariableGet(ctx context.Context, reply string, req *pro
 		return
 	}
 
-	s.nats.Publish(reply, val)
+	s.nats.Publish(reply, &proxy.DataResponse{
+		Variable: val,
+	})
 }
 
 func (s *Server) asteriskVariableSet(ctx context.Context, reply string, req *proxy.Request) {

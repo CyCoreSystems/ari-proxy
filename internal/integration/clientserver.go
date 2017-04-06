@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"sync"
+
 	"github.com/CyCoreSystems/ari"
 	"github.com/nats-io/nats"
 	"github.com/pkg/errors"
@@ -35,8 +37,19 @@ type Server interface {
 	Close() error
 }
 
-func runTest(desc string, t *testing.T, s Server, clientFactory ClientFactory, fn func(m *mock, cl ari.Client)) {
+// TestHandler is the interface for test execution
+type testHandler func(t *testing.T, m *mock, cl ari.Client)
+
+func runTest(desc string, t *testing.T, s Server, clientFactory ClientFactory, fn testHandler) {
+	defer func() {
+		// recover from panic if one occured. Set err to nil otherwise.
+		if err := recover(); err != nil {
+			t.Errorf("PANIC")
+		}
+	}()
+
 	t.Run(desc, func(t *testing.T) {
+
 		// setup mocking
 		m := standardMock()
 
@@ -66,12 +79,19 @@ func runTest(desc string, t *testing.T, s Server, clientFactory ClientFactory, f
 			return
 		}
 		defer cl.Close()
+		var once sync.Once
 
-		fn(m, cl)
+		m.Shutdown = func() {
+			once.Do(func() {
+				s.Close()
 
-		s.Close()
+				cancel()
+				<-completeCh
+			})
+		}
 
-		cancel()
-		<-completeCh
+		fn(t, m, cl)
+
+		m.Shutdown()
 	})
 }

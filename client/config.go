@@ -1,7 +1,6 @@
 package client
 
-import "github.com/CyCoreSystems/ari"
-
+/*
 type natsConfig struct {
 	conn *Conn
 }
@@ -27,3 +26,4 @@ func (c *natsConfig) Delete(configClass string, objectType string, id string) (e
 	err = c.conn.StandardRequest("ari.asterisk.config.delete", configClass+"."+objectType+"."+id, nil, nil)
 	return
 }
+*/

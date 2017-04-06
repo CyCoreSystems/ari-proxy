@@ -30,7 +30,7 @@ func (s *Server) channelBusy(ctx context.Context, reply string, req *proxy.Reque
 }
 
 func (s *Server) channelCongestion(ctx context.Context, reply string, req *proxy.Request) {
-	ID := req.ChannelBusy.ID
+	ID := req.ChannelCongestion.ID
 	err := s.ari.Channel().Congestion(ID)
 	if err != nil {
 		s.sendError(reply, err)
@@ -60,7 +60,11 @@ func (s *Server) channelCreate(ctx context.Context, reply string, req *proxy.Req
 		s.Dialog.Bind(req.Metadata.Dialog, "channel", handle.ID())
 	}
 
-	s.nats.Publish(reply, handle.ID())
+	s.nats.Publish(reply, &proxy.Response{
+		Entity: &proxy.Entity{
+			ID: handle.ID(),
+		},
+	})
 }
 
 func (s *Server) channelData(ctx context.Context, reply string, req *proxy.Request) {
@@ -70,7 +74,9 @@ func (s *Server) channelData(ctx context.Context, reply string, req *proxy.Reque
 		return
 	}
 
-	s.nats.Publish(reply, &d)
+	s.nats.Publish(reply, &proxy.DataResponse{
+		ChannelData: d,
+	})
 }
 
 func (s *Server) channelContinue(ctx context.Context, reply string, req *proxy.Request) {
@@ -139,7 +145,11 @@ func (s *Server) channelOriginate(ctx context.Context, reply string, req *proxy.
 		s.Dialog.Bind(req.Metadata.Dialog, "channel", handle.ID())
 	}
 
-	s.nats.Publish(reply, handle.ID())
+	s.nats.Publish(reply, &proxy.Response{
+		Entity: &proxy.Entity{
+			ID: handle.ID(),
+		},
+	})
 }
 
 func (s *Server) channelPlay(ctx context.Context, reply string, req *proxy.Request) {
@@ -159,7 +169,11 @@ func (s *Server) channelPlay(ctx context.Context, reply string, req *proxy.Reque
 	}
 
 	//NOTE: used to send nil
-	s.nats.Publish(reply, ph.ID())
+	s.nats.Publish(reply, &proxy.Response{
+		Entity: &proxy.Entity{
+			ID: ph.ID(),
+		},
+	})
 }
 
 func (s *Server) channelRecord(ctx context.Context, reply string, req *proxy.Request) {
@@ -178,7 +192,11 @@ func (s *Server) channelRecord(ctx context.Context, reply string, req *proxy.Req
 		return
 	}
 
-	s.nats.Publish(reply, lr.ID())
+	s.nats.Publish(reply, &proxy.Response{
+		Entity: &proxy.Entity{
+			ID: lr.ID(),
+		},
+	})
 }
 
 func (s *Server) channelRing(ctx context.Context, reply string, req *proxy.Request) {
@@ -226,7 +244,11 @@ func (s *Server) channelSnoop(ctx context.Context, reply string, req *proxy.Requ
 		s.Dialog.Bind(req.Metadata.Dialog, "channel", ch.ID())
 	}
 
-	s.nats.Publish(reply, ch.ID())
+	s.nats.Publish(reply, &proxy.Response{
+		Entity: &proxy.Entity{
+			ID: ch.ID(),
+		},
+	})
 }
 
 func (s *Server) channelStopHold(ctx context.Context, reply string, req *proxy.Request) {
@@ -296,7 +318,9 @@ func (s *Server) channelVariableGet(ctx context.Context, reply string, req *prox
 		return
 	}
 
-	s.nats.Publish(reply, val)
+	s.nats.Publish(reply, proxy.DataResponse{
+		Variable: val,
+	})
 }
 
 func (s *Server) channelVariableSet(ctx context.Context, reply string, req *proxy.Request) {

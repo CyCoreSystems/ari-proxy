@@ -4,156 +4,374 @@ import (
 	"time"
 
 	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari-proxy/proxy"
 )
 
-// ContinueRequest is the request body for continuing over the message queue
-type ContinueRequest struct {
-	Context   string `json:"context"`
-	Extension string `json:"extension"`
-	Priority  int    `json:"priority"`
+type channel struct {
+	c *Client
 }
 
-type natsChannel struct {
-	conn          *Conn
-	subscriber    ari.Subscriber
-	playback      ari.Playback
-	liveRecording ari.LiveRecording
+func (c *channel) Playback() ari.Playback {
+	return c.c.Playback()
 }
 
-func (c *natsChannel) Playback() ari.Playback {
-	return c.playback
+func (c *channel) Get(id string) ari.ChannelHandle {
+	return nil
 }
 
-func (c *natsChannel) Get(id string) *ari.ChannelHandle {
-	return ari.NewChannelHandle(id, c)
-}
-
-func (c *natsChannel) List() (cx []*ari.ChannelHandle, err error) {
-	var channels []string
-	err = c.conn.ReadRequest("ari.channels.all", "", nil, &channels)
-	for _, ch := range channels {
-		cx = append(cx, c.Get(ch))
+func (c *channel) List() (ret []ari.ChannelHandle, err error) {
+	req := proxy.Request{
+		ChannelList: &proxy.ChannelList{},
 	}
-	return
-}
-
-func (c *natsChannel) Originate(req ari.OriginateRequest) (h *ari.ChannelHandle, err error) {
-	var channelID string
-	err = c.conn.StandardRequest("ari.channels.originate", "", &req, &channelID)
+	var resp proxy.Response
+	err = c.c.nc.Request(proxy.GetSubject(c.c.prefix, c.c.appName, ""), &req, &resp, c.c.requestTimeout)
 	if err != nil {
 		return
 	}
-	h = c.Get(channelID)
+	if err = resp.Err(); err != nil {
+		return
+	}
+	for _, i := range resp.EntityList.List {
+		ret = append(ret, c.Get(i.ID))
+	}
 	return
 }
 
-func (c *natsChannel) Create(req ari.ChannelCreateRequest) (h *ari.ChannelHandle, err error) {
-	var channelID string
-	err = c.conn.StandardRequest("ari.channels.create", "", &req, &channelID)
+func (c *channel) Originate(o ari.OriginateRequest) (h ari.ChannelHandle, err error) {
+	req := proxy.Request{
+		ChannelOriginate: &proxy.ChannelOriginate{
+			OriginateRequest: o,
+		},
+	}
+	var resp proxy.Response
+	err = c.c.nc.Request(proxy.CreateSubject(c.c.prefix, c.c.appName, ""), &req, &resp, c.c.requestTimeout)
 	if err != nil {
 		return
 	}
-	h = c.Get(channelID)
+	if err = resp.Err(); err != nil {
+		return
+	}
+	h = c.Get(resp.Entity.ID)
 	return
 }
 
-func (c *natsChannel) Data(id string) (cd ari.ChannelData, err error) {
-	err = c.conn.ReadRequest("ari.channels.data", id, nil, &cd)
+func (c *channel) Create(create ari.ChannelCreateRequest) (h ari.ChannelHandle, err error) {
+	req := proxy.Request{
+		ChannelCreate: &proxy.ChannelCreate{
+			ChannelCreateRequest: create,
+		},
+	}
+	var resp proxy.Response
+	err = c.c.nc.Request(proxy.CreateSubject(c.c.prefix, c.c.appName, ""), &req, &resp, c.c.requestTimeout)
+	if err != nil {
+		return
+	}
+	if err = resp.Err(); err != nil {
+		return
+	}
+	h = c.Get(resp.Entity.ID)
 	return
 }
 
-func (c *natsChannel) Continue(id string, context string, extension string, priority int) (err error) {
-	err = c.conn.StandardRequest("ari.channels.continue", id, &ContinueRequest{
-		Context:   context,
-		Extension: extension,
-		Priority:  priority,
-	}, nil)
+func (c *channel) Data(id string) (cd *ari.ChannelData, err error) {
+	req := proxy.Request{
+		ChannelData: &proxy.ChannelData{
+			ID: id,
+		},
+	}
+	var resp proxy.DataResponse
+	err = c.c.nc.Request(proxy.GetSubject(c.c.prefix, c.c.appName, ""), &req, &resp, c.c.requestTimeout)
+	if err != nil {
+		return
+	}
+	if err = resp.Err(); err != nil {
+		return
+	}
+	cd = resp.ChannelData
 	return
 }
 
-func (c *natsChannel) Busy(id string) (err error) {
-	err = c.Hangup(id, "busy")
+func (c *channel) Continue(id string, context string, extension string, priority int) (err error) {
+	req := proxy.Request{
+		ChannelContinue: &proxy.ChannelContinue{
+			Context:   context,
+			Extension: extension,
+			Priority:  priority,
+			ID:        id,
+		},
+	}
+	var resp proxy.Response
+	err = c.c.nc.Request(proxy.CommandSubject(c.c.prefix, c.c.appName, ""), &req, &resp, c.c.requestTimeout)
+	if err != nil {
+		return
+	}
+	if err = resp.Err(); err != nil {
+		return
+	}
 	return
 }
 
-func (c *natsChannel) Congestion(id string) (err error) {
-	err = c.Hangup(id, "congestion")
+func (c *channel) Busy(id string) (err error) {
+	req := proxy.Request{
+		ChannelBusy: &proxy.ChannelBusy{
+			ID: id,
+		},
+	}
+	var resp proxy.Response
+	err = c.c.nc.Request(proxy.CommandSubject(c.c.prefix, c.c.appName, ""), &req, &resp, c.c.requestTimeout)
+	if err != nil {
+		return
+	}
+	if err = resp.Err(); err != nil {
+		return
+	}
 	return
 }
 
-func (c *natsChannel) Hangup(id string, reason string) (err error) {
-	err = c.conn.StandardRequest("ari.channels.hangup", id, &reason, nil)
+func (c *channel) Congestion(id string) (err error) {
+	req := proxy.Request{
+		ChannelCongestion: &proxy.ChannelCongestion{
+			ID: id,
+		},
+	}
+	var resp proxy.Response
+	err = c.c.nc.Request(proxy.CommandSubject(c.c.prefix, c.c.appName, ""), &req, &resp, c.c.requestTimeout)
+	if err != nil {
+		return
+	}
+	if err = resp.Err(); err != nil {
+		return
+	}
 	return
 }
 
-func (c *natsChannel) Answer(id string) (err error) {
-	err = c.conn.StandardRequest("ari.channels.answer", id, nil, nil)
+func (c *channel) Hangup(id string, reason string) (err error) {
+	req := proxy.Request{
+		ChannelHangup: &proxy.ChannelHangup{
+			ID:     id,
+			Reason: reason,
+		},
+	}
+	var resp proxy.Response
+	err = c.c.nc.Request(proxy.CommandSubject(c.c.prefix, c.c.appName, ""), &req, &resp, c.c.requestTimeout)
+	if err != nil {
+		return
+	}
+	if err = resp.Err(); err != nil {
+		return
+	}
 	return
 }
 
-func (c *natsChannel) Ring(id string) (err error) {
-	err = c.conn.StandardRequest("ari.channels.ring", id, nil, nil)
+func (c *channel) Answer(id string) (err error) {
+	req := proxy.Request{
+		ChannelAnswer: &proxy.ChannelAnswer{
+			ID: id,
+		},
+	}
+	var resp proxy.Response
+	err = c.c.nc.Request(proxy.CommandSubject(c.c.prefix, c.c.appName, ""), &req, &resp, c.c.requestTimeout)
+	if err != nil {
+		return
+	}
+	if err = resp.Err(); err != nil {
+		return
+	}
 	return
 }
 
-func (c *natsChannel) StopRing(id string) (err error) {
-	err = c.conn.StandardRequest("ari.channels.stopring", id, nil, nil)
+func (c *channel) Ring(id string) (err error) {
+	req := proxy.Request{
+		ChannelRing: &proxy.ChannelRing{
+			ID: id,
+		},
+	}
+	var resp proxy.Response
+	err = c.c.nc.Request(proxy.CommandSubject(c.c.prefix, c.c.appName, ""), &req, &resp, c.c.requestTimeout)
+	if err != nil {
+		return
+	}
+	if err = resp.Err(); err != nil {
+		return
+	}
 	return
 }
 
-func (c *natsChannel) SendDTMF(id string, dtmf string, opts *ari.DTMFOptions) (err error) {
+func (c *channel) StopRing(id string) (err error) {
+	req := proxy.Request{
+		ChannelStopRing: &proxy.ChannelStopRing{
+			ID: id,
+		},
+	}
+	var resp proxy.Response
+	err = c.c.nc.Request(proxy.CommandSubject(c.c.prefix, c.c.appName, ""), &req, &resp, c.c.requestTimeout)
+	if err != nil {
+		return
+	}
+	if err = resp.Err(); err != nil {
+		return
+	}
+	return
+}
+
+func (c *channel) SendDTMF(id string, dtmf string, opts *ari.DTMFOptions) (err error) {
 	if opts == nil {
 		opts = &ari.DTMFOptions{}
 	}
-
-	type request struct {
-		Dtmf string           `json:"dtmf,omitempty"`
-		Opts *ari.DTMFOptions `json:"options,omitempty"`
+	req := proxy.Request{
+		ChannelSendDTMF: &proxy.ChannelSendDTMF{
+			ID:      id,
+			DTMF:    dtmf,
+			Options: opts,
+		},
 	}
-
-	req := request{dtmf, opts}
-
-	err = c.conn.StandardRequest("ari.channels.dtmf", id, &req, nil)
+	var resp proxy.Response
+	err = c.c.nc.Request(proxy.CommandSubject(c.c.prefix, c.c.appName, ""), &req, &resp, c.c.requestTimeout)
+	if err != nil {
+		return
+	}
+	if err = resp.Err(); err != nil {
+		return
+	}
 	return
 }
 
-func (c *natsChannel) Hold(id string) (err error) {
-	err = c.conn.StandardRequest("ari.channels.hold", id, nil, nil)
+func (c *channel) Hold(id string) (err error) {
+	req := proxy.Request{
+		ChannelHold: &proxy.ChannelHold{
+			ID: id,
+		},
+	}
+	var resp proxy.Response
+	err = c.c.nc.Request(proxy.CommandSubject(c.c.prefix, c.c.appName, ""), &req, &resp, c.c.requestTimeout)
+	if err != nil {
+		return
+	}
+	if err = resp.Err(); err != nil {
+		return
+	}
 	return
 }
 
-func (c *natsChannel) StopHold(id string) (err error) {
-	err = c.conn.StandardRequest("ari.channels.stophold", id, nil, nil)
+func (c *channel) StopHold(id string) (err error) {
+	req := proxy.Request{
+		ChannelStopHold: &proxy.ChannelStopHold{
+			ID: id,
+		},
+	}
+	var resp proxy.Response
+	err = c.c.nc.Request(proxy.CommandSubject(c.c.prefix, c.c.appName, ""), &req, &resp, c.c.requestTimeout)
+	if err != nil {
+		return
+	}
+	if err = resp.Err(); err != nil {
+		return
+	}
 	return
 }
 
-func (c *natsChannel) Mute(id string, dir string) (err error) {
-	err = c.conn.StandardRequest("ari.channels.mute", id, &dir, nil)
+func (c *channel) Mute(id string, dir ari.Direction) (err error) {
+	req := proxy.Request{
+		ChannelMute: &proxy.ChannelMute{
+			ID:        id,
+			Direction: dir,
+		},
+	}
+	var resp proxy.Response
+	err = c.c.nc.Request(proxy.CommandSubject(c.c.prefix, c.c.appName, ""), &req, &resp, c.c.requestTimeout)
+	if err != nil {
+		return
+	}
+	if err = resp.Err(); err != nil {
+		return
+	}
 	return
 }
 
-func (c *natsChannel) Unmute(id string, dir string) (err error) {
-	err = c.conn.StandardRequest("ari.channels.unmute", id, &dir, nil)
+func (c *channel) Unmute(id string, dir ari.Direction) (err error) {
+	req := proxy.Request{
+		ChannelUnmute: &proxy.ChannelUnmute{
+			ID:        id,
+			Direction: dir,
+		},
+	}
+	var resp proxy.Response
+	err = c.c.nc.Request(proxy.CommandSubject(c.c.prefix, c.c.appName, ""), &req, &resp, c.c.requestTimeout)
+	if err != nil {
+		return
+	}
+	if err = resp.Err(); err != nil {
+		return
+	}
 	return
 }
 
-func (c *natsChannel) MOH(id string, moh string) (err error) {
-	err = c.conn.StandardRequest("ari.channels.moh", id, &moh, nil)
+func (c *channel) MOH(id string, moh string) (err error) {
+	req := proxy.Request{
+		ChannelMOH: &proxy.ChannelMOH{
+			ID:    id,
+			Music: moh,
+		},
+	}
+	var resp proxy.Response
+	err = c.c.nc.Request(proxy.CommandSubject(c.c.prefix, c.c.appName, ""), &req, &resp, c.c.requestTimeout)
+	if err != nil {
+		return
+	}
+	if err = resp.Err(); err != nil {
+		return
+	}
 	return
 }
 
-func (c *natsChannel) StopMOH(id string) (err error) {
-	err = c.conn.StandardRequest("ari.channels.stopmoh", id, nil, nil)
+func (c *channel) StopMOH(id string) (err error) {
+	req := proxy.Request{
+		ChannelStopMOH: &proxy.ChannelStopMOH{
+			ID: id,
+		},
+	}
+	var resp proxy.Response
+	err = c.c.nc.Request(proxy.CommandSubject(c.c.prefix, c.c.appName, ""), &req, &resp, c.c.requestTimeout)
+	if err != nil {
+		return
+	}
+	if err = resp.Err(); err != nil {
+		return
+	}
 	return
 }
 
-func (c *natsChannel) Silence(id string) (err error) {
-	err = c.conn.StandardRequest("ari.channels.silence", id, nil, nil)
+func (c *channel) Silence(id string) (err error) {
+	req := proxy.Request{
+		ChannelSilence: &proxy.ChannelSilence{
+			ID: id,
+		},
+	}
+	var resp proxy.Response
+	err = c.c.nc.Request(proxy.CommandSubject(c.c.prefix, c.c.appName, ""), &req, &resp, c.c.requestTimeout)
+	if err != nil {
+		return
+	}
+	if err = resp.Err(); err != nil {
+		return
+	}
 	return
 }
 
-func (c *natsChannel) StopSilence(id string) (err error) {
-	err = c.conn.StandardRequest("ari.channels.stopsilence", id, nil, nil)
+func (c *channel) StopSilence(id string) (err error) {
+	req := proxy.Request{
+		ChannelStopSilence: &proxy.ChannelStopSilence{
+			ID: id,
+		},
+	}
+	var resp proxy.Response
+	err = c.c.nc.Request(proxy.CommandSubject(c.c.prefix, c.c.appName, ""), &req, &resp, c.c.requestTimeout)
+	if err != nil {
+		return
+	}
+	if err = resp.Err(); err != nil {
+		return
+	}
 	return
 }
 
@@ -164,16 +382,23 @@ type SnoopRequest struct {
 	Options *ari.SnoopOptions
 }
 
-func (c *natsChannel) Snoop(id string, snoopID string, app string, opts *ari.SnoopOptions) (ch *ari.ChannelHandle, err error) {
-	req := &SnoopRequest{
-		SnoopID: snoopID,
-		App:     app,
-		Options: opts,
+func (c *channel) Snoop(id string, snoopID string, opts *ari.SnoopOptions) (ch ari.ChannelHandle, err error) {
+	req := proxy.Request{
+		ChannelSnoop: &proxy.ChannelSnoop{
+			ID:      id,
+			SnoopID: snoopID,
+			Options: opts,
+		},
 	}
-	err = c.conn.StandardRequest("ari.channels.snoop", id, &req, nil)
-	if err == nil {
-		ch = c.Get(snoopID)
+	var resp proxy.Response
+	err = c.c.nc.Request(proxy.CommandSubject(c.c.prefix, c.c.appName, ""), &req, &resp, c.c.requestTimeout)
+	if err != nil {
+		return
 	}
+	if err = resp.Err(); err != nil {
+		return
+	}
+	ch = c.Get(resp.Entity.ID)
 	return
 }
 
@@ -183,60 +408,79 @@ type DialRequest struct {
 	Timeout int    `json:"timeout"`
 }
 
-func (c *natsChannel) Dial(id string, caller string, timeout time.Duration) (err error) {
-	//TODO: the dial documentation does not reference the unit of timeout,
-	// second is assumed from similar parameters
-	req := DialRequest{caller, int(timeout / time.Second)}
-	err = c.conn.StandardRequest("ari.channels.dial", id, &req, nil)
-	return
-}
-
-func (c *natsChannel) Play(id string, playbackID string, mediaURI string) (p *ari.PlaybackHandle, err error) {
-	err = c.conn.StandardRequest("ari.channels.play", id, &PlayRequest{
-		PlaybackID: playbackID,
-		MediaURI:   mediaURI,
-	}, nil)
-
-	p = c.playback.Get(playbackID)
-
-	return
-}
-
-func (c *natsChannel) Record(id string, name string, opts *ari.RecordingOptions) (h *ari.LiveRecordingHandle, err error) {
-
-	if opts == nil {
-		opts = &ari.RecordingOptions{}
+func (c *channel) Dial(id string, caller string, timeout time.Duration) (err error) {
+	req := proxy.Request{
+		ChannelDial: &proxy.ChannelDial{
+			ID:      id,
+			Caller:  caller,
+			Timeout: timeout,
+		},
 	}
-
-	req := RecordRequest{
-		Name:        name,
-		Format:      opts.Format,
-		MaxDuration: int(opts.MaxDuration / time.Second),
-		MaxSilence:  int(opts.MaxSilence / time.Second),
-		IfExists:    opts.Exists,
-		Beep:        opts.Beep,
-		TerminateOn: opts.Terminate,
+	var resp proxy.Response
+	err = c.c.nc.Request(proxy.CommandSubject(c.c.prefix, c.c.appName, ""), &req, &resp, c.c.requestTimeout)
+	if err != nil {
+		return
 	}
-	err = c.conn.StandardRequest("ari.channels.record", id, req, nil)
-	if err == nil {
-		h = c.liveRecording.Get(name)
+	if err = resp.Err(); err != nil {
+		return
 	}
 	return
 }
 
-func (c *natsChannel) Subscribe(id string, n ...string) ari.Subscription {
-	ns := newSubscription(c.Get(id))
-	ns.Start(c.subscriber, n...)
-	return ns
+func (c *channel) Play(id string, playbackID string, mediaURI string) (p ari.PlaybackHandle, err error) {
+	req := proxy.Request{
+		ChannelPlay: &proxy.ChannelPlay{
+			ID:         id,
+			PlaybackID: playbackID,
+			MediaURI:   mediaURI,
+		},
+	}
+	var resp proxy.Response
+	err = c.c.nc.Request(proxy.CommandSubject(c.c.prefix, c.c.appName, ""), &req, &resp, c.c.requestTimeout)
+	if err != nil {
+		return
+	}
+	if err = resp.Err(); err != nil {
+		return
+	}
+	p = c.Playback().Get(resp.Entity.ID)
+	return
 }
 
-type natsChannelVariables struct {
-	conn *Conn
-	id   string
+func (c *channel) Record(id string, name string, opts *ari.RecordingOptions) (h ari.LiveRecordingHandle, err error) {
+	req := proxy.Request{
+		ChannelRecord: &proxy.ChannelRecord{
+			ID:      id,
+			Name:    name,
+			Options: opts,
+		},
+	}
+	var resp proxy.Response
+	err = c.c.nc.Request(proxy.CommandSubject(c.c.prefix, c.c.appName, ""), &req, &resp, c.c.requestTimeout)
+	if err != nil {
+		return
+	}
+	if err = resp.Err(); err != nil {
+		return
+	}
+	h = c.c.LiveRecording().Get(resp.Entity.ID)
+	return
 }
 
-func (c *natsChannel) Variables(id string) ari.Variables {
-	return &natsChannelVariables{c.conn, id}
+func (c *channel) Subscribe(id string, n ...string) ari.Subscription {
+	//ns := newSubscription(c.Get(id))
+	//ns.Start(c.subscriber, n...)
+	//return ns
+	return nil
+}
+
+type channelVariables struct {
+	c  *channel
+	id string
+}
+
+func (c *channel) Variables(id string) ari.Variables {
+	return &channelVariables{c, id}
 }
 
 // GetChannelVariable is the request object for getting a channel variable
@@ -250,14 +494,43 @@ type SetChannelVariable struct {
 	Value string `json:"value"`
 }
 
-func (c *natsChannelVariables) Get(variable string) (ret string, err error) {
-	req := GetChannelVariable{variable}
-	err = c.conn.ReadRequest("ari.channels.variables.get", c.id, &req, &ret)
+func (c *channelVariables) Get(variable string) (ret string, err error) {
+	req := proxy.Request{
+		ChannelVariables: &proxy.ChannelVariables{
+			Name: variable,
+			ID:   c.id,
+			Get:  &proxy.VariablesGet{},
+		},
+	}
+	var resp proxy.DataResponse
+	err = c.c.c.nc.Request(proxy.GetSubject(c.c.c.prefix, c.c.c.appName, ""), &req, &resp, c.c.c.requestTimeout)
+	if err != nil {
+		return
+	}
+	if err = resp.Err(); err != nil {
+		return
+	}
+	ret = resp.Variable
 	return
 }
 
-func (c *natsChannelVariables) Set(variable string, value string) (err error) {
-	req := SetChannelVariable{variable, value}
-	err = c.conn.StandardRequest("ari.channels.variables.set", c.id, &req, nil)
+func (c *channelVariables) Set(variable string, value string) (err error) {
+	req := proxy.Request{
+		ChannelVariables: &proxy.ChannelVariables{
+			Name: variable,
+			ID:   c.id,
+			Set: &proxy.VariablesSet{
+				Value: value,
+			},
+		},
+	}
+	var resp proxy.Response
+	err = c.c.c.nc.Request(proxy.CommandSubject(c.c.c.prefix, c.c.c.appName, ""), &req, &resp, c.c.c.requestTimeout)
+	if err != nil {
+		return
+	}
+	if err = resp.Err(); err != nil {
+		return
+	}
 	return
 }

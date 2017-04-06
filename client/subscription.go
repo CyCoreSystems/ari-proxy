@@ -1,7 +1,6 @@
 package client
 
-import "github.com/CyCoreSystems/ari"
-
+/*
 type natsSubscription struct {
 	m         ari.Matcher
 	closeChan chan struct{}
@@ -55,3 +54,4 @@ func (ns *natsSubscription) Cancel() {
 		close(ns.closeChan)
 	}
 }
+*/

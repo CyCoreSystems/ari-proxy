@@ -1,7 +1,6 @@
 package client
 
-import "github.com/CyCoreSystems/ari"
-
+/*
 type natsDeviceState struct {
 	conn *Conn
 }
@@ -33,3 +32,4 @@ func (ds *natsDeviceState) Delete(name string) (err error) {
 	err = ds.conn.StandardRequest("ari.devices.delete", name, nil, nil)
 	return
 }
+*/

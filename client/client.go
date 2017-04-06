@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -10,9 +9,8 @@ import (
 	log15 "gopkg.in/inconshreveable/log15.v2"
 
 	"github.com/CyCoreSystems/ari"
-	"github.com/CyCoreSystems/ari-proxy/proxy"
-	"github.com/CyCoreSystems/ari/stdbus"
 	"github.com/nats-io/nats"
+	"github.com/pkg/errors"
 )
 
 // DefaultRequestTimeout is the default timeout for a NATS request
@@ -21,7 +19,8 @@ const DefaultRequestTimeout = 200 * time.Millisecond
 // DefaultInputBufferLength is the default size of the event buffer for events coming in from NATS
 const DefaultInputBufferLength = 100
 
-type proxyClient struct {
+// Client is the ari-proxy client.
+type Client struct {
 
 	// appName provides an ARI application to which to bind.  At least one of Application or Dialog must be specified.  This option may also be supplied by the `ARI_APPLICATION` environment variable.
 	appName string
@@ -62,9 +61,14 @@ type proxyClient struct {
 
 // New creates a new Client to the Asterisk ARI NATS proxy.
 func New(ctx context.Context, opts ...OptionFunc) (ari.Client, error) {
+	cl, err := newClient(ctx, opts...)
+	return cl, err
+}
+
+func newClient(ctx context.Context, opts ...OptionFunc) (*Client, error) {
 	ctx, cancel := context.WithCancel(ctx)
 
-	c := &proxyClient{
+	c := &Client{
 		cancel:            cancel,
 		log:               log15.New(),
 		prefix:            "ari.",
@@ -80,7 +84,7 @@ func New(ctx context.Context, opts ...OptionFunc) (ari.Client, error) {
 	}
 
 	// Load environment-based configurations if such configurations are not explicitly set
-	if c.appName == "" && os.Getenv("ARI_APPLICATION") {
+	if c.appName == "" && os.Getenv("ARI_APPLICATION") != "" {
 		c.appName = os.Getenv("ARI_APPLICATION")
 	}
 	if c.uri == "" && os.Getenv("NATS_URI") != "" {
@@ -106,8 +110,9 @@ func New(ctx context.Context, opts ...OptionFunc) (ari.Client, error) {
 	}
 
 	// Bind events from NATS to our bus
-	c.bus = stdbus.Start(ctx)
+	// TODO: c.bus = stdbus.Start(ctx)
 	go c.bindEvents(ctx)
+	return c, nil
 }
 
 // OptionFunc is a function which configures options on a Client
@@ -125,7 +130,7 @@ type OptionFunc func(*Client)
 // the first ari.Client and maintain lifecycle control of it manually.
 func FromClient(cl ari.Client) OptionFunc {
 	return func(c *Client) {
-		old, ok := cl.(*proxyClient)
+		old, ok := cl.(*Client)
 		if ok {
 			c.nc = old.nc
 			c.prefix = old.prefix
@@ -179,29 +184,22 @@ func WithLogHandler(h log15.Handler) OptionFunc {
 // WithNATS binds an existing NATS connection
 func WithNATS(nc *nats.EncodedConn) OptionFunc {
 	return func(c *Client) {
-		c.NATS = nc
-	}
-}
-
-// WithNATSURI configures the NATS URI for a Client
-func WithNATSURI(uri string) OptionFunc {
-	return func(c *Client) {
-		c.NATSURI = nc
+		c.nc = nc
 	}
 }
 
 // WithPrefix configures the NATS Prefix to use om a Client
 func WithPrefix(prefix string) OptionFunc {
 	return func(c *Client) {
-		c.NATSPrefix = prefix
+		c.prefix = prefix
 	}
 }
 
-func (p *proxyClient) ApplicationName() string {
+func (p *Client) ApplicationName() string {
 	return p.appName
 }
 
-func (p *proxyClient) Close() {
+func (p *Client) Close() {
 	if p.cancel != nil {
 		p.cancel()
 	}
@@ -210,116 +208,70 @@ func (p *proxyClient) Close() {
 		p.bus.Close()
 	}
 
-	if opts.closeNATSOnClose && p.nc != nil {
+	if p.closeNATSOnClose && p.nc != nil {
 		p.nc.Close()
 	}
 }
 
-func (p *proxyClient) Application() ari.Application {
-	return &Application{p}
+func (p *Client) Application() ari.Application {
+	return &application{
+		c: p,
+	}
 }
 
-func (p *proxyClient) Asterisk() ari.Asterisk {
-	return &Asterisk{p}
+func (p *Client) Asterisk() ari.Asterisk {
+	return &asterisk{
+		c: p,
+	}
 }
 
-func (p *proxyClient) Bridge() ari.Bridge {
-	return &Bridge{p}
+func (p *Client) Bridge() ari.Bridge {
+	return &bridge{
+		c: p,
+	}
 }
 
-func (p *proxyClient) Bus() ari.Bus {
+func (p *Client) Bus() ari.Bus {
 	return p.bus
 }
 
-func (p *proxyClient) Channel() ari.Channel {
-	return &Channel{p}
+func (p *Client) Channel() ari.Channel {
+	return &channel{p}
 }
 
-func (p *proxyClient) DeviceState() ari.DeviceState {
-	return &DeviceState{p}
+func (p *Client) DeviceState() ari.DeviceState {
+	return nil
 }
 
-func (p *proxyClient) Endpoint() ari.Endpoint {
-	return &Endpoint{p}
+func (p *Client) Endpoint() ari.Endpoint {
+	return nil
 }
 
-func (p *proxyClient) LiveRecording() ari.LiveRecording {
-	return &LiveRecording{p}
+func (p *Client) LiveRecording() ari.LiveRecording {
+	return &liveRecording{p}
 }
 
-func (p *proxyClient) Mailbox() ari.Mailbox {
-	return &Mailbox{p}
+func (p *Client) Mailbox() ari.Mailbox {
+	return nil
 }
 
-func (p *proxyClient) Playback() ari.Playback {
-	return &Playback{p}
+func (p *Client) Playback() ari.Playback {
+	return &playback{p}
 }
 
-func (p *proxyClient) Sound() ari.Sound {
-	return &Sound{p}
+func (p *Client) Sound() ari.Sound {
+	return nil
 }
 
-func (p *proxyClient) StoredRecording() ari.StoredRecording {
-	return &StoredRecording{p}
+func (p *Client) StoredRecording() ari.StoredRecording {
+	return nil
 }
 
-func (p *proxyClient) TextMessage() ari.TextMessage {
-	return &TextMessage{p}
+func (p *Client) TextMessage() ari.TextMessage {
+	return nil
 }
 
-func (p *proxyClient) commandRequest(req interface{}) error {
-	var resp proxy.Response
-	err := p.makeRequest(subject("command"), req, &resp)
-	if err != nil {
-		return err
-	}
-	return resp.Err()
-}
-
-func (p *proxyClient) createRequest(req interface{}) (*proxy.Entity, error) {
-	var resp proxy.Response
-	err := p.makeRequest(subject, req, &resp)
-	if err != nil {
-		return nil, err
-	}
-	if resp.Err() != nil {
-		return nil, err
-	}
-	if resp.Entity == nil {
-		return nil, errors.New("no entity returned")
-	}
-	return resp.Entity, nil
-}
-
-func (p *proxyClient) getRequest(req interface{}) (*proxy.Entity, error) {
-	var resp proxy.Response
-	err := p.makeRequest(subject, req, &resp)
-	if err != nil {
-		return nil, err
-	}
-	if resp.Err() != nil {
-		return nil, err
-	}
-	if resp.Entity == nil {
-		return nil, errors.New("no entity returned")
-	}
-	return resp.Entity, nil
-
-}
-
-func (p *proxyClient) dataRequest(req interface{}, resp interface{}) error {
-
-}
-
-func (p *proxyClient) listRequest(req interface{}) (*proxy.EntityList, error) {
-
-}
-
-func (p *proxyClient) makeRequest(subject string, req interface{}, resp interface{}) error {
-	p.nc.Request(subject)
-}
-
-func (p *proxyClient) subject(class string) (ret string) {
+func (p *Client) subject(class string) (ret string) {
 	ret = fmt.Sprintf("%s.%s", p.prefix, class)
 	if p.appName != "" {
 		ret += "." + p.appName
@@ -330,7 +282,7 @@ func (p *proxyClient) subject(class string) (ret string) {
 	return
 }
 
-func (p *proxyClient) eventsSubject() (subj string) {
+func (p *Client) eventsSubject() (subj string) {
 	if p.appName != "" {
 		subj = fmt.Sprintf("%sevent.%s", p.prefix, p.appName)
 
@@ -346,7 +298,7 @@ func (p *proxyClient) eventsSubject() (subj string) {
 	return
 }
 
-func (p *proxyClient) bindEvents(ctx context.Context) {
+func (p *Client) bindEvents(ctx context.Context) {
 	subj := p.eventsSubject()
 	if subj == "" {
 		p.log.Error("cannot bind events without application or dialog")

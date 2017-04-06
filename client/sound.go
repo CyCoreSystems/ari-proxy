@@ -1,7 +1,6 @@
 package client
 
-import "github.com/CyCoreSystems/ari"
-
+/*
 type natsSound struct {
 	conn *Conn
 }
@@ -28,3 +27,4 @@ func (s *natsSound) Data(name string) (sd ari.SoundData, err error) {
 	err = s.conn.ReadRequest("ari.sounds.data", name, nil, &sd)
 	return
 }
+*/

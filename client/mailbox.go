@@ -1,7 +1,6 @@
 package client
 
-import "github.com/CyCoreSystems/ari"
-
+/*
 type natsMailbox struct {
 	conn *Conn
 }
@@ -40,3 +39,4 @@ func (m *natsMailbox) Delete(name string) (err error) {
 	err = m.conn.StandardRequest("ari.mailboxes.delete", name, nil, nil)
 	return
 }
+*/

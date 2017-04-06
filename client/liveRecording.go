@@ -2,50 +2,90 @@ package client
 
 import "github.com/CyCoreSystems/ari"
 
-type natsLiveRecording struct {
-	conn *Conn
+type liveRecording struct {
+	c *Client
 }
 
-func (lr *natsLiveRecording) Get(name string) *ari.LiveRecordingHandle {
-	return ari.NewLiveRecordingHandle(name, lr)
+func (lr *liveRecording) Get(name string) ari.LiveRecordingHandle {
+	return &liveRecordingHandle{
+		name: name,
+		lr:   lr,
+	}
 }
 
-func (lr *natsLiveRecording) Data(name string) (lrd ari.LiveRecordingData, err error) {
-	err = lr.conn.ReadRequest("ari.recording.live.data", name, nil, &lrd)
+func (lr *liveRecording) Data(name string) (lrd *ari.LiveRecordingData, err error) {
 	return
 }
 
-func (lr *natsLiveRecording) Stop(name string) (err error) {
-	err = lr.conn.StandardRequest("ari.recording.live.stop", name, nil, nil)
+func (lr *liveRecording) Stop(name string) (err error) {
 	return
 }
 
-func (lr *natsLiveRecording) Pause(name string) (err error) {
-	err = lr.conn.StandardRequest("ari.recording.live.pause", name, nil, nil)
+func (lr *liveRecording) Pause(name string) (err error) {
 	return
 }
 
-func (lr *natsLiveRecording) Resume(name string) (err error) {
-	err = lr.conn.StandardRequest("ari.recording.live.resume", name, nil, nil)
+func (lr *liveRecording) Resume(name string) (err error) {
 	return
 }
 
-func (lr *natsLiveRecording) Mute(name string) (err error) {
-	err = lr.conn.StandardRequest("ari.recording.live.mute", name, nil, nil)
+func (lr *liveRecording) Mute(name string) (err error) {
 	return
 }
 
-func (lr *natsLiveRecording) Unmute(name string) (err error) {
-	err = lr.conn.StandardRequest("ari.recording.live.unmute", name, nil, nil)
+func (lr *liveRecording) Unmute(name string) (err error) {
 	return
 }
 
-func (lr *natsLiveRecording) Delete(name string) (err error) {
-	err = lr.conn.StandardRequest("ari.recording.live.delete", name, nil, nil)
+func (lr *liveRecording) Delete(name string) (err error) {
 	return
 }
 
-func (lr *natsLiveRecording) Scrap(name string) (err error) {
-	err = lr.conn.StandardRequest("ari.recording.live.scrap", name, nil, nil)
+func (lr *liveRecording) Scrap(name string) (err error) {
+	return
+}
+
+type liveRecordingHandle struct {
+	name string
+	lr   *liveRecording
+}
+
+func (lr *liveRecordingHandle) ID() string {
+	return lr.name
+}
+
+func (lr *liveRecordingHandle) Match(evt ari.Event) (ok bool) {
+	return
+}
+
+func (lr *liveRecordingHandle) Data() (lrd *ari.LiveRecordingData, err error) {
+	return
+}
+
+func (lr *liveRecordingHandle) Stop() (err error) {
+	return
+}
+
+func (lr *liveRecordingHandle) Pause() (err error) {
+	return
+}
+
+func (lr *liveRecordingHandle) Resume() (err error) {
+	return
+}
+
+func (lr *liveRecordingHandle) Mute() (err error) {
+	return
+}
+
+func (lr *liveRecordingHandle) Unmute() (err error) {
+	return
+}
+
+func (lr *liveRecordingHandle) Delete() (err error) {
+	return
+}
+
+func (lr *liveRecordingHandle) Scrap() (err error) {
 	return
 }

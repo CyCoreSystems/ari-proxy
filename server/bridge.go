@@ -40,7 +40,11 @@ func (s *Server) bridgeCreate(ctx context.Context, reply string, req *proxy.Requ
 		return
 	}
 
-	s.nats.Publish(reply, bh.ID())
+	s.nats.Publish(reply, &proxy.Response{
+		Entity: &proxy.Entity{
+			ID: bh.ID(),
+		},
+	})
 }
 
 func (s *Server) bridgeData(ctx context.Context, reply string, req *proxy.Request) {
@@ -50,7 +54,9 @@ func (s *Server) bridgeData(ctx context.Context, reply string, req *proxy.Reques
 		return
 	}
 
-	s.nats.Publish(reply, &bd)
+	s.nats.Publish(reply, &proxy.DataResponse{
+		BridgeData: bd,
+	})
 }
 
 func (s *Server) bridgeDelete(ctx context.Context, reply string, req *proxy.Request) {
@@ -75,12 +81,17 @@ func (s *Server) bridgeList(ctx context.Context, reply string, req *proxy.Reques
 		return
 	}
 
-	var bridges []string
-	for _, bridge := range bx {
-		bridges = append(bridges, bridge.ID())
+	resp := proxy.EntityList{List: []*proxy.Entity{}}
+	for _, i := range bx {
+		resp.List = append(resp.List, &proxy.Entity{
+			Metadata: s.Metadata(req.Metadata.Dialog),
+			ID:       i.ID(),
+		})
 	}
 
-	s.nats.Publish(reply, &bridges)
+	s.nats.Publish(reply, &proxy.Response{
+		EntityList: &resp,
+	})
 }
 
 func (s *Server) bridgePlay(ctx context.Context, reply string, req *proxy.Request) {
@@ -98,7 +109,11 @@ func (s *Server) bridgePlay(ctx context.Context, reply string, req *proxy.Reques
 	}
 
 	//NOTE: this originally returned a nil
-	s.nats.Publish(reply, &obj)
+	s.nats.Publish(reply, &proxy.Response{
+		Entity: &proxy.Entity{
+			ID: obj.ID(),
+		},
+	})
 }
 
 func (s *Server) bridgeRecord(ctx context.Context, reply string, req *proxy.Request) {
@@ -116,7 +131,11 @@ func (s *Server) bridgeRecord(ctx context.Context, reply string, req *proxy.Requ
 	}
 
 	//NOTE: this originally returned a nil
-	s.nats.Publish(reply, &obj)
+	s.nats.Publish(reply, &proxy.Response{
+		Entity: &proxy.Entity{
+			ID: obj.ID(),
+		},
+	})
 }
 
 func (s *Server) bridgeRemoveChannel(ctx context.Context, reply string, req *proxy.Request) {

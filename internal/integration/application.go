@@ -5,10 +5,11 @@ import (
 
 	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/internal/mocks"
+	"github.com/pkg/errors"
 )
 
 func TestApplicationList(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("emptyList", t, s, clientFactory, func(m *mock, cl ari.Client) {
+	runTest("emptyList", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
 		m.Application.On("List").Return([]ari.ApplicationHandle{}, nil)
 
 		if _, err := cl.Application().List(); err != nil {
@@ -16,7 +17,7 @@ func TestApplicationList(t *testing.T, s Server, clientFactory ClientFactory) {
 		}
 	})
 
-	runTest("nonEmptyList", t, s, clientFactory, func(m *mock, cl ari.Client) {
+	runTest("nonEmptyList", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
 
 		h1 := &mocks.ApplicationHandle{}
 		h1.On("ID").Return("1")
@@ -45,7 +46,7 @@ func TestApplicationList(t *testing.T, s Server, clientFactory ClientFactory) {
 }
 
 func TestApplicationData(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("simple", t, s, clientFactory, func(m *mock, cl ari.Client) {
+	runTest("simple", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
 		ad := &ari.ApplicationData{}
 		ad.Name = "app1"
 
@@ -59,33 +60,85 @@ func TestApplicationData(t *testing.T, s Server, clientFactory ClientFactory) {
 			t.Errorf("Expected application data name %s, got %s", ad, res)
 		}
 	})
+
+	runTest("error", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+		expected := errors.New("unknown error")
+
+		m.Application.On("Data", "1").Return(nil, expected)
+
+		res, err := cl.Application().Data("1")
+		if err == nil || errors.Cause(err).Error() != expected.Error() {
+			t.Errorf("Expected error '%v', got '%v'", expected, err)
+		}
+		if res != nil {
+			t.Errorf("Expected application data result to be empty, got %s", res)
+		}
+	})
 }
 
 func TestApplicationSubscribe(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("simple", t, s, clientFactory, func(m *mock, cl ari.Client) {
+	runTest("simple", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
 		m.Application.On("Subscribe", "1", "2").Return(nil)
 
 		if err := cl.Application().Subscribe("1", "2"); err != nil {
 			t.Errorf("Unexpected error in remote Subscribe call: %v", err)
 		}
+
+		m.Shutdown()
+
+		m.Application.AssertCalled(t, "Subscribe", "1", "2")
+	})
+
+	runTest("error", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+		expected := errors.New("unknown error")
+
+		m.Application.On("Subscribe", "1", "2").Return(expected)
+
+		if err := cl.Application().Subscribe("1", "2"); err == nil || errors.Cause(err).Error() != expected.Error() {
+			t.Errorf("Expected error '%v', got '%v'", expected, err)
+		}
+
+		m.Shutdown()
+
+		m.Application.AssertCalled(t, "Subscribe", "1", "2")
 	})
 }
 
 func TestApplicationUnsubscribe(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("simple", t, s, clientFactory, func(m *mock, cl ari.Client) {
+	runTest("simple", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
 		m.Application.On("Unsubscribe", "1", "2").Return(nil)
 
 		if err := cl.Application().Unsubscribe("1", "2"); err != nil {
 			t.Errorf("Unexpected error in remote Unsubscribe call: %T", err)
 		}
+
+		m.Shutdown()
+
+		m.Application.AssertCalled(t, "Unsubscribe", "1", "2")
+	})
+
+	runTest("error", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+		expected := errors.New("unknown error")
+
+		m.Application.On("Unsubscribe", "1", "2").Return(expected)
+
+		if err := cl.Application().Unsubscribe("1", "2"); err == nil || errors.Cause(err).Error() != expected.Error() {
+			t.Errorf("Expected error '%v', got '%v'", expected, err)
+		}
+
+		m.Application.AssertCalled(t, "Unsubscribe", "1", "2")
 	})
 }
 
 func TestApplicationGet(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("simple", t, s, clientFactory, func(m *mock, cl ari.Client) {
-		m.Application.AssertNotCalled(t, "Get", "1")
+	runTest("simple", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
 		if h := cl.Application().Get("1"); h == nil {
 			t.Errorf("Unexpected nil-handle")
 		}
+
+		m.Shutdown()
+
+		m.Application.AssertNotCalled(t, "Get", "1")
 	})
+
 }

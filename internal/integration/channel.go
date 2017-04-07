@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari-proxy/internal/mocks"
 )
 
 func TestChannelData(t *testing.T, s Server, clientFactory ClientFactory) {
@@ -192,4 +193,64 @@ func TestChannelHangup(t *testing.T, s Server, clientFactory ClientFactory) {
 
 		m.Channel.AssertCalled(t, "Hangup", "c1", "busy")
 	})
+}
+
+func TestChannelList(t *testing.T, s Server, clientFactory ClientFactory) {
+	runTest("empty", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+		m.Channel.On("List").Return([]ari.ChannelHandle{}, nil)
+
+		ret, err := cl.Channel().List()
+		if err != nil {
+			t.Errorf("Unexpected error in remote List call")
+		}
+		if len(ret) != 0 {
+			t.Errorf("Expected return length to be 0, got %d", len(ret))
+		}
+
+		m.Shutdown()
+
+		m.Channel.AssertCalled(t, "List")
+	})
+
+	runTest("nonEmpty", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+
+		var h1 = &mocks.ChannelHandle{}
+		var h2 = &mocks.ChannelHandle{}
+
+		h1.On("ID").Return("h1")
+		h2.On("ID").Return("h2")
+
+		m.Channel.On("List").Return([]ari.ChannelHandle{h1, h2}, nil)
+
+		ret, err := cl.Channel().List()
+		if err != nil {
+			t.Errorf("Unexpected error in remote List call")
+		}
+		if len(ret) != 2 {
+			t.Errorf("Expected return length to be 2, got %d", len(ret))
+		}
+
+		m.Shutdown()
+
+		m.Channel.AssertCalled(t, "List")
+		h1.AssertCalled(t, "ID")
+		h2.AssertCalled(t, "ID")
+	})
+
+	runTest("error", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+		m.Channel.On("List").Return(nil, errors.New("unknown error"))
+
+		ret, err := cl.Channel().List()
+		if err == nil {
+			t.Errorf("Expected error in remote List call")
+		}
+		if len(ret) != 0 {
+			t.Errorf("Expected return length to be 0, got %d", len(ret))
+		}
+
+		m.Shutdown()
+
+		m.Channel.AssertCalled(t, "List")
+	})
+
 }

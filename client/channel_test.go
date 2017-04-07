@@ -25,3 +25,7 @@ func TestChannelCongestion(t *testing.T) {
 func TestChannelHangup(t *testing.T) {
 	integration.TestChannelHangup(t, &srv{}, clientFactory)
 }
+
+func TestChannelList(t *testing.T) {
+	integration.TestChannelList(t, &srv{}, clientFactory)
+}

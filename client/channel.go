@@ -16,7 +16,10 @@ func (c *channel) Playback() ari.Playback {
 }
 
 func (c *channel) Get(id string) ari.ChannelHandle {
-	return nil
+	return &channelHandle{
+		id:      id,
+		channel: c,
+	}
 }
 
 func (c *channel) List() (ret []ari.ChannelHandle, err error) {
@@ -533,4 +536,127 @@ func (c *channelVariables) Set(variable string, value string) (err error) {
 		return
 	}
 	return
+}
+
+type channelHandle struct {
+	id      string
+	channel *channel
+}
+
+func (c *channelHandle) Answer() error {
+	return c.channel.Answer(c.id)
+}
+
+func (c *channelHandle) Busy() error {
+	return c.channel.Busy(c.id)
+}
+
+func (c *channelHandle) Congestion() error {
+	return c.channel.Congestion(c.id)
+}
+
+func (c *channelHandle) Continue(s string, s1 string, i int) error {
+	return c.channel.Continue(c.id, s, s1, i)
+}
+
+func (c *channelHandle) Data() (*ari.ChannelData, error) {
+	return c.channel.Data(c.id)
+}
+
+func (c *channelHandle) Dial(s string, d time.Duration) error {
+	return c.channel.Dial(c.id, s, d)
+}
+
+func (c *channelHandle) Hangup() error {
+	return c.channel.Hangup(c.id, "")
+}
+
+func (c *channelHandle) Hold() error {
+	return c.channel.Hold(c.id)
+}
+
+func (c *channelHandle) ID() string {
+	return c.id
+}
+
+func (c *channelHandle) IsAnswered() (bool, error) {
+	//TODO: this is logic, move elsewhere
+	d, err := c.Data()
+	if err != nil {
+		return false, err
+	}
+	if d.State != "Up" {
+		return false, nil
+	}
+	return true, nil
+}
+
+func (c *channelHandle) MOH(s string) error {
+	return c.channel.MOH(c.id, s)
+}
+
+func (c *channelHandle) Match(e ari.Event) bool {
+	//TODO: implement match
+	return false
+}
+
+func (c *channelHandle) Mute(d ari.Direction) error {
+	return c.channel.Mute(c.id, d)
+}
+
+func (c *channelHandle) Originate(o ari.OriginateRequest) (ari.ChannelHandle, error) {
+	//TODO: not sure how to hook this into this channel. o.OtherChannelID = c.id ?
+	return c.channel.Originate(o)
+}
+
+func (c *channelHandle) Play(playbackID string, mediaURI string) (ari.PlaybackHandle, error) {
+	return c.channel.Play(c.id, playbackID, mediaURI)
+}
+
+func (c *channelHandle) Record(name string, r *ari.RecordingOptions) (ari.LiveRecordingHandle, error) {
+	return c.channel.Record(c.id, name, r)
+}
+
+func (c *channelHandle) Ring() error {
+	return c.channel.Ring(c.id)
+}
+
+func (c *channelHandle) SendDTMF(s string, d *ari.DTMFOptions) error {
+	return c.channel.SendDTMF(c.id, s, d)
+}
+
+func (c *channelHandle) Silence() error {
+	return c.channel.Silence(c.id)
+}
+
+func (c *channelHandle) Snoop(snoopID string, opts *ari.SnoopOptions) (ari.ChannelHandle, error) {
+	return c.channel.Snoop(c.id, snoopID, opts)
+}
+
+func (c *channelHandle) StopHold() error {
+	return c.channel.StopHold(c.id)
+}
+
+func (c *channelHandle) StopMOH() error {
+	return c.channel.StopMOH(c.id)
+}
+
+func (c *channelHandle) StopRing() error {
+	return c.channel.StopRing(c.id)
+}
+
+func (c *channelHandle) StopSilence() error {
+	return c.channel.StopSilence(c.id)
+}
+
+func (c *channelHandle) Subscribe(nx ...string) ari.Subscription {
+	return c.channel.Subscribe(c.id, nx...)
+}
+
+func (c *channelHandle) Unmute(d ari.Direction) error {
+	return c.channel.Unmute(c.id, d)
+}
+
+func (c *channelHandle) Variables() ari.Variables {
+	return c.channel.Variables(c.id)
 }

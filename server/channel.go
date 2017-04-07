@@ -102,12 +102,16 @@ func (s *Server) channelList(ctx context.Context, reply string, req *proxy.Reque
 		return
 	}
 
-	var channels []string
+	var el proxy.EntityList
 	for _, channel := range cx {
-		channels = append(channels, channel.ID())
+		el.List = append(el.List, &proxy.Entity{
+			ID: channel.ID(),
+		})
 	}
 
-	s.nats.Publish(reply, &channels)
+	s.nats.Publish(reply, &proxy.Response{
+		EntityList: &el,
+	})
 }
 
 func (s *Server) channelMOH(ctx context.Context, reply string, req *proxy.Request) {

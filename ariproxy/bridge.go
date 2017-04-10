@@ -49,7 +49,9 @@ func (ins *Instance) bridge() {
 			return
 		}
 
-		ins.server.cache.Add(req.ID, ins)
+		if ins.Dialog != nil && ins.Dialog.ID != ins.server.Application+"_0" {
+			ins.server.cache.Add(req.ID, ins)
+		}
 
 		reply(bh.ID(), err)
 	})

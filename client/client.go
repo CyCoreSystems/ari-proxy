@@ -19,7 +19,10 @@ const DefaultRequestTimeout = 200 * time.Millisecond
 // DefaultInputBufferLength is the default size of the event buffer for events coming in from NATS
 const DefaultInputBufferLength = 100
 
-// Client is the ari-proxy client.
+// ErrNil indicates that the request returned an empty response
+var ErrNil = errors.New("Nil")
+
+// Client provides an ari.Client for an ari-proxy server
 type Client struct {
 
 	// appName provides an ARI application to which to bind.  At least one of Application or Dialog must be specified.  This option may also be supplied by the `ARI_APPLICATION` environment variable.
@@ -61,8 +64,7 @@ type Client struct {
 
 // New creates a new Client to the Asterisk ARI NATS proxy.
 func New(ctx context.Context, opts ...OptionFunc) (ari.Client, error) {
-	cl, err := newClient(ctx, opts...)
-	return cl, err
+	return newClient(ctx, opts...)
 }
 
 func newClient(ctx context.Context, opts ...OptionFunc) (*Client, error) {
@@ -78,17 +80,17 @@ func newClient(ctx context.Context, opts ...OptionFunc) (*Client, error) {
 	}
 	c.log.SetHandler(log15.DiscardHandler())
 
+	// Load environment-based configurations if such configurations are not explicitly set
+	if os.Getenv("ARI_APPLICATION") != "" {
+		c.appName = os.Getenv("ARI_APPLICATION")
+	}
+	if os.Getenv("NATS_URI") != "" {
+		c.uri = os.Getenv("NATS_URI")
+	}
+
 	// Load explicit configurations
 	for _, opt := range opts {
 		opt(c)
-	}
-
-	// Load environment-based configurations if such configurations are not explicitly set
-	if c.appName == "" && os.Getenv("ARI_APPLICATION") != "" {
-		c.appName = os.Getenv("ARI_APPLICATION")
-	}
-	if c.uri == "" && os.Getenv("NATS_URI") != "" {
-		c.uri = os.Getenv("NATS_URI")
 	}
 
 	// Make sure at least one of appName or dialog are set
@@ -195,122 +197,205 @@ func WithPrefix(prefix string) OptionFunc {
 	}
 }
 
-func (p *Client) ApplicationName() string {
-	return p.appName
+// ApplicationName returns the ARI application's name
+func (c *Client) ApplicationName() string {
+	return c.appName
 }
 
-func (p *Client) Close() {
-	if p.cancel != nil {
-		p.cancel()
+// Close shuts down the client
+func (c *Client) Close() {
+	if c.cancel != nil {
+		c.cancel()
 	}
 
-	if p.bus != nil {
-		p.bus.Close()
+	if c.bus != nil {
+		c.bus.Close()
 	}
 
-	if p.closeNATSOnClose && p.nc != nil {
-		p.nc.Close()
-	}
-}
-
-func (p *Client) Application() ari.Application {
-	return &application{
-		c: p,
+	if opts.closeNATSOnClose && c.nc != nil {
+		c.nc.Close()
 	}
 }
 
-func (p *Client) Asterisk() ari.Asterisk {
-	return &asterisk{
-		c: p,
+// Application is the application operation accessor
+func (c *Client) Application() ari.Application {
+	return &Application{c}
+}
+
+// Asterisk is the asterisk operation accessor
+func (c *Client) Asterisk() ari.Asterisk {
+	return &Asterisk{c}
+}
+
+// Bridge is the bridge operation accessor
+func (c *Client) Bridge() ari.Bridge {
+	return &Bridge{c}
+}
+
+// Bus is the bus operation accessor
+func (c *Client) Bus() ari.Bus {
+	return c.bus
+}
+
+// Channel is the channel operation accessor
+func (c *Client) Channel() ari.Channel {
+	return &Channel{c}
+}
+
+// DeviceState is the device state operation accessor
+func (c *Client) DeviceState() ari.DeviceState {
+	return &DeviceState{c}
+}
+
+// Endpoint is the endpoint accessor
+func (c *Client) Endpoint() ari.Endpoint {
+	return &Endpoint{c}
+}
+
+// LiveRecording is the live recording accessor
+func (c *Client) LiveRecording() ari.LiveRecording {
+	return &LiveRecording{c}
+}
+
+// Mailbox is the mailbox accessor
+func (c *Client) Mailbox() ari.Mailbox {
+	return &Mailbox{c}
+}
+
+// Playback is the media playback accessor
+func (c *Client) Playback() ari.Playback {
+	return &Playback{c}
+}
+
+// Sound is the sound accessor
+func (c *Client) Sound() ari.Sound {
+	return &Sound{c}
+}
+
+// StoredRecording is the stored recording accessor
+func (c *Client) StoredRecording() ari.StoredRecording {
+	return &StoredRecording{c}
+}
+
+// TextMessage is the text message accessor
+func (c *Client) TextMessage() ari.TextMessage {
+	return &TextMessage{c}
+}
+
+func (c *Client) commandRequest(req interface{}) error {
+	var resp proxy.Response
+	err := c.makeRequest(subject("command"), req, &resp)
+	if err != nil {
+		return err
 	}
+	return resc.Err()
 }
 
-func (p *Client) Bridge() ari.Bridge {
-	return &bridge{
-		c: p,
+func (c *Client) createRequest(req interface{}) (*proxy.Entity, error) {
+	var resp proxy.Response
+	err := c.makeRequest(subject("create"), req, &resp)
+	if err != nil {
+		return nil, err
 	}
+	if resc.Err() != nil {
+		return nil, resc.Err()
+	}
+	if resc.Entity == nil {
+		return nil, ErrNil
+	}
+	return resc.Entity, nil
 }
 
-func (p *Client) Bus() ari.Bus {
-	return p.bus
+func (c *Client) getRequest(req interface{}) (*proxy.Entity, error) {
+	var resp proxy.Response
+	err := c.makeRequest(subject("get"), req, &resp)
+	if err != nil {
+		return nil, err
+	}
+	if resc.Err() != nil {
+		return nil, resc.Err()
+	}
+	if resc.Entity == nil {
+		return nil, ErrNil
+	}
+	return resc.Entity, nil
 }
 
-func (p *Client) Channel() ari.Channel {
-	return &channel{p}
+func (c *Client) dataRequest(req interface{}) (*proxy.EntityData, error) {
+	var resp proxy.Response
+	err := c.makeRequest(subject("data"), req, &resp)
+	if err != nil {
+		return nil, err
+	}
+	if resc.Err() != nil {
+		return nil, resc.Err()
+	}
+	if resc.EntityData == nil {
+		return nil, ErrNil
+	}
+	return resc.EntityData, nil
 }
 
-func (p *Client) DeviceState() ari.DeviceState {
-	return nil
+func (c *Client) listRequest(req interface{}) (*proxy.EntityList, error) {
+	var resp proxy.Response
+	err := c.makeRequest(subject("get"), req, &resp)
+	if err != nil {
+		return nil, err
+	}
+	if resc.Err() != nil {
+		return nil, resc.Err()
+	}
+	if resc.EntityList == nil {
+		return nil, ErrNil
+	}
+	return resc.EntityList, nil
 }
 
-func (p *Client) Endpoint() ari.Endpoint {
-	return nil
+func (c *Client) makeRequest(subject string, req interface{}, resp interface{}) error {
+	return c.nc.Request(subject, req, resp, c.requestTimeout)
 }
 
-func (p *Client) LiveRecording() ari.LiveRecording {
-	return &liveRecording{p}
-}
-
-func (p *Client) Mailbox() ari.Mailbox {
-	return nil
-}
-
-func (p *Client) Playback() ari.Playback {
-	return &playback{p}
-}
-
-func (p *Client) Sound() ari.Sound {
-	return nil
-}
-
-func (p *Client) StoredRecording() ari.StoredRecording {
-	return nil
-}
-
-func (p *Client) TextMessage() ari.TextMessage {
-	return nil
-}
-
-func (p *Client) subject(class string) (ret string) {
-	ret = fmt.Sprintf("%s.%s", p.prefix, class)
-	if p.appName != "" {
-		ret += "." + p.appName
-		if p.asterisk != "" {
-			ret += "." + p.asterisk
+func (c *Client) subject(class string) (ret string) {
+	ret = fmt.Sprintf("%s.%s", c.prefix, class)
+	if c.appName != "" {
+		ret += "." + c.appName
+		if c.asterisk != "" {
+			ret += "." + c.asterisk
 		}
 	}
 	return
 }
 
-func (p *Client) eventsSubject() (subj string) {
-	if p.appName != "" {
-		subj = fmt.Sprintf("%sevent.%s", p.prefix, p.appName)
+func (c *Client) eventsSubject() (subj string) {
+	if c.appName != "" {
+		subj = fmt.Sprintf("%sevent.%s", c.prefix, c.appName)
 
-		if p.asterisk != "" {
-			subj += "." + p.asterisk
+		if c.asterisk != "" {
+			subj += "." + c.asterisk
 		} else {
 			subj += ".>"
 		}
 	}
-	if p.dialog != "" {
-		subj = fmt.Sprintf("%sdialogevent.%s", p.prefix, p.dialog)
+	if c.dialog != "" {
+		subj = fmt.Sprintf("%sdialogevent.%s", c.prefix, c.dialog)
 	}
 	return
 }
 
-func (p *Client) bindEvents(ctx context.Context) {
-	subj := p.eventsSubject()
+
+func (c *Client) bindEvents(ctx context.Context) {
+	subj := c.eventsSubject()
 	if subj == "" {
-		p.log.Error("cannot bind events without application or dialog")
+		c.log.Error("cannot bind events without application or dialog")
 		return
 	}
 
-	eChan := make(chan *ari.RawEvent, p.inputBufferLength)
+	eChan := make(chan *ari.RawEvent, c.inputBufferLength)
 	defer close(eChan)
 
-	sub, err := p.nc.BindRecvChan(subj, eChan)
+	sub, err := c.nc.BindRecvChan(subj, eChan)
 	if err != nil {
-		p.log.Error("failed to bind NATS event receiver")
+		c.log.Error("failed to bind NATS event receiver")
 		return
 	}
 	defer sub.Unsubscribe()
@@ -321,15 +406,15 @@ func (p *Client) bindEvents(ctx context.Context) {
 			return
 		case raw, ok := <-eChan:
 			if !ok {
-				p.log.Info("event channel closed")
+				c.log.Info("event channel closed")
 				return
 			}
 			e, err := raw.ToEvent()
 			if err != nil {
-				p.log.Error("failed to convert raw event to ari.Event", "error", err)
+				c.log.Error("failed to convert raw event to ari.Event", "error", err)
 				continue
 			}
-			p.bus.Send(e)
+			c.bus.Send(e)
 		}
 	}
 }

@@ -44,6 +44,8 @@ func (ins *Instance) commands() {
 		// find using full name
 		h, _ := ins.dispatcher[msg.Command]
 
+		ins.dispatcherLock.RUnlock()
+
 		if h == nil {
 			err := errors.New("No handler found for " + msg.Command)
 			respMap := client.ErrorToMap(err, "")

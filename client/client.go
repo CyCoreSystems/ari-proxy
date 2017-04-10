@@ -21,7 +21,11 @@ const DefaultRequestTimeout = 200 * time.Millisecond
 // DefaultInputBufferLength is the default size of the event buffer for events coming in from NATS
 const DefaultInputBufferLength = 100
 
-type proxyClient struct {
+// ErrNil indicates that the request returned an empty response
+var ErrNil = errors.New("Nil")
+
+// Client provides an ari.Client for an ari-proxy server
+type Client struct {
 
 	// appName provides an ARI application to which to bind.  At least one of Application or Dialog must be specified.  This option may also be supplied by the `ARI_APPLICATION` environment variable.
 	appName string
@@ -62,9 +66,13 @@ type proxyClient struct {
 
 // New creates a new Client to the Asterisk ARI NATS proxy.
 func New(ctx context.Context, opts ...OptionFunc) (ari.Client, error) {
+	return newClient(ctx, opts...)
+}
+
+func newClient(ctx context.Context, opts ...OptionFunc) (*Client, error) {
 	ctx, cancel := context.WithCancel(ctx)
 
-	c := &proxyClient{
+	c := &Client{
 		cancel:            cancel,
 		log:               log15.New(),
 		prefix:            "ari.",
@@ -74,17 +82,17 @@ func New(ctx context.Context, opts ...OptionFunc) (ari.Client, error) {
 	}
 	c.log.SetHandler(log15.DiscardHandler())
 
+	// Load environment-based configurations if such configurations are not explicitly set
+	if os.Getenv("ARI_APPLICATION") != "" {
+		c.appName = os.Getenv("ARI_APPLICATION")
+	}
+	if os.Getenv("NATS_URI") != "" {
+		c.uri = os.Getenv("NATS_URI")
+	}
+
 	// Load explicit configurations
 	for _, opt := range opts {
 		opt(c)
-	}
-
-	// Load environment-based configurations if such configurations are not explicitly set
-	if c.appName == "" && os.Getenv("ARI_APPLICATION") {
-		c.appName = os.Getenv("ARI_APPLICATION")
-	}
-	if c.uri == "" && os.Getenv("NATS_URI") != "" {
-		c.uri = os.Getenv("NATS_URI")
 	}
 
 	// Make sure at least one of appName or dialog are set
@@ -125,7 +133,7 @@ type OptionFunc func(*Client)
 // the first ari.Client and maintain lifecycle control of it manually.
 func FromClient(cl ari.Client) OptionFunc {
 	return func(c *Client) {
-		old, ok := cl.(*proxyClient)
+		old, ok := cl.(*Client)
 		if ok {
 			c.nc = old.nc
 			c.prefix = old.prefix
@@ -197,168 +205,204 @@ func WithPrefix(prefix string) OptionFunc {
 	}
 }
 
-func (p *proxyClient) ApplicationName() string {
-	return p.appName
+// ApplicationName returns the ARI application's name
+func (c *Client) ApplicationName() string {
+	return c.appName
 }
 
-func (p *proxyClient) Close() {
-	if p.cancel != nil {
-		p.cancel()
+// Close shuts down the client
+func (c *Client) Close() {
+	if c.cancel != nil {
+		c.cancel()
 	}
 
-	if p.bus != nil {
-		p.bus.Close()
+	if c.bus != nil {
+		c.bus.Close()
 	}
 
-	if opts.closeNATSOnClose && p.nc != nil {
-		p.nc.Close()
+	if opts.closeNATSOnClose && c.nc != nil {
+		c.nc.Close()
 	}
 }
 
-func (p *proxyClient) Application() ari.Application {
+// Application is the application operation accessor
+func (c *Client) Application() ari.Application {
 	return &Application{p}
 }
 
-func (p *proxyClient) Asterisk() ari.Asterisk {
+// Asterisk is the asterisk operation accessor
+func (c *Client) Asterisk() ari.Asterisk {
 	return &Asterisk{p}
 }
 
-func (p *proxyClient) Bridge() ari.Bridge {
+// Bridge is the bridge operation accessor
+func (c *Client) Bridge() ari.Bridge {
 	return &Bridge{p}
 }
 
-func (p *proxyClient) Bus() ari.Bus {
-	return p.bus
+// Bus is the bus operation accessor
+func (c *Client) Bus() ari.Bus {
+	return c.bus
 }
 
-func (p *proxyClient) Channel() ari.Channel {
+// Channel is the channel operation accessor
+func (c *Client) Channel() ari.Channel {
 	return &Channel{p}
 }
 
-func (p *proxyClient) DeviceState() ari.DeviceState {
+// DeviceState is the device state operation accessor
+func (c *Client) DeviceState() ari.DeviceState {
 	return &DeviceState{p}
 }
 
-func (p *proxyClient) Endpoint() ari.Endpoint {
+// Endpoint is the endpoint accessor
+func (c *Client) Endpoint() ari.Endpoint {
 	return &Endpoint{p}
 }
 
-func (p *proxyClient) LiveRecording() ari.LiveRecording {
+// LiveRecording is the live recording accessor
+func (c *Client) LiveRecording() ari.LiveRecording {
 	return &LiveRecording{p}
 }
 
-func (p *proxyClient) Mailbox() ari.Mailbox {
+// Mailbox is the mailbox accessor
+func (c *Client) Mailbox() ari.Mailbox {
 	return &Mailbox{p}
 }
 
-func (p *proxyClient) Playback() ari.Playback {
+// Playback is the media playback accessor
+func (c *Client) Playback() ari.Playback {
 	return &Playback{p}
 }
 
-func (p *proxyClient) Sound() ari.Sound {
+// Sound is the sound accessor
+func (c *Client) Sound() ari.Sound {
 	return &Sound{p}
 }
 
-func (p *proxyClient) StoredRecording() ari.StoredRecording {
+// StoredRecording is the stored recording accessor
+func (c *Client) StoredRecording() ari.StoredRecording {
 	return &StoredRecording{p}
 }
 
-func (p *proxyClient) TextMessage() ari.TextMessage {
+// TextMessage is the text message accessor
+func (c *Client) TextMessage() ari.TextMessage {
 	return &TextMessage{p}
 }
 
-func (p *proxyClient) commandRequest(req interface{}) error {
+func (c *Client) commandRequest(req interface{}) error {
 	var resp proxy.Response
-	err := p.makeRequest(subject("command"), req, &resp)
+	err := c.makeRequest(subject("command"), req, &resp)
 	if err != nil {
 		return err
 	}
-	return resp.Err()
+	return resc.Err()
 }
 
-func (p *proxyClient) createRequest(req interface{}) (*proxy.Entity, error) {
+func (c *Client) createRequest(req interface{}) (*proxy.Entity, error) {
 	var resp proxy.Response
-	err := p.makeRequest(subject, req, &resp)
+	err := c.makeRequest(subject("create"), req, &resp)
 	if err != nil {
 		return nil, err
 	}
-	if resp.Err() != nil {
-		return nil, err
+	if resc.Err() != nil {
+		return nil, resc.Err()
 	}
-	if resp.Entity == nil {
-		return nil, errors.New("no entity returned")
+	if resc.Entity == nil {
+		return nil, ErrNil
 	}
-	return resp.Entity, nil
+	return resc.Entity, nil
 }
 
-func (p *proxyClient) getRequest(req interface{}) (*proxy.Entity, error) {
+func (c *Client) getRequest(req interface{}) (*proxy.Entity, error) {
 	var resp proxy.Response
-	err := p.makeRequest(subject, req, &resp)
+	err := c.makeRequest(subject("get"), req, &resp)
 	if err != nil {
 		return nil, err
 	}
-	if resp.Err() != nil {
+	if resc.Err() != nil {
+		return nil, resc.Err()
+	}
+	if resc.Entity == nil {
+		return nil, ErrNil
+	}
+	return resc.Entity, nil
+}
+
+func (c *Client) dataRequest(req interface{}) (*proxy.EntityData, error) {
+	var resp proxy.Response
+	err := c.makeRequest(subject("data"), req, &resp)
+	if err != nil {
 		return nil, err
 	}
-	if resp.Entity == nil {
-		return nil, errors.New("no entity returned")
+	if resc.Err() != nil {
+		return nil, resc.Err()
 	}
-	return resp.Entity, nil
-
+	if resc.EntityData == nil {
+		return nil, ErrNil
+	}
+	return resc.EntityData, nil
 }
 
-func (p *proxyClient) dataRequest(req interface{}, resp interface{}) error {
-
+func (c *Client) listRequest(req interface{}) (*proxy.EntityList, error) {
+	var resp proxy.Response
+	err := c.makeRequest(subject("get"), req, &resp)
+	if err != nil {
+		return nil, err
+	}
+	if resc.Err() != nil {
+		return nil, resc.Err()
+	}
+	if resc.EntityList == nil {
+		return nil, ErrNil
+	}
+	return resc.EntityList, nil
 }
 
-func (p *proxyClient) listRequest(req interface{}) (*proxy.EntityList, error) {
-
+func (c *Client) makeRequest(subject string, req interface{}, resp interface{}) error {
+	return c.nc.Request(subject, req, resp, c.requestTimeout)
 }
 
-func (p *proxyClient) makeRequest(subject string, req interface{}, resp interface{}) error {
-	p.nc.Request(subject)
-}
-
-func (p *proxyClient) subject(class string) (ret string) {
-	ret = fmt.Sprintf("%s.%s", p.prefix, class)
-	if p.appName != "" {
-		ret += "." + p.appName
-		if p.asterisk != "" {
-			ret += "." + p.asterisk
+func (c *Client) subject(class string) (ret string) {
+	ret = fmt.Sprintf("%s.%s", c.prefix, class)
+	if c.appName != "" {
+		ret += "." + c.appName
+		if c.asterisk != "" {
+			ret += "." + c.asterisk
 		}
 	}
 	return
 }
 
-func (p *proxyClient) eventsSubject() (subj string) {
-	if p.appName != "" {
-		subj = fmt.Sprintf("%sevent.%s", p.prefix, p.appName)
+func (c *Client) eventsSubject() (subj string) {
+	if c.appName != "" {
+		subj = fmt.Sprintf("%sevent.%s", c.prefix, c.appName)
 
-		if p.asterisk != "" {
-			subj += "." + p.asterisk
+		if c.asterisk != "" {
+			subj += "." + c.asterisk
 		} else {
 			subj += ".>"
 		}
 	}
-	if p.dialog != "" {
-		subj = fmt.Sprintf("%sdialogevent.%s", p.prefix, p.dialog)
+	if c.dialog != "" {
+		subj = fmt.Sprintf("%sdialogevent.%s", c.prefix, c.dialog)
 	}
 	return
 }
 
-func (p *proxyClient) bindEvents(ctx context.Context) {
-	subj := p.eventsSubject()
+func (c *Client) bindEvents(ctx context.Context) {
+	subj := c.eventsSubject()
 	if subj == "" {
-		p.log.Error("cannot bind events without application or dialog")
+		c.log.Error("cannot bind events without application or dialog")
 		return
 	}
 
-	eChan := make(chan *ari.RawEvent, p.inputBufferLength)
+	eChan := make(chan *ari.RawEvent, c.inputBufferLength)
 	defer close(eChan)
 
-	sub, err := p.nc.BindRecvChan(subj, eChan)
+	sub, err := c.nc.BindRecvChan(subj, eChan)
 	if err != nil {
-		p.log.Error("failed to bind NATS event receiver")
+		c.log.Error("failed to bind NATS event receiver")
 		return
 	}
 	defer sub.Unsubscribe()
@@ -369,15 +413,15 @@ func (p *proxyClient) bindEvents(ctx context.Context) {
 			return
 		case raw, ok := <-eChan:
 			if !ok {
-				p.log.Info("event channel closed")
+				c.log.Info("event channel closed")
 				return
 			}
 			e, err := raw.ToEvent()
 			if err != nil {
-				p.log.Error("failed to convert raw event to ari.Event", "error", err)
+				c.log.Error("failed to convert raw event to ari.Event", "error", err)
 				continue
 			}
-			p.bus.Send(e)
+			c.bus.Send(e)
 		}
 	}
 }

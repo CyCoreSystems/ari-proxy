@@ -10,37 +10,29 @@ type application struct {
 }
 
 func (a *application) List() (ret []ari.ApplicationHandle, err error) {
-	req := proxy.Request{
+	list, err := a.c.listRequest(&proxy.Request{
 		ApplicationList: &proxy.ApplicationList{},
-	}
-	var resp proxy.EntityList
-	err = a.c.nc.Request(proxy.GetSubject(a.c.prefix, a.c.appName, ""), &req, &resp, a.c.requestTimeout)
+	})
 	if err != nil {
 		return
 	}
 
-	for _, i := range resp.List {
+	for _, i := range list.List {
 		ret = append(ret, a.Get(i.ID))
 	}
 	return
 }
 
-func (a *application) Data(name string) (d *ari.ApplicationData, err error) {
-	req := proxy.Request{
+func (a *application) Data(name string) (*ari.ApplicationData, error) {
+	ret, err := a.c.dataRequest(&proxy.Request{
 		ApplicationData: &proxy.ApplicationData{
 			Name: name,
 		},
-	}
-	var resp proxy.DataResponse
-	err = a.c.nc.Request(proxy.GetSubject(a.c.prefix, a.c.appName, ""), &req, &resp, a.c.requestTimeout)
+	})
 	if err != nil {
-		return
+		return nil, err
 	}
-	if err = resp.Err(); err != nil {
-		return
-	}
-	d = resp.ApplicationData
-	return
+	return ret.Application, nil
 }
 
 func (a *application) Get(id string) (h ari.ApplicationHandle) {
@@ -48,35 +40,21 @@ func (a *application) Get(id string) (h ari.ApplicationHandle) {
 }
 
 func (a *application) Subscribe(name string, eventSource string) (err error) {
-	req := proxy.Request{
+	return a.c.commandRequest(&proxy.Request{
 		ApplicationSubscribe: &proxy.ApplicationSubscribe{
 			EventSource: eventSource,
 			Name:        name,
 		},
-	}
-	var resp proxy.Response
-	err = a.c.nc.Request(proxy.CommandSubject(a.c.prefix, a.c.appName, ""), &req, &resp, a.c.requestTimeout)
-	if err != nil {
-		return
-	}
-	err = resp.Err()
-	return
+	})
 }
 
 func (a *application) Unsubscribe(name string, eventSource string) (err error) {
-	req := proxy.Request{
+	return a.c.commandRequest(&proxy.Request{
 		ApplicationUnsubscribe: &proxy.ApplicationUnsubscribe{
 			EventSource: eventSource,
 			Name:        name,
 		},
-	}
-	var resp proxy.Response
-	err = a.c.nc.Request(proxy.CommandSubject(a.c.prefix, a.c.appName, ""), &req, &resp, a.c.requestTimeout)
-	if err != nil {
-		return
-	}
-	err = resp.Err()
-	return
+	})
 }
 
 type applicationHandle struct {

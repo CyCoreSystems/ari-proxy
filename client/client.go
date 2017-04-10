@@ -9,6 +9,7 @@ import (
 	log15 "gopkg.in/inconshreveable/log15.v2"
 
 	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari-proxy/proxy"
 	"github.com/nats-io/nats"
 	"github.com/pkg/errors"
 )
@@ -212,24 +213,24 @@ func (c *Client) Close() {
 		c.bus.Close()
 	}
 
-	if opts.closeNATSOnClose && c.nc != nil {
+	if c.closeNATSOnClose && c.nc != nil {
 		c.nc.Close()
 	}
 }
 
 // Application is the application operation accessor
 func (c *Client) Application() ari.Application {
-	return &Application{c}
+	return &application{c}
 }
 
 // Asterisk is the asterisk operation accessor
 func (c *Client) Asterisk() ari.Asterisk {
-	return &Asterisk{c}
+	return &asterisk{c}
 }
 
 // Bridge is the bridge operation accessor
 func (c *Client) Bridge() ari.Bridge {
-	return &Bridge{c}
+	return &bridge{c}
 }
 
 // Bus is the bus operation accessor
@@ -239,116 +240,116 @@ func (c *Client) Bus() ari.Bus {
 
 // Channel is the channel operation accessor
 func (c *Client) Channel() ari.Channel {
-	return &Channel{c}
+	return &channel{c}
 }
 
 // DeviceState is the device state operation accessor
 func (c *Client) DeviceState() ari.DeviceState {
-	return &DeviceState{c}
+	return nil
 }
 
 // Endpoint is the endpoint accessor
 func (c *Client) Endpoint() ari.Endpoint {
-	return &Endpoint{c}
+	return nil
 }
 
 // LiveRecording is the live recording accessor
 func (c *Client) LiveRecording() ari.LiveRecording {
-	return &LiveRecording{c}
+	return nil
 }
 
 // Mailbox is the mailbox accessor
 func (c *Client) Mailbox() ari.Mailbox {
-	return &Mailbox{c}
+	return nil
 }
 
 // Playback is the media playback accessor
 func (c *Client) Playback() ari.Playback {
-	return &Playback{c}
+	return nil
 }
 
 // Sound is the sound accessor
 func (c *Client) Sound() ari.Sound {
-	return &Sound{c}
+	return nil
 }
 
 // StoredRecording is the stored recording accessor
 func (c *Client) StoredRecording() ari.StoredRecording {
-	return &StoredRecording{c}
+	return nil
 }
 
 // TextMessage is the text message accessor
 func (c *Client) TextMessage() ari.TextMessage {
-	return &TextMessage{c}
+	return nil
 }
 
 func (c *Client) commandRequest(req interface{}) error {
 	var resp proxy.Response
-	err := c.makeRequest(subject("command"), req, &resp)
+	err := c.makeRequest(c.subject("command"), req, &resp)
 	if err != nil {
 		return err
 	}
-	return resc.Err()
+	return resp.Err()
 }
 
 func (c *Client) createRequest(req interface{}) (*proxy.Entity, error) {
 	var resp proxy.Response
-	err := c.makeRequest(subject("create"), req, &resp)
+	err := c.makeRequest(c.subject("create"), req, &resp)
 	if err != nil {
 		return nil, err
 	}
-	if resc.Err() != nil {
-		return nil, resc.Err()
+	if resp.Err() != nil {
+		return nil, resp.Err()
 	}
-	if resc.Entity == nil {
+	if resp.Entity == nil {
 		return nil, ErrNil
 	}
-	return resc.Entity, nil
+	return resp.Entity, nil
 }
 
 func (c *Client) getRequest(req interface{}) (*proxy.Entity, error) {
 	var resp proxy.Response
-	err := c.makeRequest(subject("get"), req, &resp)
+	err := c.makeRequest(c.subject("get"), req, &resp)
 	if err != nil {
 		return nil, err
 	}
-	if resc.Err() != nil {
-		return nil, resc.Err()
+	if resp.Err() != nil {
+		return nil, resp.Err()
 	}
-	if resc.Entity == nil {
+	if resp.Entity == nil {
 		return nil, ErrNil
 	}
-	return resc.Entity, nil
+	return resp.Entity, nil
 }
 
 func (c *Client) dataRequest(req interface{}) (*proxy.EntityData, error) {
 	var resp proxy.Response
-	err := c.makeRequest(subject("data"), req, &resp)
+	err := c.makeRequest(c.subject("data"), req, &resp)
 	if err != nil {
 		return nil, err
 	}
-	if resc.Err() != nil {
-		return nil, resc.Err()
+	if resp.Err() != nil {
+		return nil, resp.Err()
 	}
-	if resc.EntityData == nil {
+	if resp.Data == nil {
 		return nil, ErrNil
 	}
-	return resc.EntityData, nil
+	return resp.Data, nil
 }
 
 func (c *Client) listRequest(req interface{}) (*proxy.EntityList, error) {
 	var resp proxy.Response
-	err := c.makeRequest(subject("get"), req, &resp)
+	err := c.makeRequest(c.subject("get"), req, &resp)
 	if err != nil {
 		return nil, err
 	}
-	if resc.Err() != nil {
-		return nil, resc.Err()
+	if resp.Err() != nil {
+		return nil, resp.Err()
 	}
-	if resc.EntityList == nil {
+	if resp.EntityList == nil {
 		return nil, ErrNil
 	}
-	return resc.EntityList, nil
+	return resp.EntityList, nil
 }
 
 func (c *Client) makeRequest(subject string, req interface{}, resp interface{}) error {
@@ -381,7 +382,6 @@ func (c *Client) eventsSubject() (subj string) {
 	}
 	return
 }
-
 
 func (c *Client) bindEvents(ctx context.Context) {
 	subj := c.eventsSubject()

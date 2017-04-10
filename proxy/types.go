@@ -42,6 +42,24 @@ type Entity struct {
 	ID string `json:"name"`
 }
 
+// EntityData is a response which returns the data for a specific entity.
+type EntityData struct {
+	Application     *ari.ApplicationData     `json:"applicationData,omitempty"`
+	Asterisk        *ari.AsteriskInfo        `json:"asteriskInfo,omitempty"`
+	Bridge          *ari.BridgeData          `json:"bridgeData,omitempty"`
+	Channel         *ari.ChannelData         `json:"channelData,omitempty"`
+	Config          *ari.ConfigData          `json:"configData,omitempty"`
+	DeviceState     *ari.DeviceStateData     `json:"deviceStateData,omitempty"`
+	Endpoint        *ari.EndpointData        `json:"endpointData,omitempty"`
+	LiveRecording   *ari.LiveRecordingData   `json:"liveRecordingData,omitempty"`
+	Log             *ari.LogData             `json:"logData,omitempty"`
+	Mailbox         *ari.MailboxData         `json:"mailboxData,omitempty"`
+	Playback        *ari.PlaybackData        `json:"playbackData,omitempty"`
+	Sound           *ari.SoundData           `json:"soundData,omitempty"`
+	StoredRecording *ari.StoredRecordingData `json:"storedRecordingData,omitempty"`
+	TextMessage     *ari.TextMessageData     `json:"textMessageData,omitempty"`
+}
+
 // EntityList is a response which returns a list of Entities, as described above.
 type EntityList struct {
 	// List is the list of entities
@@ -54,6 +72,9 @@ var ErrNotFound = errors.New("Not found")
 // Response is a response to a request.  This acts as a base type for more complicated responses, as well.
 type Response struct {
 	Error string `json:"error,omitempty"`
+
+	// Data is the returned entity data, if applicable
+	Data *EntityData `json:",omitempty"`
 
 	// Entity is the returned entity, if applicable
 	Entity *Entity `json:",inline,omitempty"`

@@ -58,6 +58,8 @@ type EntityData struct {
 	Sound           *ari.SoundData           `json:"soundData,omitempty"`
 	StoredRecording *ari.StoredRecordingData `json:"storedRecordingData,omitempty"`
 	TextMessage     *ari.TextMessageData     `json:"textMessageData,omitempty"`
+
+	Variable string `json:"variable,omitempty"`
 }
 
 // EntityList is a response which returns a list of Entities, as described above.

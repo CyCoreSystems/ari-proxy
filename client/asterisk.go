@@ -30,61 +30,40 @@ func (a *asterisk) ReloadModule(name string) (err error) {
 	return
 }
 
-func (a *asterisk) Info(only string) (ai *ari.AsteriskInfo, err error) {
-	req := proxy.Request{
+func (a *asterisk) Info(only string) (*ari.AsteriskInfo, error) {
+	resp, err := a.c.dataRequest(&proxy.Request{
 		AsteriskInfo: &proxy.AsteriskInfo{},
-	}
-	var resp proxy.DataResponse
-	err = a.c.nc.Request(proxy.GetSubject(a.c.prefix, a.c.appName, ""), &req, &resp, a.c.requestTimeout)
+	})
 	if err != nil {
-		return
+		return nil, err
 	}
-	if err = resp.Err(); err != nil {
-		return
-	}
-	ai = resp.AsteriskInfo
-	return
+	return resp.Asterisk, nil
 }
 
 func (a *asterisk) Variables() ari.Variables {
 	return &asteriskVariables{a.c}
 }
 
-func (a *asteriskVariables) Get(variable string) (ret string, err error) {
-	req := proxy.Request{
+func (a *asteriskVariables) Get(key string) (ret string, err error) {
+	data, err := a.c.dataRequest(&proxy.Request{
 		AsteriskVariables: &proxy.AsteriskVariables{
-			Name: variable,
+			Name: key,
 			Get:  &proxy.VariablesGet{},
 		},
-	}
-	var resp proxy.DataResponse
-	err = a.c.nc.Request(proxy.GetSubject(a.c.prefix, a.c.appName, ""), &req, &resp, a.c.requestTimeout)
+	})
 	if err != nil {
-		return
+		return "", err
 	}
-	if err = resp.Err(); err != nil {
-		return
-	}
-	ret = resp.Variable
-	return
+	return data.Variable, err
 }
 
-func (a *asteriskVariables) Set(variable string, value string) (err error) {
-	req := proxy.Request{
+func (a *asteriskVariables) Set(key string, val string) (err error) {
+	return a.c.commandRequest(&proxy.Request{
 		AsteriskVariables: &proxy.AsteriskVariables{
-			Name: variable,
+			Name: key,
 			Set: &proxy.VariablesSet{
-				Value: value,
+				Value: val,
 			},
 		},
-	}
-	var resp proxy.Response
-	err = a.c.nc.Request(proxy.CommandSubject(a.c.prefix, a.c.appName, ""), &req, &resp, a.c.requestTimeout)
-	if err != nil {
-		return
-	}
-	if err = resp.Err(); err != nil {
-		return
-	}
-	return
+	})
 }

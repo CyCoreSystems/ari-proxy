@@ -52,10 +52,10 @@ func (ins *Instance) channel() {
 			return
 		}
 
-		if req.ChannelID != "" {
+		if req.ChannelID != "" && ins.Dialog != nil && ins.Dialog.ID != ins.server.Application+"_0" {
 			ins.server.cache.Add(req.ChannelID, ins)
 		}
-		if req.OtherChannelID != "" {
+		if req.OtherChannelID != "" && ins.Dialog != nil && ins.Dialog.ID != ins.server.Application+"_0" {
 			ins.server.cache.Add(req.OtherChannelID, ins)
 		}
 

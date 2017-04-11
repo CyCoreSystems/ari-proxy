@@ -82,11 +82,25 @@ func (ins *Instance) commands() {
 		})
 	}
 
-	sub, err := ins.conn.Subscribe(endpoint, func(m *nats.Msg) { go cb(m) })
-	if err != nil {
-		ins.log.Error("Error starting subscription", "endpoint", endpoint, "error", err)
-		ins.Stop()
-		return
+	var err error
+	var sub *nats.Subscription
+	if ins.Dialog == nil || ins.Dialog.ID == ins.server.Application+"_0" {
+		// root-level listeners for multi-node proxy setups
+		// must listen with queue groups so the same subject
+		// will only go to a single asterisk box. v1 hacks
+		sub, err = ins.conn.QueueSubscribe(endpoint, endpoint, func(m *nats.Msg) { go cb(m) })
+		if err != nil {
+			ins.log.Error("Error starting subscription", "endpoint", endpoint, "error", err)
+			ins.Stop()
+			return
+		}
+	} else {
+		sub, err = ins.conn.Subscribe(endpoint, func(m *nats.Msg) { go cb(m) })
+		if err != nil {
+			ins.log.Error("Error starting subscription", "endpoint", endpoint, "error", err)
+			ins.Stop()
+			return
+		}
 	}
 
 	go func() {

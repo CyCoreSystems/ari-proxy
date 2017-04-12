@@ -255,7 +255,9 @@ func (ins *Instance) channel() {
 			return
 		}
 
-		ins.server.cache.Add(rr.Name, ins)
+		if ins.Dialog != nil && ins.Dialog.ID != ins.server.Application+"_0" {
+			ins.server.cache.Add(rr.Name, ins)
+		}
 
 		var opts ari.RecordingOptions
 

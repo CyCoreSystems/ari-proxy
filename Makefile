@@ -14,7 +14,7 @@ test:
 lint:
 	gometalinter client/... server/... proxy/...
 
-check: lint test
+check: all lint test
 
 deps:
 	glide cc

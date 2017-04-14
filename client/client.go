@@ -275,7 +275,7 @@ func (c *Client) Sound() ari.Sound {
 
 // StoredRecording is the stored recording accessor
 func (c *Client) StoredRecording() ari.StoredRecording {
-	return nil
+	return &storedRecording{c}
 }
 
 // TextMessage is the text message accessor

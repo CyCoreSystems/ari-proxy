@@ -260,7 +260,7 @@ func (c *Client) LiveRecording() ari.LiveRecording {
 
 // Mailbox is the mailbox accessor
 func (c *Client) Mailbox() ari.Mailbox {
-	return nil
+	return &mailbox{c}
 }
 
 // Playback is the media playback accessor

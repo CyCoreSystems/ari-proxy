@@ -16,8 +16,8 @@ type mock struct {
 	DeviceState   *mocks.DeviceState
 	Endpoint      *mocks.Endpoint
 	LiveRecording *mocks.LiveRecording
-
-	Logging *mocks.Logging
+	Logging       *mocks.Logging
+	Mailbox       *mocks.Mailbox
 
 	AllSub          *mocks.Subscription
 	AllEventChannel <-chan ari.Event
@@ -37,8 +37,10 @@ func standardMock() *mock {
 	m.Channel = &mocks.Channel{}
 	m.DeviceState = &mocks.DeviceState{}
 	m.Endpoint = &mocks.Endpoint{}
-	m.Logging = &mocks.Logging{}
 	m.LiveRecording = &mocks.LiveRecording{}
+	m.Logging = &mocks.Logging{}
+	m.Mailbox = &mocks.Mailbox{}
+
 	m.AllSub = &mocks.Subscription{}
 
 	eventCh := make(<-chan ari.Event)
@@ -58,6 +60,7 @@ func standardMock() *mock {
 	m.Client.On("Endpoint").Return(m.Endpoint)
 	m.Client.On("LiveRecording").Return(m.LiveRecording)
 	m.Asterisk.On("Logging").Return(m.Logging)
+	m.Client.On("Mailbox").Return(m.Mailbox)
 
 	m.Asterisk.On("Info", "").Return(&ari.AsteriskInfo{
 		SystemInfo: ari.SystemInfo{

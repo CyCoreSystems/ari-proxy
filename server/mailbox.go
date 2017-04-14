@@ -8,13 +8,15 @@ import (
 
 func (s *Server) mailboxData(ctx context.Context, reply string, req *proxy.Request) {
 	name := req.MailboxData.Name
-	dd, err := s.ari.Mailbox().Data(name)
+	md, err := s.ari.Mailbox().Data(name)
 	if err != nil {
 		s.sendError(reply, err)
 		return
 	}
 
-	s.nats.Publish(reply, &dd)
+	s.nats.Publish(reply, &proxy.DataResponse{
+		MailboxData: md,
+	})
 }
 
 func (s *Server) mailboxDelete(ctx context.Context, reply string, req *proxy.Request) {
@@ -35,12 +37,16 @@ func (s *Server) mailboxList(ctx context.Context, reply string, req *proxy.Reque
 		return
 	}
 
-	var mailboxes []string
+	var el proxy.EntityList
 	for _, m := range mx {
-		mailboxes = append(mailboxes, m.ID())
+		el.List = append(el.List, &proxy.Entity{
+			ID: m.ID(),
+		})
 	}
 
-	s.nats.Publish(reply, mailboxes)
+	s.nats.Publish(reply, &proxy.Response{
+		EntityList: &el,
+	})
 }
 
 func (s *Server) mailboxUpdate(ctx context.Context, reply string, req *proxy.Request) {

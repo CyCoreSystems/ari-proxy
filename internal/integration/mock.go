@@ -19,6 +19,7 @@ type mock struct {
 	Logging       *mocks.Logging
 	Mailbox       *mocks.Mailbox
 	Modules       *mocks.Modules
+	Playback      *mocks.Playback
 
 	AllSub          *mocks.Subscription
 	AllEventChannel <-chan ari.Event
@@ -42,6 +43,7 @@ func standardMock() *mock {
 	m.Logging = &mocks.Logging{}
 	m.Mailbox = &mocks.Mailbox{}
 	m.Modules = &mocks.Modules{}
+	m.Playback = &mocks.Playback{}
 
 	m.AllSub = &mocks.Subscription{}
 
@@ -64,6 +66,7 @@ func standardMock() *mock {
 	m.Asterisk.On("Logging").Return(m.Logging)
 	m.Client.On("Mailbox").Return(m.Mailbox)
 	m.Asterisk.On("Modules").Return(m.Modules)
+	m.Client.On("Playback").Return(m.Playback)
 
 	m.Asterisk.On("Info", "").Return(&ari.AsteriskInfo{
 		SystemInfo: ari.SystemInfo{

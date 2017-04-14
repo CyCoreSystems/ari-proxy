@@ -98,11 +98,24 @@ func TestModulesReload(t *testing.T, s Server, clientFactory ClientFactory) {
 func TestModulesData(t *testing.T, s Server, clientFactory ClientFactory) {
 	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
 
-		m.Modules.On("Data", "m1").Return(nil, nil)
+		var d ari.ModuleData
+		d.Description = "Desc"
+		d.Name = "name"
 
-		_, err := cl.Asterisk().Modules().Data("m1")
+		m.Modules.On("Data", "m1").Return(&d, nil)
+
+		ret, err := cl.Asterisk().Modules().Data("m1")
 		if err != nil {
 			t.Errorf("Unexpected error in module Data: %s", err)
+		}
+		if ret == nil {
+			t.Errorf("Expected module data to be non-nil")
+		} else {
+			failed := ret.Description != d.Description
+			failed = ret.Name != d.Name
+			if failed {
+				t.Errorf("Expected '%v', got '%v'", d, ret)
+			}
 		}
 
 		m.Shutdown()

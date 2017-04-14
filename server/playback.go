@@ -23,7 +23,9 @@ func (s *Server) playbackData(ctx context.Context, reply string, req *proxy.Requ
 		return
 	}
 
-	s.nats.Publish(reply, &d)
+	s.nats.Publish(reply, &proxy.DataResponse{
+		PlaybackData: d,
+	})
 }
 
 func (s *Server) playbackStop(ctx context.Context, reply string, req *proxy.Request) {

@@ -120,6 +120,7 @@ type DataResponse struct {
 	LiveRecordingData *ari.LiveRecordingData `json:",inline,omitempty"`
 	LogDataList       []ari.LogData          `json:",inline,omitempty"`
 	MailboxData       *ari.MailboxData       `json:",inline,omitempty"`
+	ModuleData        *ari.ModuleData        `json:",inline,omitempty"`
 }
 
 // Err returns an error from the DataResponse.

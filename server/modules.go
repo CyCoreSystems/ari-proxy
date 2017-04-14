@@ -40,7 +40,9 @@ func (s *Server) asteriskModuleData(ctx context.Context, reply string, req *prox
 		return
 	}
 
-	s.nats.Publish(reply, &data)
+	s.nats.Publish(reply, &proxy.DataResponse{
+		ModuleData: data,
+	})
 }
 
 func (s *Server) asteriskModuleList(ctx context.Context, reply string, req *proxy.Request) {
@@ -50,10 +52,14 @@ func (s *Server) asteriskModuleList(ctx context.Context, reply string, req *prox
 		return
 	}
 
-	var modules []string
+	var el proxy.EntityList
 	for _, m := range mx {
-		modules = append(modules, m.ID())
+		el.List = append(el.List, &proxy.Entity{
+			ID: m.ID(),
+		})
 	}
 
-	s.nats.Publish(reply, &modules)
+	s.nats.Publish(reply, &proxy.Response{
+		EntityList: &el,
+	})
 }

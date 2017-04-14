@@ -22,7 +22,7 @@ func (a *asterisk) Logging() ari.Logging {
 }
 
 func (a *asterisk) Modules() ari.Modules {
-	return nil
+	return &modules{a.c}
 }
 
 func (a *asterisk) ReloadModule(name string) (err error) {

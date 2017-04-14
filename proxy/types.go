@@ -108,15 +108,16 @@ func NewErrorResponse(err error) *Response {
 
 // DataResponse is a response to a data request
 type DataResponse struct {
-	Error           string               `json:"error,omitempty"`
-	ApplicationData *ari.ApplicationData `json:",inline,omitempty"`
-	AsteriskInfo    *ari.AsteriskInfo    `json:",inline,omitempty"`
-	Variable        string               `json:"variable,omitempty"`
-	BridgeData      *ari.BridgeData      `json:",inline,omitempty"`
-	ChannelData     *ari.ChannelData     `json:",inline,omitempty"`
-	ConfigData      *ari.ConfigData      `json:",inline,omitempty"`
-	DeviceStateData *ari.DeviceStateData `json:",inline,omitempty"`
-	LogDataList     []ari.LogData        `json:",inline,omitempty"`
+	Error             string                 `json:"error,omitempty"`
+	ApplicationData   *ari.ApplicationData   `json:",inline,omitempty"`
+	AsteriskInfo      *ari.AsteriskInfo      `json:",inline,omitempty"`
+	Variable          string                 `json:"variable,omitempty"`
+	BridgeData        *ari.BridgeData        `json:",inline,omitempty"`
+	ChannelData       *ari.ChannelData       `json:",inline,omitempty"`
+	ConfigData        *ari.ConfigData        `json:",inline,omitempty"`
+	DeviceStateData   *ari.DeviceStateData   `json:",inline,omitempty"`
+	LiveRecordingData *ari.LiveRecordingData `json:",inline,omitempty"`
+	LogDataList       []ari.LogData          `json:",inline,omitempty"`
 }
 
 // Err returns an error from the DataResponse.

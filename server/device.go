@@ -13,8 +13,10 @@ func (s *Server) deviceStateData(ctx context.Context, reply string, req *proxy.R
 		s.sendError(reply, err)
 		return
 	}
-	s.nats.Publish(reply, &proxy.DataResponse{
-		DeviceStateData: dd,
+	s.nats.Publish(reply, &proxy.Response{
+		Data: &proxy.EntityData{
+			DeviceState: dd,
+		},
 	})
 }
 

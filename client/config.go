@@ -21,28 +21,23 @@ func (c *config) Get(configClass string, objectType string, id string) ari.Confi
 }
 
 func (c *config) Data(configClass string, objectType string, id string) (cd *ari.ConfigData, err error) {
-	req := proxy.Request{
+	data, err := c.c.dataRequest(&proxy.Request{
 		AsteriskConfig: &proxy.AsteriskConfig{
 			ConfigClass: configClass,
 			ObjectType:  objectType,
 			ID:          id,
 			Data:        &proxy.AsteriskConfigData{},
 		},
-	}
-	var resp proxy.DataResponse
-	err = c.c.nc.Request(proxy.GetSubject(c.c.prefix, c.c.appName, ""), &req, &resp, c.c.requestTimeout)
+	})
 	if err != nil {
 		return
 	}
-	if err = resp.Err(); err != nil {
-		return
-	}
-	cd = resp.ConfigData
+	cd = data.Config
 	return
 }
 
 func (c *config) Update(configClass string, objectType string, id string, tuples []ari.ConfigTuple) (err error) {
-	req := proxy.Request{
+	err = c.c.commandRequest(&proxy.Request{
 		AsteriskConfig: &proxy.AsteriskConfig{
 			ConfigClass: configClass,
 			ObjectType:  objectType,
@@ -51,35 +46,19 @@ func (c *config) Update(configClass string, objectType string, id string, tuples
 				Tuples: tuples,
 			},
 		},
-	}
-	var resp proxy.Response
-	err = c.c.nc.Request(proxy.GetSubject(c.c.prefix, c.c.appName, ""), &req, &resp, c.c.requestTimeout)
-	if err != nil {
-		return
-	}
-	if err = resp.Err(); err != nil {
-		return
-	}
+	})
 	return
 }
 
 func (c *config) Delete(configClass string, objectType string, id string) (err error) {
-	req := proxy.Request{
+	err = c.c.commandRequest(&proxy.Request{
 		AsteriskConfig: &proxy.AsteriskConfig{
 			ConfigClass: configClass,
 			ObjectType:  objectType,
 			ID:          id,
 			Delete:      &proxy.AsteriskConfigDelete{},
 		},
-	}
-	var resp proxy.Response
-	err = c.c.nc.Request(proxy.GetSubject(c.c.prefix, c.c.appName, ""), &req, &resp, c.c.requestTimeout)
-	if err != nil {
-		return
-	}
-	if err = resp.Err(); err != nil {
-		return
-	}
+	})
 	return
 }
 

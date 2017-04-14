@@ -17,55 +17,34 @@ func (p *playback) Get(id string) ari.PlaybackHandle {
 }
 
 func (p *playback) Data(id string) (d *ari.PlaybackData, err error) {
-	req := proxy.Request{
+	data, err := p.c.dataRequest(&proxy.Request{
 		PlaybackData: &proxy.PlaybackData{
 			ID: id,
 		},
-	}
-	var resp proxy.DataResponse
-	err = p.c.nc.Request(proxy.GetSubject(p.c.prefix, p.c.appName, ""), &req, &resp, p.c.requestTimeout)
+	})
 	if err != nil {
 		return
 	}
-	if err = resp.Err(); err != nil {
-		return
-	}
-	d = resp.PlaybackData
+	d = data.Playback
 	return
 }
 
 func (p *playback) Control(id string, op string) (err error) {
-	req := proxy.Request{
+	err = p.c.commandRequest(&proxy.Request{
 		PlaybackControl: &proxy.PlaybackControl{
 			ID:      id,
 			Command: op,
 		},
-	}
-	var resp proxy.Response
-	err = p.c.nc.Request(proxy.CommandSubject(p.c.prefix, p.c.appName, ""), &req, &resp, p.c.requestTimeout)
-	if err != nil {
-		return
-	}
-	if err = resp.Err(); err != nil {
-		return
-	}
+	})
 	return
 }
 
 func (p *playback) Stop(id string) (err error) {
-	req := proxy.Request{
+	err = p.c.commandRequest(&proxy.Request{
 		PlaybackStop: &proxy.PlaybackStop{
 			ID: id,
 		},
-	}
-	var resp proxy.Response
-	err = p.c.nc.Request(proxy.CommandSubject(p.c.prefix, p.c.appName, ""), &req, &resp, p.c.requestTimeout)
-	if err != nil {
-		return
-	}
-	if err = resp.Err(); err != nil {
-		return
-	}
+	})
 	return
 }
 

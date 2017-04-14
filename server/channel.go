@@ -74,8 +74,10 @@ func (s *Server) channelData(ctx context.Context, reply string, req *proxy.Reque
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.DataResponse{
-		ChannelData: d,
+	s.nats.Publish(reply, &proxy.Response{
+		Data: &proxy.EntityData{
+			Channel: d,
+		},
 	})
 }
 
@@ -322,8 +324,10 @@ func (s *Server) channelVariableGet(ctx context.Context, reply string, req *prox
 		return
 	}
 
-	s.nats.Publish(reply, proxy.DataResponse{
-		Variable: val,
+	s.nats.Publish(reply, &proxy.Response{
+		Data: &proxy.EntityData{
+			Variable: val,
+		},
 	})
 }
 

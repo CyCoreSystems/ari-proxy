@@ -15,8 +15,10 @@ func (s *Server) applicationData(ctx context.Context, reply string, req *proxy.R
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.DataResponse{
-		ApplicationData: app,
+	s.nats.Publish(reply, &proxy.Response{
+		Data: &proxy.EntityData{
+			Application: app,
+		},
 	})
 }
 
@@ -34,7 +36,10 @@ func (s *Server) applicationList(ctx context.Context, reply string, req *proxy.R
 			ID:       i.ID(),
 		})
 	}
-	s.nats.Publish(reply, &resp)
+
+	s.nats.Publish(reply, &proxy.Response{
+		EntityList: &resp,
+	})
 }
 
 func (s *Server) applicationGet(ctx context.Context, reply string, req *proxy.Request) {

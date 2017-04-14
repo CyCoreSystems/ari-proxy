@@ -14,8 +14,10 @@ func (s *Server) mailboxData(ctx context.Context, reply string, req *proxy.Reque
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.DataResponse{
-		MailboxData: md,
+	s.nats.Publish(reply, &proxy.Response{
+		Data: &proxy.EntityData{
+			Mailbox: md,
+		},
 	})
 }
 

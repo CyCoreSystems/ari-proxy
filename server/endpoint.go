@@ -13,8 +13,10 @@ func (s *Server) endpointData(ctx context.Context, reply string, req *proxy.Requ
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.DataResponse{
-		EndpointData: ed,
+	s.nats.Publish(reply, &proxy.Response{
+		Data: &proxy.EntityData{
+			Endpoint: ed,
+		},
 	})
 }
 

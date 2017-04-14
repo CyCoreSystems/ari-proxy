@@ -54,8 +54,10 @@ func (s *Server) bridgeData(ctx context.Context, reply string, req *proxy.Reques
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.DataResponse{
-		BridgeData: bd,
+	s.nats.Publish(reply, &proxy.Response{
+		Data: &proxy.EntityData{
+			Bridge: bd,
+		},
 	})
 }
 

@@ -229,7 +229,7 @@ func TestBridgePlay(t *testing.T, s Server, clientFactory ClientFactory) {
 	runTest("simple", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var ph = &mocks.PlaybackHandle{}
-		ph.On("ID").Return("ph1")
+		ph.On("ID").Return("playback1")
 
 		m.Bridge.On("Play", "bridge1", "playback1", "mediaURI").Return(ph, nil)
 
@@ -238,7 +238,7 @@ func TestBridgePlay(t *testing.T, s Server, clientFactory ClientFactory) {
 			t.Errorf("Unexpected error in remote Play call: %v", err)
 		}
 		if ret == nil || ret.ID() != ph.ID() {
-			t.Errorf("Expected playback handle '%v', got '%v'", ph, ret)
+			t.Errorf("Expected playback handle '%v', got '%v'", ph.ID(), ret.ID())
 		}
 
 		m.Shutdown()
@@ -270,7 +270,7 @@ func TestBridgeRecord(t *testing.T, s Server, clientFactory ClientFactory) {
 		var opts = &ari.RecordingOptions{Format: "", MaxDuration: 0, MaxSilence: 0, Exists: "", Beep: false, Terminate: "#"}
 
 		var lrh = &mocks.LiveRecordingHandle{}
-		lrh.On("ID").Return("lrh1")
+		lrh.On("ID").Return("recording1")
 
 		m.Bridge.On("Record", "bridge1", "recording1", opts).Return(lrh, nil)
 
@@ -292,7 +292,7 @@ func TestBridgeRecord(t *testing.T, s Server, clientFactory ClientFactory) {
 		var opts = &ari.RecordingOptions{}
 
 		var lrh = &mocks.LiveRecordingHandle{}
-		lrh.On("ID").Return("lrh1")
+		lrh.On("ID").Return("recording1")
 
 		m.Bridge.On("Record", "bridge1", "recording1", opts).Return(lrh, nil)
 

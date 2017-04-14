@@ -15,20 +15,15 @@ func (s *sound) List(filters map[string]string) (ret []ari.SoundHandle, err erro
 		filters = make(map[string]string)
 	}
 
-	req := proxy.Request{
+	el, err := s.c.listRequest(&proxy.Request{
 		SoundList: &proxy.SoundList{
 			Filters: filters,
 		},
-	}
-	var resp proxy.Response
-	err = s.c.nc.Request(proxy.GetSubject(s.c.prefix, s.c.appName, ""), &req, &resp, s.c.requestTimeout)
+	})
 	if err != nil {
 		return
 	}
-	if err = resp.Err(); err != nil {
-		return
-	}
-	for _, i := range resp.EntityList.List {
+	for _, i := range el.List {
 		ret = append(ret, s.Get(i.ID))
 	}
 	return
@@ -42,20 +37,15 @@ func (s *sound) Get(name string) ari.SoundHandle {
 }
 
 func (s *sound) Data(name string) (sd *ari.SoundData, err error) {
-	req := proxy.Request{
+	data, err := s.c.dataRequest(&proxy.Request{
 		SoundData: &proxy.SoundData{
 			Name: name,
 		},
-	}
-	var resp proxy.DataResponse
-	err = s.c.nc.Request(proxy.GetSubject(s.c.prefix, s.c.appName, ""), &req, &resp, s.c.requestTimeout)
+	})
 	if err != nil {
 		return
 	}
-	if err = resp.Err(); err != nil {
-		return
-	}
-	sd = resp.SoundData
+	sd = data.Sound
 	return
 }
 

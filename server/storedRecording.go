@@ -30,8 +30,10 @@ func (s *Server) recordingStoredData(ctx context.Context, reply string, req *pro
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.DataResponse{
-		StoredRecordingData: data,
+	s.nats.Publish(reply, &proxy.Response{
+		Data: &proxy.EntityData{
+			StoredRecording: data,
+		},
 	})
 }
 

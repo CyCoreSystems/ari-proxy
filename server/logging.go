@@ -13,8 +13,10 @@ func (s *Server) asteriskLoggingList(ctx context.Context, reply string, req *pro
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.DataResponse{
-		LogDataList: ld,
+	s.nats.Publish(reply, &proxy.Response{
+		Data: &proxy.EntityData{
+			LogList: ld,
+		},
 	})
 }
 

@@ -143,52 +143,69 @@ func (s *Server) listen(ctx context.Context) error {
 	requestHandler := s.newRequestHandler(ctx)
 
 	// get handlers
-	allGet, err := s.nats.Subscribe(proxy.GetSubject(s.NATSPrefix, "", ""), requestHandler)
+	allGet, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "get", "", ""), requestHandler)
 	if err != nil {
 		return errors.Wrap(err, "failed to create get-all subscription")
 	}
 	defer wg.Add(allGet.Unsubscribe)()
 
-	appGet, err := s.nats.Subscribe(proxy.GetSubject(s.NATSPrefix, s.Application, ""), requestHandler)
+	appGet, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "get", s.Application, ""), requestHandler)
 	if err != nil {
 		return errors.Wrap(err, "failed to create get-app subscription")
 	}
 	defer wg.Add(appGet.Unsubscribe)()
-	idGet, err := s.nats.Subscribe(proxy.GetSubject(s.NATSPrefix, s.Application, s.AsteriskID), requestHandler)
+	idGet, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "get", s.Application, s.AsteriskID), requestHandler)
 	if err != nil {
 		return errors.Wrap(err, "failed to create get-id subscription")
 	}
 	defer wg.Add(idGet.Unsubscribe)()
 
+	// data handlers
+	allData, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "data", "", ""), requestHandler)
+	if err != nil {
+		return errors.Wrap(err, "failed to create data-all subscription")
+	}
+	defer wg.Add(allData.Unsubscribe)()
+	appData, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "data", s.Application, ""), requestHandler)
+	if err != nil {
+		return errors.Wrap(err, "failed to create data-data subscription")
+	}
+	defer wg.Add(appData.Unsubscribe)()
+	idData, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "data", s.Application, s.AsteriskID), requestHandler)
+	if err != nil {
+		return errors.Wrap(err, "failed to create data-id subscription")
+	}
+	defer wg.Add(idData.Unsubscribe)()
+
 	// command handlers
-	allCommand, err := s.nats.Subscribe(proxy.CommandSubject(s.NATSPrefix, "", ""), requestHandler)
+	allCommand, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "command", "", ""), requestHandler)
 	if err != nil {
 		return errors.Wrap(err, "failed to create command-all subscription")
 	}
 	defer wg.Add(allCommand.Unsubscribe)()
-	appCommand, err := s.nats.Subscribe(proxy.CommandSubject(s.NATSPrefix, s.Application, ""), requestHandler)
+	appCommand, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "command", s.Application, ""), requestHandler)
 	if err != nil {
 		return errors.Wrap(err, "failed to create command-app subscription")
 	}
 	defer wg.Add(appCommand.Unsubscribe)()
-	idCommand, err := s.nats.Subscribe(proxy.CommandSubject(s.NATSPrefix, s.Application, s.AsteriskID), requestHandler)
+	idCommand, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "command", s.Application, s.AsteriskID), requestHandler)
 	if err != nil {
 		return errors.Wrap(err, "failed to create command-id subscription")
 	}
 	defer wg.Add(idCommand.Unsubscribe)()
 
 	// create handlers
-	allCreate, err := s.nats.QueueSubscribe(proxy.CreateSubject(s.NATSPrefix, "", ""), "ariproxy", requestHandler)
+	allCreate, err := s.nats.QueueSubscribe(proxy.Subject(s.NATSPrefix, "create", "", ""), "ariproxy", requestHandler)
 	if err != nil {
 		return errors.Wrap(err, "failed to create create-all subscription")
 	}
 	defer wg.Add(allCreate.Unsubscribe)()
-	appCreate, err := s.nats.QueueSubscribe(proxy.CreateSubject(s.NATSPrefix, s.Application, ""), "ariproxy", requestHandler)
+	appCreate, err := s.nats.QueueSubscribe(proxy.Subject(s.NATSPrefix, "create", s.Application, ""), "ariproxy", requestHandler)
 	if err != nil {
 		return errors.Wrap(err, "failed to create create-app subscription")
 	}
 	defer wg.Add(appCreate.Unsubscribe)()
-	idCreate, err := s.nats.QueueSubscribe(proxy.CreateSubject(s.NATSPrefix, s.Application, s.AsteriskID), "ariproxy", requestHandler)
+	idCreate, err := s.nats.QueueSubscribe(proxy.Subject(s.NATSPrefix, "create", s.Application, s.AsteriskID), "ariproxy", requestHandler)
 	if err != nil {
 		return errors.Wrap(err, "failed to create create-id subscription")
 	}

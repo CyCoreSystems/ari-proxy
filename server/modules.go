@@ -40,8 +40,10 @@ func (s *Server) asteriskModuleData(ctx context.Context, reply string, req *prox
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.DataResponse{
-		ModuleData: data,
+	s.nats.Publish(reply, &proxy.Response{
+		Data: &proxy.EntityData{
+			Module: data,
+		},
 	})
 }
 

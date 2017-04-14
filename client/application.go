@@ -16,7 +16,6 @@ func (a *application) List() (ret []ari.ApplicationHandle, err error) {
 	if err != nil {
 		return
 	}
-
 	for _, i := range list.List {
 		ret = append(ret, a.Get(i.ID))
 	}

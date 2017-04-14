@@ -9,18 +9,6 @@ type liveRecording struct {
 	c *Client
 }
 
-func (lr *liveRecording) command(req *proxy.Request) (err error) {
-	var resp proxy.Response
-	err = lr.c.nc.Request(proxy.CommandSubject(lr.c.prefix, lr.c.appName, ""), &req, &resp, lr.c.requestTimeout)
-	if err != nil {
-		return
-	}
-	if err = resp.Err(); err != nil {
-		return
-	}
-	return
-}
-
 func (lr *liveRecording) Get(name string) ari.LiveRecordingHandle {
 	return &liveRecordingHandle{
 		name: name,
@@ -29,25 +17,20 @@ func (lr *liveRecording) Get(name string) ari.LiveRecordingHandle {
 }
 
 func (lr *liveRecording) Data(name string) (lrd *ari.LiveRecordingData, err error) {
-	req := proxy.Request{
+	nd, err := lr.c.dataRequest(&proxy.Request{
 		RecordingLiveData: &proxy.RecordingLiveData{
 			ID: name,
 		},
-	}
-	var resp proxy.DataResponse
-	err = lr.c.nc.Request(proxy.GetSubject(lr.c.prefix, lr.c.appName, ""), &req, &resp, lr.c.requestTimeout)
+	})
 	if err != nil {
 		return
 	}
-	if err = resp.Err(); err != nil {
-		return
-	}
-	lrd = resp.LiveRecordingData
+	lrd = nd.LiveRecording
 	return
 }
 
 func (lr *liveRecording) Stop(name string) (err error) {
-	err = lr.command(&proxy.Request{
+	err = lr.c.commandRequest(&proxy.Request{
 		RecordingLiveStop: &proxy.RecordingLiveStop{
 			ID: name,
 		},
@@ -56,7 +39,7 @@ func (lr *liveRecording) Stop(name string) (err error) {
 }
 
 func (lr *liveRecording) Pause(name string) (err error) {
-	err = lr.command(&proxy.Request{
+	err = lr.c.commandRequest(&proxy.Request{
 		RecordingLivePause: &proxy.RecordingLivePause{
 			ID: name,
 		},
@@ -65,7 +48,7 @@ func (lr *liveRecording) Pause(name string) (err error) {
 }
 
 func (lr *liveRecording) Resume(name string) (err error) {
-	err = lr.command(&proxy.Request{
+	err = lr.c.commandRequest(&proxy.Request{
 		RecordingLiveResume: &proxy.RecordingLiveResume{
 			ID: name,
 		},
@@ -74,7 +57,7 @@ func (lr *liveRecording) Resume(name string) (err error) {
 }
 
 func (lr *liveRecording) Mute(name string) (err error) {
-	err = lr.command(&proxy.Request{
+	err = lr.c.commandRequest(&proxy.Request{
 		RecordingLiveMute: &proxy.RecordingLiveMute{
 			ID: name,
 		},
@@ -83,7 +66,7 @@ func (lr *liveRecording) Mute(name string) (err error) {
 }
 
 func (lr *liveRecording) Unmute(name string) (err error) {
-	err = lr.command(&proxy.Request{
+	err = lr.c.commandRequest(&proxy.Request{
 		RecordingLiveUnmute: &proxy.RecordingLiveUnmute{
 			ID: name,
 		},
@@ -92,7 +75,7 @@ func (lr *liveRecording) Unmute(name string) (err error) {
 }
 
 func (lr *liveRecording) Delete(name string) (err error) {
-	err = lr.command(&proxy.Request{
+	err = lr.c.commandRequest(&proxy.Request{
 		RecordingLiveDelete: &proxy.RecordingLiveDelete{
 			ID: name,
 		},
@@ -101,7 +84,7 @@ func (lr *liveRecording) Delete(name string) (err error) {
 }
 
 func (lr *liveRecording) Scrap(name string) (err error) {
-	err = lr.command(&proxy.Request{
+	err = lr.c.commandRequest(&proxy.Request{
 		RecordingLiveScrap: &proxy.RecordingLiveScrap{
 			ID: name,
 		},

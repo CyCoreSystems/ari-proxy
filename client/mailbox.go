@@ -17,74 +17,48 @@ func (m *mailbox) Get(name string) ari.MailboxHandle {
 }
 
 func (m *mailbox) List() (mx []ari.MailboxHandle, err error) {
-	req := proxy.Request{
+	ml, err := m.c.listRequest(&proxy.Request{
 		MailboxList: &proxy.MailboxList{},
-	}
-	var resp proxy.Response
-	err = m.c.nc.Request(proxy.GetSubject(m.c.prefix, m.c.appName, ""), &req, &resp, m.c.requestTimeout)
+	})
 	if err != nil {
 		return
 	}
-	if err = resp.Err(); err != nil {
-		return
-	}
-	for _, i := range resp.EntityList.List {
+	for _, i := range ml.List {
 		mx = append(mx, m.Get(i.ID))
 	}
 	return
 }
 
 func (m *mailbox) Data(name string) (d *ari.MailboxData, err error) {
-	req := proxy.Request{
+	data, err := m.c.dataRequest(&proxy.Request{
 		MailboxData: &proxy.MailboxData{
 			Name: name,
 		},
-	}
-	var resp proxy.DataResponse
-	err = m.c.nc.Request(proxy.GetSubject(m.c.prefix, m.c.appName, ""), &req, &resp, m.c.requestTimeout)
+	})
 	if err != nil {
 		return
 	}
-	if err = resp.Err(); err != nil {
-		return
-	}
-	d = resp.MailboxData
+	d = data.Mailbox
 	return
 }
 
 func (m *mailbox) Update(name string, oldMessages int, newMessages int) (err error) {
-	req := proxy.Request{
+	err = m.c.commandRequest(&proxy.Request{
 		MailboxUpdate: &proxy.MailboxUpdate{
 			Name: name,
 			Old:  oldMessages,
 			New:  newMessages,
 		},
-	}
-	var resp proxy.Response
-	err = m.c.nc.Request(proxy.CommandSubject(m.c.prefix, m.c.appName, ""), &req, &resp, m.c.requestTimeout)
-	if err != nil {
-		return
-	}
-	if err = resp.Err(); err != nil {
-		return
-	}
+	})
 	return
 }
 
 func (m *mailbox) Delete(name string) (err error) {
-	req := proxy.Request{
+	err = m.c.commandRequest(&proxy.Request{
 		MailboxDelete: &proxy.MailboxDelete{
 			Name: name,
 		},
-	}
-	var resp proxy.Response
-	err = m.c.nc.Request(proxy.CommandSubject(m.c.prefix, m.c.appName, ""), &req, &resp, m.c.requestTimeout)
-	if err != nil {
-		return
-	}
-	if err = resp.Err(); err != nil {
-		return
-	}
+	})
 	return
 }
 

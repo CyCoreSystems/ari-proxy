@@ -53,7 +53,9 @@ type EntityData struct {
 	Endpoint        *ari.EndpointData        `json:"endpointData,omitempty"`
 	LiveRecording   *ari.LiveRecordingData   `json:"liveRecordingData,omitempty"`
 	Log             *ari.LogData             `json:"logData,omitempty"`
+	LogList         []ari.LogData            `json:"logDataList,omitempty"`
 	Mailbox         *ari.MailboxData         `json:"mailboxData,omitempty"`
+	Module          *ari.ModuleData          `json:"moduleData,omitempty"`
 	Playback        *ari.PlaybackData        `json:"playbackData,omitempty"`
 	Sound           *ari.SoundData           `json:"soundData,omitempty"`
 	StoredRecording *ari.StoredRecordingData `json:"storedRecordingData,omitempty"`
@@ -104,35 +106,6 @@ func NewErrorResponse(err error) *Response {
 		return &Response{}
 	}
 	return &Response{Error: err.Error()}
-}
-
-// DataResponse is a response to a data request
-type DataResponse struct {
-	Error               string                   `json:"error,omitempty"`
-	ApplicationData     *ari.ApplicationData     `json:",inline,omitempty"`
-	AsteriskInfo        *ari.AsteriskInfo        `json:",inline,omitempty"`
-	Variable            string                   `json:"variable,omitempty"`
-	BridgeData          *ari.BridgeData          `json:",inline,omitempty"`
-	ChannelData         *ari.ChannelData         `json:",inline,omitempty"`
-	ConfigData          *ari.ConfigData          `json:",inline,omitempty"`
-	EndpointData        *ari.EndpointData        `json:",inline,omitempty"`
-	DeviceStateData     *ari.DeviceStateData     `json:",inline,omitempty"`
-	LiveRecordingData   *ari.LiveRecordingData   `json:",inline,omitempty"`
-	LogDataList         []ari.LogData            `json:",inline,omitempty"`
-	MailboxData         *ari.MailboxData         `json:",inline,omitempty"`
-	ModuleData          *ari.ModuleData          `json:",inline,omitempty"`
-	PlaybackData        *ari.PlaybackData        `json:",inline,omitempty"`
-	SoundData           *ari.SoundData           `json:",inline,omitempty"`
-	StoredRecordingData *ari.StoredRecordingData `json:",inline,omitempty"`
-}
-
-// Err returns an error from the DataResponse.
-// If the response's Error is empty, a nil error is returned.  Otherwise, the error will be filled with the value of dataResponse.Error.
-func (e *DataResponse) Err() error {
-	if e.Error != "" {
-		return errors.New(e.Error)
-	}
-	return nil
 }
 
 // Request describes a request which is sent from an ARI proxy Client to an ARI proxy Server
@@ -1158,4 +1131,3 @@ type AsteriskModulesReload struct {
 	// Name is the name of the asterisk module
 	Name string
 }
-

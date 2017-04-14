@@ -255,7 +255,7 @@ func (c *Client) Endpoint() ari.Endpoint {
 
 // LiveRecording is the live recording accessor
 func (c *Client) LiveRecording() ari.LiveRecording {
-	return nil
+	return &liveRecording{c}
 }
 
 // Mailbox is the mailbox accessor
@@ -265,7 +265,7 @@ func (c *Client) Mailbox() ari.Mailbox {
 
 // Playback is the media playback accessor
 func (c *Client) Playback() ari.Playback {
-	return nil
+	return &playback{c}
 }
 
 // Sound is the sound accessor
@@ -357,13 +357,7 @@ func (c *Client) makeRequest(subject string, req interface{}, resp interface{}) 
 }
 
 func (c *Client) subject(class string) (ret string) {
-	ret = fmt.Sprintf("%s.%s", c.prefix, class)
-	if c.appName != "" {
-		ret += "." + c.appName
-		if c.asterisk != "" {
-			ret += "." + c.asterisk
-		}
-	}
+	ret = proxy.Subject(c.prefix, class, c.appName, c.asterisk)
 	return
 }
 

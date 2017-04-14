@@ -14,6 +14,7 @@ type mock struct {
 	Bridge        *mocks.Bridge
 	Channel       *mocks.Channel
 	DeviceState   *mocks.DeviceState
+	Endpoint      *mocks.Endpoint
 	LiveRecording *mocks.LiveRecording
 
 	Logging *mocks.Logging
@@ -35,6 +36,7 @@ func standardMock() *mock {
 	m.Bridge = &mocks.Bridge{}
 	m.Channel = &mocks.Channel{}
 	m.DeviceState = &mocks.DeviceState{}
+	m.Endpoint = &mocks.Endpoint{}
 	m.Logging = &mocks.Logging{}
 	m.LiveRecording = &mocks.LiveRecording{}
 	m.AllSub = &mocks.Subscription{}
@@ -53,6 +55,7 @@ func standardMock() *mock {
 	m.Client.On("Bridge").Return(m.Bridge)
 	m.Client.On("Channel").Return(m.Channel)
 	m.Client.On("DeviceState").Return(m.DeviceState)
+	m.Client.On("Endpoint").Return(m.Endpoint)
 	m.Client.On("LiveRecording").Return(m.LiveRecording)
 	m.Asterisk.On("Logging").Return(m.Logging)
 

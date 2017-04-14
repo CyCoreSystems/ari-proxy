@@ -115,6 +115,7 @@ type DataResponse struct {
 	BridgeData        *ari.BridgeData        `json:",inline,omitempty"`
 	ChannelData       *ari.ChannelData       `json:",inline,omitempty"`
 	ConfigData        *ari.ConfigData        `json:",inline,omitempty"`
+	EndpointData      *ari.EndpointData      `json:",inline,omitempty"`
 	DeviceStateData   *ari.DeviceStateData   `json:",inline,omitempty"`
 	LiveRecordingData *ari.LiveRecordingData `json:",inline,omitempty"`
 	LogDataList       []ari.LogData          `json:",inline,omitempty"`

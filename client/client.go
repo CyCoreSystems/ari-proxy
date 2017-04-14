@@ -250,7 +250,7 @@ func (c *Client) DeviceState() ari.DeviceState {
 
 // Endpoint is the endpoint accessor
 func (c *Client) Endpoint() ari.Endpoint {
-	return nil
+	return &endpoint{c}
 }
 
 // LiveRecording is the live recording accessor

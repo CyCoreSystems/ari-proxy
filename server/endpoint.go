@@ -13,7 +13,9 @@ func (s *Server) endpointData(ctx context.Context, reply string, req *proxy.Requ
 		return
 	}
 
-	s.nats.Publish(reply, &ed)
+	s.nats.Publish(reply, &proxy.DataResponse{
+		EndpointData: ed,
+	})
 }
 
 func (s *Server) endpointList(ctx context.Context, reply string, req *proxy.Request) {
@@ -23,7 +25,16 @@ func (s *Server) endpointList(ctx context.Context, reply string, req *proxy.Requ
 		return
 	}
 
-	s.nats.Publish(reply, &ex)
+	var el proxy.EntityList
+	for _, e := range ex {
+		el.List = append(el.List, &proxy.Entity{
+			ID: e.ID(),
+		})
+	}
+
+	s.nats.Publish(reply, &proxy.Response{
+		EntityList: &el,
+	})
 }
 
 func (s *Server) endpointListByTech(ctx context.Context, reply string, req *proxy.Request) {
@@ -33,5 +44,14 @@ func (s *Server) endpointListByTech(ctx context.Context, reply string, req *prox
 		return
 	}
 
-	s.nats.Publish(reply, &ex)
+	var el proxy.EntityList
+	for _, e := range ex {
+		el.List = append(el.List, &proxy.Entity{
+			ID: e.ID(),
+		})
+	}
+
+	s.nats.Publish(reply, &proxy.Response{
+		EntityList: &el,
+	})
 }

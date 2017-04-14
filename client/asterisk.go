@@ -18,7 +18,7 @@ type asteriskVariables struct {
 }
 
 func (a *asterisk) Logging() ari.Logging {
-	return nil
+	return &logging{a.c}
 }
 
 func (a *asterisk) Modules() ari.Modules {

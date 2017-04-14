@@ -15,6 +15,8 @@ type mock struct {
 	Channel     *mocks.Channel
 	DeviceState *mocks.DeviceState
 
+	Logging *mocks.Logging
+
 	AllSub          *mocks.Subscription
 	AllEventChannel <-chan ari.Event
 
@@ -32,6 +34,7 @@ func standardMock() *mock {
 	m.Bridge = &mocks.Bridge{}
 	m.Channel = &mocks.Channel{}
 	m.DeviceState = &mocks.DeviceState{}
+	m.Logging = &mocks.Logging{}
 
 	m.AllSub = &mocks.Subscription{}
 
@@ -49,6 +52,7 @@ func standardMock() *mock {
 	m.Client.On("Bridge").Return(m.Bridge)
 	m.Client.On("Channel").Return(m.Channel)
 	m.Client.On("DeviceState").Return(m.DeviceState)
+	m.Asterisk.On("Logging").Return(m.Logging)
 
 	m.Asterisk.On("Info", "").Return(&ari.AsteriskInfo{
 		SystemInfo: ari.SystemInfo{

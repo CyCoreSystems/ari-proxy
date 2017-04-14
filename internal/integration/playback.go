@@ -10,29 +10,40 @@ import (
 func TestPlaybackData(t *testing.T, s Server, clientFactory ClientFactory) {
 	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
 
-		m.Playback.On("Data", "m1").Return(nil, nil)
+		var pb ari.PlaybackData
+		pb.ID = "pb1"
+		pb.State = "st1"
 
-		_, err := cl.Playback().Data("m1")
+		m.Playback.On("Data", "pb1").Return(&pb, nil)
+
+		ret, err := cl.Playback().Data("pb1")
 		if err != nil {
 			t.Errorf("Unexpected error in Playback Data: %s", err)
+		}
+		if ret == nil {
+			t.Errorf("Expected Playback data to be non-nil")
+		} else {
+			if ret.ID != "pb1" && ret.State != "st1" {
+				t.Errorf("got '%v', expected '%v'", pb, ret)
+			}
 		}
 
 		m.Shutdown()
 
-		m.Playback.AssertCalled(t, "Data", "m1")
+		m.Playback.AssertCalled(t, "Data", "pb1")
 	})
 	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
 
-		m.Playback.On("Data", "m1").Return(nil, errors.New("error"))
+		m.Playback.On("Data", "pb1").Return(nil, errors.New("error"))
 
-		_, err := cl.Playback().Data("m1")
+		_, err := cl.Playback().Data("pb1")
 		if err == nil {
 			t.Errorf("Expected error in Playback Data: %s", err)
 		}
 
 		m.Shutdown()
 
-		m.Playback.AssertCalled(t, "Data", "m1")
+		m.Playback.AssertCalled(t, "Data", "pb1")
 	})
 }
 

@@ -245,7 +245,7 @@ func (c *Client) Channel() ari.Channel {
 
 // DeviceState is the device state operation accessor
 func (c *Client) DeviceState() ari.DeviceState {
-	return nil
+	return &deviceState{c}
 }
 
 // Endpoint is the endpoint accessor

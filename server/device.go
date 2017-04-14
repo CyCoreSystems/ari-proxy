@@ -13,7 +13,9 @@ func (s *Server) deviceStateData(ctx context.Context, reply string, req *proxy.R
 		s.sendError(reply, err)
 		return
 	}
-	s.nats.Publish(reply, &dd)
+	s.nats.Publish(reply, &proxy.DataResponse{
+		DeviceStateData: dd,
+	})
 }
 
 func (s *Server) deviceStateDelete(ctx context.Context, reply string, req *proxy.Request) {
@@ -33,13 +35,16 @@ func (s *Server) deviceStateList(ctx context.Context, reply string, req *proxy.R
 		s.sendError(reply, err)
 		return
 	}
-
-	var ret []string
-	for _, device := range dx {
-		ret = append(ret, device.ID())
+	var el proxy.EntityList
+	for _, d := range dx {
+		el.List = append(el.List, &proxy.Entity{
+			ID: d.ID(),
+		})
 	}
 
-	s.nats.Publish(reply, ret)
+	s.nats.Publish(reply, &proxy.Response{
+		EntityList: &el,
+	})
 }
 
 func (s *Server) deviceStateUpdate(ctx context.Context, reply string, req *proxy.Request) {

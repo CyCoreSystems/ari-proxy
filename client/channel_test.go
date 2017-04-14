@@ -29,3 +29,23 @@ func TestChannelHangup(t *testing.T) {
 func TestChannelList(t *testing.T) {
 	integration.TestChannelList(t, &srv{}, clientFactory)
 }
+
+func TestChannelMute(t *testing.T) {
+	integration.TestChannelMute(t, &srv{}, clientFactory)
+}
+
+func TestChannelUnmute(t *testing.T) {
+	integration.TestChannelUnmute(t, &srv{}, clientFactory)
+}
+
+func TestChannelMOH(t *testing.T) {
+	integration.TestChannelMOH(t, &srv{}, clientFactory)
+}
+
+func TestChannelStopMOH(t *testing.T) {
+	integration.TestChannelStopMOH(t, &srv{}, clientFactory)
+}
+
+func TestChannelContinue(t *testing.T) {
+	integration.TestChannelContinue(t, &srv{}, clientFactory)
+}

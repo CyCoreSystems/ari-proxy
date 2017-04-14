@@ -120,9 +120,32 @@ func (b *bridge) Record(id string, name string, opts *ari.RecordingOptions) (ari
 
 func (b *bridge) Subscribe(id string, nx ...string) ari.Subscription {
 	// TODO
-	//	ns := newSubscription(b.Get(id))
-	//	ns.Start(b.subscriber, nx...)
-	//	return ns
+	/*
+		inSub := b.c.Bus().Subscribe(n...)
+		outSub := newSubscription()
+
+		go func() {
+			defer inSub.Cancel()
+
+			br := b.Get(id)
+
+			for {
+				select {
+				case <-outSub.closedChan:
+					return
+				case e, ok := <-inSub.Events():
+					if !ok {
+						return
+					}
+					if br.Match(e) {
+						outSub.events <- e
+					}
+				}
+			}
+		}()
+
+		return outSub
+	*/
 	return nil
 }
 

@@ -286,9 +286,7 @@ func (c *channel) Record(id string, name string, opts *ari.RecordingOptions) (h 
 }
 
 func (c *channel) Subscribe(id string, n ...string) ari.Subscription {
-	//ns := newSubscription(c.Get(id))
-	//ns.Start(c.subscriber, n...)
-	//return ns
+	// TODO
 	return nil
 }
 

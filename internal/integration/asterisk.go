@@ -149,4 +149,23 @@ func TestAsteriskVariablesSet(t *testing.T, s Server, clientFactory ClientFactor
 		m.Asterisk.AssertCalled(t, "Variables")
 		mv.AssertCalled(t, "Set", "s", "hello")
 	})
+
+	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+		var ai ari.AsteriskInfo
+		ai.SystemInfo.EntityID = "1"
+
+		mv := mocks.Variables{}
+		m.Asterisk.On("Variables").Return(&mv)
+		mv.On("Set", "s", "hello").Return(errors.New("error"))
+
+		err := cl.Asterisk().Variables().Set("s", "hello")
+		if err == nil {
+			t.Errorf("Expected error in remote Variables Set call: %v", err)
+		}
+
+		m.Shutdown()
+
+		m.Asterisk.AssertCalled(t, "Variables")
+		mv.AssertCalled(t, "Set", "s", "hello")
+	})
 }

@@ -102,6 +102,7 @@ func (s *Server) Ready() <-chan struct{} {
 	return s.readyCh
 }
 
+// nolint: gocyclo
 func (s *Server) listen(ctx context.Context) error {
 
 	var wg closeGroup
@@ -298,6 +299,7 @@ func (s *Server) newRequestHandler(ctx context.Context) func(subject string, rep
 	}
 }
 
+// nolint: gocyclo
 func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.Request) {
 	f := func(ctx context.Context, reply string, req *proxy.Request) {
 		s.sendError(reply, errors.New("Not implemented"))

@@ -64,7 +64,10 @@ func init() {
 	p.String("ari.websocket_url", "ws://localhost:8088/ari/events", "Websocket URL for connecting to ARI")
 
 	for _, n := range []string{"verbose", "nats.url", "ari.application", "ari.username", "ari.password", "ari.http_url", "ari.websocket_url"} {
-		viper.BindPFlag(n, p.Lookup(n))
+		err := viper.BindPFlag(n, p.Lookup(n))
+		if err != nil {
+			panic("failed to bind flag " + n)
+		}
 	}
 }
 
@@ -82,7 +85,10 @@ func readConfig() {
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
-	viper.ReadInConfig()
+	err := viper.ReadInConfig()
+	if err != nil {
+		panic("failed to read config file: " + err.Error())
+	}
 }
 
 func runServer(ctx context.Context, log log15.Logger) error {

@@ -11,7 +11,10 @@ func (cg *closeGroup) Add(fn func() error) func() {
 	}
 	cg.count++
 	return func() {
-		fn()
+		err := fn()
+		if err != nil {
+			panic(err.Error())
+		}
 		cg.count--
 		if cg.count == 0 {
 			close(cg.closeCh)

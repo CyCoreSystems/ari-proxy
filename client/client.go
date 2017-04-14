@@ -270,7 +270,7 @@ func (c *Client) Playback() ari.Playback {
 
 // Sound is the sound accessor
 func (c *Client) Sound() ari.Sound {
-	return nil
+	return &sound{c}
 }
 
 // StoredRecording is the stored recording accessor

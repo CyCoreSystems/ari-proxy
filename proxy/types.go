@@ -122,6 +122,7 @@ type DataResponse struct {
 	MailboxData       *ari.MailboxData       `json:",inline,omitempty"`
 	ModuleData        *ari.ModuleData        `json:",inline,omitempty"`
 	PlaybackData      *ari.PlaybackData      `json:",inline,omitempty"`
+	SoundData         *ari.SoundData         `json:",inline,omitempty"`
 }
 
 // Err returns an error from the DataResponse.

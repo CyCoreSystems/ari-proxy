@@ -13,7 +13,9 @@ func (s *Server) soundData(ctx context.Context, reply string, req *proxy.Request
 		return
 	}
 
-	s.nats.Publish(reply, &sd)
+	s.nats.Publish(reply, &proxy.DataResponse{
+		SoundData: sd,
+	})
 }
 
 func (s *Server) soundList(ctx context.Context, reply string, req *proxy.Request) {
@@ -29,11 +31,14 @@ func (s *Server) soundList(ctx context.Context, reply string, req *proxy.Request
 		s.sendError(reply, err)
 		return
 	}
-
-	var sounds []string
-	for _, sound := range sx {
-		sounds = append(sounds, sound.ID())
+	var el proxy.EntityList
+	for _, s := range sx {
+		el.List = append(el.List, &proxy.Entity{
+			ID: s.ID(),
+		})
 	}
 
-	s.nats.Publish(reply, sounds)
+	s.nats.Publish(reply, &proxy.Response{
+		EntityList: &el,
+	})
 }

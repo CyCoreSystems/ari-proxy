@@ -12,7 +12,7 @@ test:
 	go test `go list ./... | grep -v /vendor/`
 
 lint:
-	gometalinter --deadline 20s --vendor --fast --skip internal ./...
+	gometalinter client/... server/... proxy/...
 
 check: lint test
 

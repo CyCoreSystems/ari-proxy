@@ -18,7 +18,9 @@ func (s *Server) asteriskConfigData(ctx context.Context, reply string, req *prox
 		return
 	}
 
-	s.nats.Publish(reply, &cd)
+	s.nats.Publish(reply, &proxy.DataResponse{
+		ConfigData: cd,
+	})
 }
 
 func (s *Server) asteriskConfigDelete(ctx context.Context, reply string, req *proxy.Request) {

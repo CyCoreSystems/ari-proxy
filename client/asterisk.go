@@ -10,7 +10,7 @@ type asterisk struct {
 }
 
 func (a *asterisk) Config() ari.Config {
-	return nil
+	return &config{a.c}
 }
 
 type asteriskVariables struct {

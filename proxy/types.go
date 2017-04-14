@@ -114,6 +114,7 @@ type DataResponse struct {
 	Variable        string               `json:"variable,omitempty"`
 	BridgeData      *ari.BridgeData      `json:",inline,omitempty"`
 	ChannelData     *ari.ChannelData     `json:",inline,omitempty"`
+	ConfigData      *ari.ConfigData      `json:",inline,omitempty"`
 }
 
 // Err returns an error from the DataResponse.

@@ -83,6 +83,15 @@ func (ph *playbackHandle) Data() (d *ari.PlaybackData, err error) {
 	return
 }
 
-func (ph *playbackHandle) Match(evt ari.Event) (ok bool) {
-	return
+func (ph *playbackHandle) Match(e ari.Event) (ok bool) {
+	v, ok := e.(ari.PlaybackEvent)
+	if !ok {
+		return false
+	}
+	for _, i := range v.GetPlaybackIDs() {
+		if i == ph.id {
+			return true
+		}
+	}
+	return false
 }

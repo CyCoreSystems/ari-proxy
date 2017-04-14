@@ -78,6 +78,15 @@ func (e *endpointHandle) ID() string {
 	return fmt.Sprintf("%s/%s", e.tech, e.resource)
 }
 
-func (e *endpointHandle) Match(e1 ari.Event) (ok bool) {
-	return
+func (e *endpointHandle) Match(ev ari.Event) (ok bool) {
+	v, ok := ev.(ari.EndpointEvent)
+	if !ok {
+		return false
+	}
+	for _, i := range v.GetEndpointIDs() {
+		if i == e.ID() {
+			return true
+		}
+	}
+	return false
 }

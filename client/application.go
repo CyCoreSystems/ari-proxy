@@ -81,6 +81,5 @@ func (a *applicationHandle) Unsubscribe(eventSource string) (err error) {
 }
 
 func (a *applicationHandle) Match(evt ari.Event) (ok bool) {
-	// TODO
-	return
+	return evt.GetApplication() == a.id
 }

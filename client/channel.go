@@ -382,7 +382,6 @@ func (c *channelHandle) ID() string {
 }
 
 func (c *channelHandle) IsAnswered() (bool, error) {
-	//TODO: this is logic, move elsewhere
 	d, err := c.Data()
 	if err != nil {
 		return false, err
@@ -398,7 +397,16 @@ func (c *channelHandle) MOH(s string) error {
 }
 
 func (c *channelHandle) Match(e ari.Event) bool {
-	//TODO: implement match
+	v, ok := e.(ari.ChannelEvent)
+	if !ok {
+		return false
+	}
+	list := v.GetChannelIDs()
+	for _, i := range list {
+		if i == c.id {
+			return true
+		}
+	}
 	return false
 }
 
@@ -407,7 +415,9 @@ func (c *channelHandle) Mute(d ari.Direction) error {
 }
 
 func (c *channelHandle) Originate(o ari.OriginateRequest) (ari.ChannelHandle, error) {
-	//TODO: not sure how to hook this into this channel. o.OtherChannelID = c.id ?
+	if o.ChannelID == "" {
+		o.ChannelID = c.ID()
+	}
 	return c.channel.Originate(o)
 }
 

@@ -101,8 +101,17 @@ func (lr *liveRecordingHandle) ID() string {
 	return lr.name
 }
 
-func (lr *liveRecordingHandle) Match(evt ari.Event) (ok bool) {
-	return
+func (lr *liveRecordingHandle) Match(e ari.Event) (ok bool) {
+	v, ok := e.(ari.RecordingEvent)
+	if !ok {
+		return false
+	}
+	for _, i := range v.GetRecordingIDs() {
+		if i == lr.ID() {
+			return true
+		}
+	}
+	return false
 }
 
 func (lr *liveRecordingHandle) Data() (lrd *ari.LiveRecordingData, err error) {

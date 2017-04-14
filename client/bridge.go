@@ -164,6 +164,14 @@ func (bh *bridgeHandle) Record(name string, opts *ari.RecordingOptions) (ari.Liv
 }
 
 func (bh *bridgeHandle) Match(e ari.Event) (ok bool) {
-	// TODO
-	return
+	v, ok := e.(ari.BridgeEvent)
+	if !ok {
+		return false
+	}
+	for _, i := range v.GetBridgeIDs() {
+		if i == bh.id {
+			return true
+		}
+	}
+	return false
 }

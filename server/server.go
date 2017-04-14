@@ -169,7 +169,7 @@ func (s *Server) listen(ctx context.Context) error {
 	defer wg.Add(allData.Unsubscribe)()
 	appData, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "data", s.Application, ""), requestHandler)
 	if err != nil {
-		return errors.Wrap(err, "failed to create data-data subscription")
+		return errors.Wrap(err, "failed to create data-app subscription")
 	}
 	defer wg.Add(appData.Unsubscribe)()
 	idData, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "data", s.Application, s.AsteriskID), requestHandler)

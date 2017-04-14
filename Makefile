@@ -15,3 +15,9 @@ lint:
 	gometalinter --deadline 20s --vendor --fast --skip internal ./...
 
 check: lint test
+
+deps:
+	glide cc
+	glide i
+
+ci: deps check

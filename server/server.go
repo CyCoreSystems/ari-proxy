@@ -248,7 +248,7 @@ func (s *Server) runAnnouncer(ctx context.Context) {
 
 // announce publishes the presence of this server to the cluster
 func (s *Server) announce() {
-	s.nats.Publish(fmt.Sprintf("%sannounce", s.NATSPrefix), &proxy.Announcement{
+	s.nats.Publish(proxy.AnnouncementSubject(s.NATSPrefix), &proxy.Announcement{
 		Asterisk:    s.AsteriskID,
 		Application: s.Application,
 	})

@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/CyCoreSystems/ari"
@@ -17,6 +18,11 @@ type Announcement struct {
 
 	// Application indicates the ARI application as which the proxy is connected
 	Application string `json:"application"`
+}
+
+// AnnouncementSubject returns the NATS subject
+func AnnouncementSubject(prefix string) string {
+	return fmt.Sprintf("%sannounce", prefix)
 }
 
 // Metadata describes the metadata and associations of a message
@@ -36,7 +42,7 @@ type Entity struct {
 	Metadata *Metadata `json:"metadata"`
 
 	// Kind is the type of entity (application, asterisk, bridge, channel, deviceState, endpoint, logging, mailbox, playback, liveRecording, storedRecording, sound)
-	Kind string `json:"type"`
+	Kind string `json:"kind"`
 
 	// ID is the unique identifier for the entity
 	ID string `json:"name"`
@@ -85,21 +91,21 @@ const (
 type EntityData struct {
 	Metadata *Metadata `json:"metadata"`
 
-	Application     *ari.ApplicationData     `json:"applicationData,omitempty"`
-	Asterisk        *ari.AsteriskInfo        `json:"asteriskInfo,omitempty"`
-	Bridge          *ari.BridgeData          `json:"bridgeData,omitempty"`
-	Channel         *ari.ChannelData         `json:"channelData,omitempty"`
-	Config          *ari.ConfigData          `json:"configData,omitempty"`
-	DeviceState     *ari.DeviceStateData     `json:"deviceStateData,omitempty"`
-	Endpoint        *ari.EndpointData        `json:"endpointData,omitempty"`
-	LiveRecording   *ari.LiveRecordingData   `json:"liveRecordingData,omitempty"`
-	Log             *ari.LogData             `json:"logData,omitempty"`
-	Mailbox         *ari.MailboxData         `json:"mailboxData,omitempty"`
-	Module          *ari.ModuleData          `json:"moduleData,omitempty"`
-	Playback        *ari.PlaybackData        `json:"playbackData,omitempty"`
-	Sound           *ari.SoundData           `json:"soundData,omitempty"`
-	StoredRecording *ari.StoredRecordingData `json:"storedRecordingData,omitempty"`
-	TextMessage     *ari.TextMessageData     `json:"textMessageData,omitempty"`
+	Application     *ari.ApplicationData     `json:"application,omitempty"`
+	Asterisk        *ari.AsteriskInfo        `json:"asterisk,omitempty"`
+	Bridge          *ari.BridgeData          `json:"bridge,omitempty"`
+	Channel         *ari.ChannelData         `json:"channel,omitempty"`
+	Config          *ari.ConfigData          `json:"config,omitempty"`
+	DeviceState     *ari.DeviceStateData     `json:"device_state,omitempty"`
+	Endpoint        *ari.EndpointData        `json:"endpoint,omitempty"`
+	LiveRecording   *ari.LiveRecordingData   `json:"live_recording,omitempty"`
+	Log             *ari.LogData             `json:"log,omitempty"`
+	Mailbox         *ari.MailboxData         `json:"mailbox,omitempty"`
+	Module          *ari.ModuleData          `json:"module,omitempty"`
+	Playback        *ari.PlaybackData        `json:"playback,omitempty"`
+	Sound           *ari.SoundData           `json:"sound,omitempty"`
+	StoredRecording *ari.StoredRecordingData `json:"stored_recording,omitempty"`
+	TextMessage     *ari.TextMessageData     `json:"text_message,omitempty"`
 
 	Variable string `json:"variable,omitempty"`
 }
@@ -118,13 +124,13 @@ type Response struct {
 	Error string `json:"error,omitempty"`
 
 	// Data is the returned entity data, if applicable
-	Data *EntityData `json:",omitempty"`
+	Data *EntityData `json:"data,omitempty"`
 
 	// Entity is the returned entity, if applicable
-	Entity *Entity `json:",inline,omitempty"`
+	Entity *Entity `json:"entity,omitempty"`
 
 	// EntityList is the returned list of entities, if applicable
-	EntityList *EntityList `json:",inline,omitempty"`
+	EntityList *EntityList `json:"list,omitempty"`
 }
 
 // Err returns an error from the Response.  If the response's Error is empty, a nil error is returned.  Otherwise, the error will be filled with the value of response.Error.
@@ -151,93 +157,93 @@ func NewErrorResponse(err error) *Response {
 // Request describes a request which is sent from an ARI proxy Client to an ARI proxy Server
 type Request struct {
 	// Metadata is the metadata related to the request
-	Metadata *Metadata `json:"metadata,omitempty"`
+	Metadata *Metadata `json:"metadata"`
 
-	ApplicationData        *ApplicationData        `json:"applicationData,omitempty"`
-	ApplicationGet         *ApplicationGet         `json:"applicationGet,omitempty"`
-	ApplicationList        *ApplicationList        `json:"applicationList,omitempty"`
-	ApplicationSubscribe   *ApplicationSubscribe   `json:"applicationSubscribe,omitempty"`
-	ApplicationUnsubscribe *ApplicationUnsubscribe `json:"applicationUnsubscribe,omitempty"`
+	ApplicationData        *ApplicationData        `json:"application_data,omitempty"`
+	ApplicationGet         *ApplicationGet         `json:"application_get,omitempty"`
+	ApplicationList        *ApplicationList        `json:"application_list,omitempty"`
+	ApplicationSubscribe   *ApplicationSubscribe   `json:"application_subscribe,omitempty"`
+	ApplicationUnsubscribe *ApplicationUnsubscribe `json:"application_unsubscribe,omitempty"`
 
-	AsteriskInfo         *AsteriskInfo         `json:"asteriskInfo,omitempty"`
-	AsteriskReloadModule *AsteriskReloadModule `json:"asteriskReloadModule,omitempty"`
-	AsteriskVariables    *AsteriskVariables    `json:"asteriskVariables,omitempty"`
-	AsteriskConfig       *AsteriskConfig       `json:"asteriskConfig,omitempty"`
-	AsteriskLogging      *AsteriskLogging      `json:"asteriskLogging,omitempty"`
-	AsteriskModules      *AsteriskModules      `json:"asteriskModules,omitempty"`
+	AsteriskInfo         *AsteriskInfo         `json:"asterisk_info,omitempty"`
+	AsteriskReloadModule *AsteriskReloadModule `json:"asterisk_reload_module,omitempty"`
+	AsteriskVariables    *AsteriskVariables    `json:"asterisk_variables,omitempty"`
+	AsteriskConfig       *AsteriskConfig       `json:"asterisk_config,omitempty"`
+	AsteriskLogging      *AsteriskLogging      `json:"asterisk_logging,omitempty"`
+	AsteriskModules      *AsteriskModules      `json:"asterisk_modules,omitempty"`
 
-	BridgeAddChannel    *BridgeAddChannel    `json:"bridgeAddChannel,omitempty"`
-	BridgeCreate        *BridgeCreate        `json:"bridgeCreate,omitempty"`
-	BridgeData          *BridgeData          `json:"bridgeData,omitempty"`
-	BridgeDelete        *BridgeDelete        `json:"bridgeDelete,omitempty"`
-	BridgeList          *BridgeList          `json:"bridgeList,omitempty"`
-	BridgePlay          *BridgePlay          `json:"bridgePlay,omitempty"`
-	BridgeRecord        *BridgeRecord        `json:"bridgeRecord,omitempty"`
-	BridgeRemoveChannel *BridgeRemoveChannel `json:"bridgeRemoveChannel,omitempty"`
-	BridgeSubscribe     *BridgeSubscribe     `json:"bridgeSubscribe,omitempty"`
+	BridgeAddChannel    *BridgeAddChannel    `json:"bridge_add_channel,omitempty"`
+	BridgeCreate        *BridgeCreate        `json:"bridge_create,omitempty"`
+	BridgeData          *BridgeData          `json:"bridge_data,omitempty"`
+	BridgeDelete        *BridgeDelete        `json:"bridge_delete,omitempty"`
+	BridgeList          *BridgeList          `json:"bridge_list,omitempty"`
+	BridgePlay          *BridgePlay          `json:"bridge_play,omitempty"`
+	BridgeRecord        *BridgeRecord        `json:"bridge_record,omitempty"`
+	BridgeRemoveChannel *BridgeRemoveChannel `json:"bridge_remove_channel,omitempty"`
+	BridgeSubscribe     *BridgeSubscribe     `json:"bridge_subscribe,omitempty"`
 
-	ChannelAnswer      *ChannelAnswer      `json:"channelAnswer,omitempty"`
-	ChannelBusy        *ChannelBusy        `json:"channelBusy,omitempty"`
-	ChannelCongestion  *ChannelCongestion  `json:"channelCongestion,omitempty"`
-	ChannelCreate      *ChannelCreate      `json:"channelCreate,omitempty"`
-	ChannelData        *ChannelData        `json:"channelData,omitempty"`
-	ChannelContinue    *ChannelContinue    `json:"channelContinue,omitempty"`
-	ChannelDial        *ChannelDial        `json:"channelDial,omitempty"`
-	ChannelHangup      *ChannelHangup      `json:"channelHangup,omitempty"`
-	ChannelHold        *ChannelHold        `json:"channelHold,omitempty"`
-	ChannelList        *ChannelList        `json:"channelList,omitempty"`
-	ChannelMOH         *ChannelMOH         `json:"channelMOH,omitempty"`
-	ChannelMute        *ChannelMute        `json:"channelMute,omitempty"`
-	ChannelOriginate   *ChannelOriginate   `json:"channelOriginate,omitempty"`
-	ChannelPlay        *ChannelPlay        `json:"channelPlay,omitempty"`
-	ChannelRecord      *ChannelRecord      `json:"channelRecord,omitempty"`
-	ChannelRing        *ChannelRing        `json:"channelRing,omitempty"`
-	ChannelSendDTMF    *ChannelSendDTMF    `json:"channelSendDTMF,omitempty"`
-	ChannelSilence     *ChannelSilence     `json:"channelSilence,omitempty"`
-	ChannelSnoop       *ChannelSnoop       `json:"channelSnoop,omitempty"`
-	ChannelStopHold    *ChannelStopHold    `json:"channelStopHold,omitempty"`
-	ChannelStopMOH     *ChannelStopMOH     `json:"channelStopMOH,omitempty"`
-	ChannelStopRing    *ChannelStopRing    `json:"channelStopRing,omitempty"`
-	ChannelStopSilence *ChannelStopSilence `json:"channelStopSilence,omitempty"`
-	ChannelSubscribe   *ChannelSubscribe   `json:"channelSubscribe,omitempty"`
-	ChannelUnmute      *ChannelUnmute      `json:"channelUnmute,omitempty"`
-	ChannelVariables   *ChannelVariables   `json:"channelVariables,omitempty"`
+	ChannelAnswer      *ChannelAnswer      `json:"channel_answer,omitempty"`
+	ChannelBusy        *ChannelBusy        `json:"channel_busy,omitempty"`
+	ChannelCongestion  *ChannelCongestion  `json:"channel_congestion,omitempty"`
+	ChannelCreate      *ChannelCreate      `json:"channel_create,omitempty"`
+	ChannelData        *ChannelData        `json:"channel_data,omitempty"`
+	ChannelContinue    *ChannelContinue    `json:"channel_continue,omitempty"`
+	ChannelDial        *ChannelDial        `json:"channel_dial,omitempty"`
+	ChannelHangup      *ChannelHangup      `json:"channel_hangup,omitempty"`
+	ChannelHold        *ChannelHold        `json:"channel_hold,omitempty"`
+	ChannelList        *ChannelList        `json:"channel_list,omitempty"`
+	ChannelMOH         *ChannelMOH         `json:"channel_moh,omitempty"`
+	ChannelMute        *ChannelMute        `json:"channel_mute,omitempty"`
+	ChannelOriginate   *ChannelOriginate   `json:"channel_originate,omitempty"`
+	ChannelPlay        *ChannelPlay        `json:"channel_play,omitempty"`
+	ChannelRecord      *ChannelRecord      `json:"channel_record,omitempty"`
+	ChannelRing        *ChannelRing        `json:"channel_ring,omitempty"`
+	ChannelSendDTMF    *ChannelSendDTMF    `json:"channel_send_dtmf,omitempty"`
+	ChannelSilence     *ChannelSilence     `json:"channel_silence,omitempty"`
+	ChannelSnoop       *ChannelSnoop       `json:"channel_snoop,omitempty"`
+	ChannelStopHold    *ChannelStopHold    `json:"channel_stop_hold,omitempty"`
+	ChannelStopMOH     *ChannelStopMOH     `json:"channel_stop_moh,omitempty"`
+	ChannelStopRing    *ChannelStopRing    `json:"channel_stop_ring,omitempty"`
+	ChannelStopSilence *ChannelStopSilence `json:"channel_stop_silence,omitempty"`
+	ChannelSubscribe   *ChannelSubscribe   `json:"channel_subscribe,omitempty"`
+	ChannelUnmute      *ChannelUnmute      `json:"channel_unmute,omitempty"`
+	ChannelVariables   *ChannelVariables   `json:"channel_variables,omitempty"`
 
-	DeviceStateData   *DeviceStateData   `json:"deviceStateData,omitempty"`
-	DeviceStateDelete *DeviceStateDelete `json:"deviceStateDelete,omitempty"`
-	DeviceStateList   *DeviceStateList   `json:"deviceStateList,omitempty"`
-	DeviceStateUpdate *DeviceStateUpdate `json:"deviceStateUpdate,omitempty"`
+	DeviceStateData   *DeviceStateData   `json:"device_state_data,omitempty"`
+	DeviceStateDelete *DeviceStateDelete `json:"device_state_delete,omitempty"`
+	DeviceStateList   *DeviceStateList   `json:"device_state_list,omitempty"`
+	DeviceStateUpdate *DeviceStateUpdate `json:"device_state_update,omitempty"`
 
-	EndpointData       *EndpointData       `json:"endpointData,omitempty"`
-	EndpointList       *EndpointList       `json:"endpointList,omitempty"`
-	EndpointListByTech *EndpointListByTech `json:"endpointListByTech,omitempty"`
+	EndpointData       *EndpointData       `json:"endpoint_data,omitempty"`
+	EndpointList       *EndpointList       `json:"endpoint_list,omitempty"`
+	EndpointListByTech *EndpointListByTech `json:"endpoint_list_by_tech,omitempty"`
 
-	MailboxData   *MailboxData   `json:"mailboxData,omitempty"`
-	MailboxDelete *MailboxDelete `json:"mailboxDelete,omitempty"`
-	MailboxList   *MailboxList   `json:"mailboxList,omitempty"`
-	MailboxUpdate *MailboxUpdate `json:"mailboxUpdate,omitempty"`
+	MailboxData   *MailboxData   `json:"mailbox_data,omitempty"`
+	MailboxDelete *MailboxDelete `json:"mailbox_delete,omitempty"`
+	MailboxList   *MailboxList   `json:"mailbox_list,omitempty"`
+	MailboxUpdate *MailboxUpdate `json:"mailbox_update,omitempty"`
 
-	PlaybackControl   *PlaybackControl   `json:"playbackControl,omitempty"`
-	PlaybackData      *PlaybackData      `json:"playbackData,omitempty"`
-	PlaybackStop      *PlaybackStop      `json:"playbackStop,omitempty"`
-	PlaybackSubscribe *PlaybackSubscribe `json:"playbackSubscribe,omitempty"`
+	PlaybackControl   *PlaybackControl   `json:"playback_control,omitempty"`
+	PlaybackData      *PlaybackData      `json:"playback_data,omitempty"`
+	PlaybackStop      *PlaybackStop      `json:"playback_stop,omitempty"`
+	PlaybackSubscribe *PlaybackSubscribe `json:"playback_subscribe,omitempty"`
 
-	RecordingStoredCopy   *RecordingStoredCopy   `json:"recordingStoredCopy,omitempty"`
-	RecordingStoredData   *RecordingStoredData   `json:"recordingStoredData,omitempty"`
-	RecordingStoredDelete *RecordingStoredDelete `json:"recordingStoredDelete,omitempty"`
-	RecordingStoredList   *RecordingStoredList   `json:"recordingStoredList,omitempty"`
+	RecordingStoredCopy   *RecordingStoredCopy   `json:"recording_stored_copy,omitempty"`
+	RecordingStoredData   *RecordingStoredData   `json:"recording_stored_data,omitempty"`
+	RecordingStoredDelete *RecordingStoredDelete `json:"recording_stored_delete,omitempty"`
+	RecordingStoredList   *RecordingStoredList   `json:"recording_stored_list,omitempty"`
 
-	RecordingLiveData   *RecordingLiveData   `json:"recordingLiveData,omitempty"`
-	RecordingLiveDelete *RecordingLiveDelete `json:"recordingLiveDelete,omitempty"`
-	RecordingLiveMute   *RecordingLiveMute   `json:"recordingLiveMute,omitempty"`
-	RecordingLivePause  *RecordingLivePause  `json:"recordingLivePause,omitempty"`
-	RecordingLiveResume *RecordingLiveResume `json:"recordingLiveResume,omitempty"`
-	RecordingLiveScrap  *RecordingLiveScrap  `json:"recordingLiveScrap,omitempty"`
-	RecordingLiveStop   *RecordingLiveStop   `json:"recordingLiveStop,omitempty"`
-	RecordingLiveUnmute *RecordingLiveUnmute `json:"recordingLiveUnmute,omitempty"`
+	RecordingLiveData   *RecordingLiveData   `json:"recording_live_data,omitempty"`
+	RecordingLiveDelete *RecordingLiveDelete `json:"recording_live_delete,omitempty"`
+	RecordingLiveMute   *RecordingLiveMute   `json:"recording_live_mute,omitempty"`
+	RecordingLivePause  *RecordingLivePause  `json:"recording_live_pause,omitempty"`
+	RecordingLiveResume *RecordingLiveResume `json:"recording_live_resume,omitempty"`
+	RecordingLiveScrap  *RecordingLiveScrap  `json:"recording_live_scrap,omitempty"`
+	RecordingLiveStop   *RecordingLiveStop   `json:"recording_live_stop,omitempty"`
+	RecordingLiveUnmute *RecordingLiveUnmute `json:"recording_live_unmute,omitempty"`
 
-	SoundData *SoundData `json:"soundData,omitempty"`
-	SoundList *SoundList `json:"soundList,omitempty"`
+	SoundData *SoundData `json:"sound_data,omitempty"`
+	SoundList *SoundList `json:"sound_list,omitempty"`
 }
 
 // ApplicationData describes a request to get the data for a particular ARI application

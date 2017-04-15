@@ -1,13 +1,13 @@
 hash: 00fcac7abd0de3b775d4a7268cdf6996b735b364463b6c1b0570715682f8e89e
-updated: 2017-04-14T17:13:46.315829357-04:00
+updated: 2017-04-14T20:26:24.156412903-04:00
 imports:
 - name: github.com/CyCoreSystems/ari
-  version: 07c9aed7d5c5e3d081e2764743c3593e6182953b
+  version: 2ebbcf2bc64054dc20516d43d164aa564ba7b4f4
   subpackages:
   - client/native
   - stdbus
 - name: github.com/davecgh/go-spew
-  version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
+  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
   subpackages:
   - spew
 - name: github.com/fsnotify/fsnotify

@@ -29,10 +29,7 @@ func TestLoggingList(t *testing.T, s Server, clientFactory ClientFactory) {
 		} else {
 			for idx := range ld {
 				failed := false
-				failed = failed || ld[idx].Configuration != expected[idx].Configuration
-				failed = failed || ld[idx].Name != expected[idx].Name
-				failed = failed || ld[idx].Status != expected[idx].Status
-				failed = failed || ld[idx].Type != expected[idx].Type
+				failed = failed || ld[idx].ID() != expected[idx].Name
 
 				if failed {
 					t.Errorf("Expected item '%d' to be '%v', got '%v",
@@ -58,10 +55,7 @@ func TestLoggingList(t *testing.T, s Server, clientFactory ClientFactory) {
 		} else {
 			for idx := range ld {
 				failed := false
-				failed = failed || ld[idx].Configuration != expected[idx].Configuration
-				failed = failed || ld[idx].Name != expected[idx].Name
-				failed = failed || ld[idx].Status != expected[idx].Status
-				failed = failed || ld[idx].Type != expected[idx].Type
+				failed = failed || ld[idx].ID() != expected[idx].Name
 
 				if failed {
 					t.Errorf("Expected item '%d' to be '%v', got '%v",

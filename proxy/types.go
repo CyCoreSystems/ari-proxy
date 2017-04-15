@@ -35,8 +35,8 @@ type Metadata struct {
 type Entity struct {
 	Metadata *Metadata
 
-	// Type is the type of entity (application, asterisk, bridge, channel, deviceState, endpoint, mailbox, playback, liveRecording, storedRecording, sound)
-	Type string `json:"type"`
+	// Kind is the type of entity (application, asterisk, bridge, channel, deviceState, endpoint, mailbox, playback, liveRecording, storedRecording, sound)
+	Kind string `json:"type"`
 
 	// ID is the unique identifier for the entity
 	ID string `json:"name"`
@@ -53,7 +53,6 @@ type EntityData struct {
 	Endpoint        *ari.EndpointData        `json:"endpointData,omitempty"`
 	LiveRecording   *ari.LiveRecordingData   `json:"liveRecordingData,omitempty"`
 	Log             *ari.LogData             `json:"logData,omitempty"`
-	LogList         []ari.LogData            `json:"logDataList,omitempty"`
 	Mailbox         *ari.MailboxData         `json:"mailboxData,omitempty"`
 	Module          *ari.ModuleData          `json:"moduleData,omitempty"`
 	Playback        *ari.PlaybackData        `json:"playbackData,omitempty"`
@@ -1020,17 +1019,20 @@ type AsteriskLogging struct {
 	// AsteriskLogging is the signature type for this request
 	AsteriskLogging struct{}
 
-	// List is the asterisk logging list request
-	List *AsteriskLoggingList
-
 	// Create is the asterisk logging create request
 	Create *AsteriskLoggingCreate
 
-	// Rotate is the aterisk logging rotate request
-	Rotate *AsteriskLoggingRotate
+	// Data is a logging channel data request
+	Data *AsteriskLoggingData
 
 	// Delete is the asterisk logging delete request
 	Delete *AsteriskLoggingDelete
+
+	// List is the asterisk logging list request
+	List *AsteriskLoggingList
+
+	// Rotate is the aterisk logging rotate request
+	Rotate *AsteriskLoggingRotate
 }
 
 // AsteriskLoggingList describes the asterisk logging list request
@@ -1049,6 +1051,15 @@ type AsteriskLoggingCreate struct {
 
 	// Config is the config details for the logging object
 	Config string
+}
+
+// AsteriskLoggingData describes the asterisk logging data request
+type AsteriskLoggingData struct {
+	// AsteriskLoggingData is the signature type for this request
+	AsteriskLoggingData struct{}
+
+	// ID is the identifier for this object
+	ID string
 }
 
 // AsteriskLoggingDelete describes the asterisk logging delete request

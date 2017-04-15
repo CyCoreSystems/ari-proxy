@@ -568,6 +568,10 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 			f = s.asteriskLoggingCreate
 		}
 
+		if req.AsteriskLogging.Data != nil {
+			f = s.asteriskLoggingData
+		}
+
 		if req.AsteriskLogging.Rotate != nil {
 			f = s.asteriskLoggingRotate
 		}

@@ -7,17 +7,21 @@ import (
 )
 
 func (s *Server) asteriskLoggingList(ctx context.Context, reply string, req *proxy.Request) {
-	ld, err := s.ari.Asterisk().Logging().List()
+	list, err := s.ari.Asterisk().Logging().List()
 	if err != nil {
 		s.sendError(reply, err)
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
-		Data: &proxy.EntityData{
-			LogList: ld,
-		},
-	})
+	var ret proxy.EntityList
+	for _, i := range list {
+		ret.List = append(ret.List, &proxy.Entity{
+			Metadata: s.Metadata(req.Metadata.Dialog),
+			Kind:     "logging",
+			ID:       i.ID(),
+		})
+	}
+	s.nats.Publish(reply, &proxy.Response{EntityList: &ret})
 }
 
 func (s *Server) asteriskLoggingCreate(ctx context.Context, reply string, req *proxy.Request) {
@@ -27,6 +31,19 @@ func (s *Server) asteriskLoggingCreate(ctx context.Context, reply string, req *p
 		return
 	}
 	s.sendError(reply, nil)
+}
+
+func (s *Server) asteriskLoggingData(ctx context.Context, reply string, req *proxy.Request) {
+	data, err := s.ari.Asterisk().Logging().Data(req.AsteriskLogging.Data.ID)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+	s.nats.Publish(reply, &proxy.Response{
+		Data: &proxy.EntityData{
+			Log: data,
+		},
+	})
 }
 
 func (s *Server) asteriskLoggingRotate(ctx context.Context, reply string, req *proxy.Request) {

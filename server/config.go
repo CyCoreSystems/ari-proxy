@@ -20,7 +20,8 @@ func (s *Server) asteriskConfigData(ctx context.Context, reply string, req *prox
 
 	s.nats.Publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
-			Config: cd,
+			Metadata: s.Metadata(req.Metadata.Dialog),
+			Config:   cd,
 		},
 	})
 }

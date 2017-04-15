@@ -42,7 +42,8 @@ func (s *Server) asteriskModuleData(ctx context.Context, reply string, req *prox
 
 	s.nats.Publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
-			Module: data,
+			Metadata: s.Metadata(req.Metadata.Dialog),
+			Module:   data,
 		},
 	})
 }
@@ -57,7 +58,8 @@ func (s *Server) asteriskModuleList(ctx context.Context, reply string, req *prox
 	var el proxy.EntityList
 	for _, m := range mx {
 		el.List = append(el.List, &proxy.Entity{
-			ID: m.ID(),
+			Metadata: s.Metadata(req.Metadata.Dialog),
+			ID:       m.ID(),
 		})
 	}
 

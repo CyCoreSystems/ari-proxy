@@ -15,6 +15,7 @@ func (s *Server) deviceStateData(ctx context.Context, reply string, req *proxy.R
 	}
 	s.nats.Publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
+			Metadata:    s.Metadata(req.Metadata.Dialog),
 			DeviceState: dd,
 		},
 	})
@@ -40,7 +41,8 @@ func (s *Server) deviceStateList(ctx context.Context, reply string, req *proxy.R
 	var el proxy.EntityList
 	for _, d := range dx {
 		el.List = append(el.List, &proxy.Entity{
-			ID: d.ID(),
+			Metadata: s.Metadata(req.Metadata.Dialog),
+			ID:       d.ID(),
 		})
 	}
 

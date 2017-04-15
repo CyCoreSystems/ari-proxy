@@ -33,17 +33,58 @@ type Metadata struct {
 
 // Entity is a response which returns a specific Entity, which is a stand-in for an entity Handler, containing the necessary descriptions to uniquely control the described entity.
 type Entity struct {
-	Metadata *Metadata
+	Metadata *Metadata `json:"metadata"`
 
-	// Kind is the type of entity (application, asterisk, bridge, channel, deviceState, endpoint, mailbox, playback, liveRecording, storedRecording, sound)
+	// Kind is the type of entity (application, asterisk, bridge, channel, deviceState, endpoint, logging, mailbox, playback, liveRecording, storedRecording, sound)
 	Kind string `json:"type"`
 
 	// ID is the unique identifier for the entity
 	ID string `json:"name"`
 }
 
+// Entity types
+const (
+	// EntityKindApplication indicates that the entity is an ARI Application
+	EntityKindApplication = "application"
+
+	// EntityKindAsterisk indicates that the entity is an Asterisk
+	EntityKindAsterisk = "asterisk"
+
+	// EntityKindBridge indicates that the entity is a Bridge
+	EntityKindBridge = "bridge"
+
+	// EntityKindChannel indicates that the entity is a Channel
+	EntityKindChannel = "channel"
+
+	// EntityKindDeviceState indicates that the entity is a DeviceState
+	EntityKindDeviceState = "device_state"
+
+	// EntityKindEndpoint indicates that the entity is an Endpoint
+	EntityKindEndpoint = "endpoint"
+
+	// EntityKindLogging indicates that the entity is a Logging channel
+	EntityKindLogging = "logging"
+
+	// EntityKindMailbox indicates that the entity is a Mailbox
+	EntityKindMailbox = "mailbox"
+
+	// EntityKindPlayback indicates that the entity is a Playback
+	EntityKindPlayback = "playback"
+
+	// EntityKindLiveRecording indicates that the entity is a Live Recording
+	EntityKindLiveRecording = "live_recording"
+
+	// EntityKindStoredRecording indicates that the entity is a Stored Recording
+	EntityKindStoredRecording = "stored_recording"
+
+	// EntityKindSound indicates that the entity is a Sound
+	EntityKindSound = "sound"
+)
+
 // EntityData is a response which returns the data for a specific entity.
 type EntityData struct {
+	Metadata *Metadata `json:"metadata"`
+
 	Application     *ari.ApplicationData     `json:"applicationData,omitempty"`
 	Asterisk        *ari.AsteriskInfo        `json:"asteriskInfo,omitempty"`
 	Bridge          *ari.BridgeData          `json:"bridgeData,omitempty"`

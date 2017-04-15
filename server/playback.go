@@ -25,6 +25,7 @@ func (s *Server) playbackData(ctx context.Context, reply string, req *proxy.Requ
 
 	s.nats.Publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
+			Metadata: s.Metadata(req.Metadata.Dialog),
 			Playback: d,
 		},
 	})

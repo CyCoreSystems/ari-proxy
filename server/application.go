@@ -17,6 +17,7 @@ func (s *Server) applicationData(ctx context.Context, reply string, req *proxy.R
 
 	s.nats.Publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
+			Metadata:    s.Metadata(req.Metadata.Dialog),
 			Application: app,
 		},
 	})

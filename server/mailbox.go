@@ -16,7 +16,8 @@ func (s *Server) mailboxData(ctx context.Context, reply string, req *proxy.Reque
 
 	s.nats.Publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
-			Mailbox: md,
+			Metadata: s.Metadata(req.Metadata.Dialog),
+			Mailbox:  md,
 		},
 	})
 }
@@ -42,7 +43,8 @@ func (s *Server) mailboxList(ctx context.Context, reply string, req *proxy.Reque
 	var el proxy.EntityList
 	for _, m := range mx {
 		el.List = append(el.List, &proxy.Entity{
-			ID: m.ID(),
+			Metadata: s.Metadata(req.Metadata.Dialog),
+			ID:       m.ID(),
 		})
 	}
 

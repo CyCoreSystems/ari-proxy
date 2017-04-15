@@ -15,6 +15,7 @@ func (s *Server) recordingLiveData(ctx context.Context, reply string, req *proxy
 
 	s.nats.Publish(reply, proxy.Response{
 		Data: &proxy.EntityData{
+			Metadata:      s.Metadata(req.Metadata.Dialog),
 			LiveRecording: lrd,
 		},
 	})

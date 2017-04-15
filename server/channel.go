@@ -62,7 +62,8 @@ func (s *Server) channelCreate(ctx context.Context, reply string, req *proxy.Req
 
 	s.nats.Publish(reply, &proxy.Response{
 		Entity: &proxy.Entity{
-			ID: handle.ID(),
+			Metadata: s.Metadata(req.Metadata.Dialog),
+			ID:       handle.ID(),
 		},
 	})
 }
@@ -76,7 +77,8 @@ func (s *Server) channelData(ctx context.Context, reply string, req *proxy.Reque
 
 	s.nats.Publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
-			Channel: d,
+			Metadata: s.Metadata(req.Metadata.Dialog),
+			Channel:  d,
 		},
 	})
 }
@@ -107,7 +109,8 @@ func (s *Server) channelList(ctx context.Context, reply string, req *proxy.Reque
 	var el proxy.EntityList
 	for _, channel := range cx {
 		el.List = append(el.List, &proxy.Entity{
-			ID: channel.ID(),
+			Metadata: s.Metadata(req.Metadata.Dialog),
+			ID:       channel.ID(),
 		})
 	}
 
@@ -153,7 +156,8 @@ func (s *Server) channelOriginate(ctx context.Context, reply string, req *proxy.
 
 	s.nats.Publish(reply, &proxy.Response{
 		Entity: &proxy.Entity{
-			ID: handle.ID(),
+			Metadata: s.Metadata(req.Metadata.Dialog),
+			ID:       handle.ID(),
 		},
 	})
 }
@@ -177,7 +181,8 @@ func (s *Server) channelPlay(ctx context.Context, reply string, req *proxy.Reque
 	//NOTE: used to send nil
 	s.nats.Publish(reply, &proxy.Response{
 		Entity: &proxy.Entity{
-			ID: ph.ID(),
+			Metadata: s.Metadata(req.Metadata.Dialog),
+			ID:       ph.ID(),
 		},
 	})
 }
@@ -200,7 +205,8 @@ func (s *Server) channelRecord(ctx context.Context, reply string, req *proxy.Req
 
 	s.nats.Publish(reply, &proxy.Response{
 		Entity: &proxy.Entity{
-			ID: lr.ID(),
+			Metadata: s.Metadata(req.Metadata.Dialog),
+			ID:       lr.ID(),
 		},
 	})
 }
@@ -252,7 +258,8 @@ func (s *Server) channelSnoop(ctx context.Context, reply string, req *proxy.Requ
 
 	s.nats.Publish(reply, &proxy.Response{
 		Entity: &proxy.Entity{
-			ID: ch.ID(),
+			Metadata: s.Metadata(req.Metadata.Dialog),
+			ID:       ch.ID(),
 		},
 	})
 }
@@ -326,6 +333,7 @@ func (s *Server) channelVariableGet(ctx context.Context, reply string, req *prox
 
 	s.nats.Publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
+			Metadata: s.Metadata(req.Metadata.Dialog),
 			Variable: val,
 		},
 	})

@@ -15,6 +15,7 @@ func (s *Server) endpointData(ctx context.Context, reply string, req *proxy.Requ
 
 	s.nats.Publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
+			Metadata: s.Metadata(req.Metadata.Dialog),
 			Endpoint: ed,
 		},
 	})
@@ -30,7 +31,8 @@ func (s *Server) endpointList(ctx context.Context, reply string, req *proxy.Requ
 	var el proxy.EntityList
 	for _, e := range ex {
 		el.List = append(el.List, &proxy.Entity{
-			ID: e.ID(),
+			Metadata: s.Metadata(req.Metadata.Dialog),
+			ID:       e.ID(),
 		})
 	}
 
@@ -49,7 +51,8 @@ func (s *Server) endpointListByTech(ctx context.Context, reply string, req *prox
 	var el proxy.EntityList
 	for _, e := range ex {
 		el.List = append(el.List, &proxy.Entity{
-			ID: e.ID(),
+			Metadata: s.Metadata(req.Metadata.Dialog),
+			ID:       e.ID(),
 		})
 	}
 

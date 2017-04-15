@@ -42,7 +42,8 @@ func (s *Server) bridgeCreate(ctx context.Context, reply string, req *proxy.Requ
 
 	s.nats.Publish(reply, &proxy.Response{
 		Entity: &proxy.Entity{
-			ID: bh.ID(),
+			Metadata: s.Metadata(req.Metadata.Dialog),
+			ID:       bh.ID(),
 		},
 	})
 }
@@ -56,7 +57,8 @@ func (s *Server) bridgeData(ctx context.Context, reply string, req *proxy.Reques
 
 	s.nats.Publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
-			Bridge: bd,
+			Metadata: s.Metadata(req.Metadata.Dialog),
+			Bridge:   bd,
 		},
 	})
 }
@@ -113,7 +115,8 @@ func (s *Server) bridgePlay(ctx context.Context, reply string, req *proxy.Reques
 	//NOTE: this originally returned a nil
 	s.nats.Publish(reply, &proxy.Response{
 		Entity: &proxy.Entity{
-			ID: obj.ID(),
+			Metadata: s.Metadata(req.Metadata.Dialog),
+			ID:       obj.ID(),
 		},
 	})
 }
@@ -135,7 +138,8 @@ func (s *Server) bridgeRecord(ctx context.Context, reply string, req *proxy.Requ
 	//NOTE: this originally returned a nil
 	s.nats.Publish(reply, &proxy.Response{
 		Entity: &proxy.Entity{
-			ID: obj.ID(),
+			Metadata: s.Metadata(req.Metadata.Dialog),
+			ID:       obj.ID(),
 		},
 	})
 }

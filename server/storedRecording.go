@@ -18,7 +18,8 @@ func (s *Server) recordingStoredCopy(ctx context.Context, reply string, req *pro
 
 	s.nats.Publish(reply, &proxy.Response{
 		Entity: &proxy.Entity{
-			ID: srd.ID(),
+			Metadata: s.Metadata(req.Metadata.Dialog),
+			ID:       srd.ID(),
 		},
 	})
 }
@@ -32,6 +33,7 @@ func (s *Server) recordingStoredData(ctx context.Context, reply string, req *pro
 
 	s.nats.Publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
+			Metadata:        s.Metadata(req.Metadata.Dialog),
 			StoredRecording: data,
 		},
 	})
@@ -55,9 +57,10 @@ func (s *Server) recordingStoredList(ctx context.Context, reply string, req *pro
 	}
 
 	var el proxy.EntityList
-	for _, s := range handles {
+	for _, sr := range handles {
 		el.List = append(el.List, &proxy.Entity{
-			ID: s.ID(),
+			Metadata: s.Metadata(req.Metadata.Dialog),
+			ID:       sr.ID(),
 		})
 	}
 

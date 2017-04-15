@@ -15,7 +15,8 @@ func (s *Server) soundData(ctx context.Context, reply string, req *proxy.Request
 
 	s.nats.Publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
-			Sound: sd,
+			Metadata: s.Metadata(req.Metadata.Dialog),
+			Sound:    sd,
 		},
 	})
 }
@@ -34,9 +35,10 @@ func (s *Server) soundList(ctx context.Context, reply string, req *proxy.Request
 		return
 	}
 	var el proxy.EntityList
-	for _, s := range sx {
+	for _, snd := range sx {
 		el.List = append(el.List, &proxy.Entity{
-			ID: s.ID(),
+			Metadata: s.Metadata(req.Metadata.Dialog),
+			ID:       snd.ID(),
 		})
 	}
 

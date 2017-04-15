@@ -17,7 +17,7 @@ func (s *Server) asteriskLoggingList(ctx context.Context, reply string, req *pro
 	for _, i := range list {
 		ret.List = append(ret.List, &proxy.Entity{
 			Metadata: s.Metadata(req.Metadata.Dialog),
-			Kind:     "logging",
+			Kind:     proxy.EntityKindLogging,
 			ID:       i.ID(),
 		})
 	}
@@ -41,7 +41,8 @@ func (s *Server) asteriskLoggingData(ctx context.Context, reply string, req *pro
 	}
 	s.nats.Publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
-			Log: data,
+			Metadata: s.Metadata(req.Metadata.Dialog),
+			Log:      data,
 		},
 	})
 }

@@ -1,8 +1,6 @@
 package client
 
 import (
-	"fmt"
-
 	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/proxy"
 )
@@ -11,82 +9,77 @@ type application struct {
 	c *Client
 }
 
-func (a *application) List() ([]ari.ApplicationHandle, error) {
-	panic("not implemented")
-}
-
-func (a *application) Get(name string) ari.ApplicationHandle {
-	panic("not implemented")
-}
-
-func (a *application) Data(name string) (*ari.ApplicationData, error) {
-	panic("not implemented")
-}
-
-func (a *application) Subscribe(name string, eventSource string) error {
-	panic("not implemented")
-}
-
-func (a *application) Unsubscribe(name string, eventSource string) error {
-	panic("not implemented")
-}
-
-func (a *application) List() (ax []*ari.ApplicationHandle, err error) {
-	req := proxy.Request{
+func (a *application) List() (ret []ari.ApplicationHandle, err error) {
+	list, err := a.c.listRequest(&proxy.Request{
 		ApplicationList: &proxy.ApplicationList{},
-	}
-	var resp proxy.EntityList
-	err = a.nats.Request(fmt.Sprintf("%sget.%s", a.prefix, a.app), &req, &resp, a.opts.RequestTimeout)
+	})
 	if err != nil {
 		return
 	}
-
-	for _, i := range resp.List {
-		ret = append(ret, ari.NewApplicationHandle(i.ID(), a.app))
+	for _, i := range list.List {
+		ret = append(ret, a.Get(i.ID))
 	}
 	return
 }
 
-func (a *application) Get(name string) *ari.ApplicationHandle {
-	panic("not implemented")
-}
-
-func (a *application) Data(name string) (ari.ApplicationData, error) {
-	panic("not implemented")
-}
-
-func (a *application) Subscribe(name string, eventSource string) error {
-	panic("not implemented")
-}
-
-func (a *application) Unsubscribe(name string, eventSource string) error {
-	panic("not implemented")
-}
-
-func (a *natsApplication) Get(name string) *ari.ApplicationHandle {
-	return ari.NewApplicationHandle(name, a)
-}
-
-func (a *natsApplication) List() (ax []*ari.ApplicationHandle, err error) {
-	var apps []string
-	err = a.conn.ReadRequest("ari.applications.all", "", nil, &apps)
-	for _, app := range apps {
-		ax = append(ax, a.Get(app))
+func (a *application) Data(name string) (*ari.ApplicationData, error) {
+	ret, err := a.c.dataRequest(&proxy.Request{
+		ApplicationData: &proxy.ApplicationData{
+			Name: name,
+		},
+	})
+	if err != nil {
+		return nil, err
 	}
+	return ret.Application, nil
+}
+
+func (a *application) Get(id string) (h ari.ApplicationHandle) {
+	return &applicationHandle{id: id, application: a}
+}
+
+func (a *application) Subscribe(name string, eventSource string) (err error) {
+	return a.c.commandRequest(&proxy.Request{
+		ApplicationSubscribe: &proxy.ApplicationSubscribe{
+			EventSource: eventSource,
+			Name:        name,
+		},
+	})
+}
+
+func (a *application) Unsubscribe(name string, eventSource string) (err error) {
+	return a.c.commandRequest(&proxy.Request{
+		ApplicationUnsubscribe: &proxy.ApplicationUnsubscribe{
+			EventSource: eventSource,
+			Name:        name,
+		},
+	})
+}
+
+type applicationHandle struct {
+	id          string
+	application ari.Application
+}
+
+func (a *applicationHandle) ID() string {
+	return a.id
+}
+
+func (a *applicationHandle) Data() (ad *ari.ApplicationData, err error) {
+	ad, err = a.application.Data(a.id)
 	return
 }
 
-func (a *natsApplication) Data(name string) (d ari.ApplicationData, err error) {
-	err = a.conn.ReadRequest("ari.applications.data", name, nil, &d)
+func (a *applicationHandle) Subscribe(eventSource string) (err error) {
+	err = a.application.Subscribe(a.id, eventSource)
 	return
 }
 
-func (a *natsApplication) Subscribe(name string, eventSource string) (err error) {
-	err = a.conn.StandardRequest("ari.applications.subscribe", name, eventSource, nil)
+func (a *applicationHandle) Unsubscribe(eventSource string) (err error) {
+	err = a.application.Unsubscribe(a.id, eventSource)
 	return
 }
 
-func (a *natsApplication) Unsubscribe(name string, eventSource string) (err error) {
-	err = a.conn.StandardRequest("ari.applications.unsubscribe", name, eventSource, nil)
-	return
+func (a *applicationHandle) Match(evt ari.Event) (ok bool) {
+	return evt.GetApplication() == a.id
 }

@@ -102,8 +102,20 @@ func (s *Server) Ready() <-chan struct{} {
 	return s.readyCh
 }
 
+// nolint: gocyclo
 func (s *Server) listen(ctx context.Context) error {
+
+	var wg closeGroup
+	defer func() {
+		select {
+		case <-wg.Done():
+		case <-time.After(500 * time.Millisecond):
+			panic("timeout waiting for shutdown of sub components")
+		}
+	}()
+
 	// First, get the Asterisk ID
+
 	ret, err := s.ari.Asterisk().Info("")
 	if err != nil {
 		return errors.Wrap(err, "failed to get Asterisk ID")
@@ -126,61 +138,79 @@ func (s *Server) listen(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to subscribe to pings")
 	}
-	defer pingSub.Unsubscribe()
+	defer wg.Add(pingSub.Unsubscribe)
 
 	// get a contextualized request handler
 	requestHandler := s.newRequestHandler(ctx)
 
 	// get handlers
-	allGet, err := s.nats.Subscribe(fmt.Sprintf("%sget", s.NATSPrefix), requestHandler)
+	allGet, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "get", "", ""), requestHandler)
 	if err != nil {
 		return errors.Wrap(err, "failed to create get-all subscription")
 	}
-	defer allGet.Unsubscribe()
-	appGet, err := s.nats.Subscribe(fmt.Sprintf("%sget.%s", s.NATSPrefix, s.Application), requestHandler)
+	defer wg.Add(allGet.Unsubscribe)()
+
+	appGet, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "get", s.Application, ""), requestHandler)
 	if err != nil {
 		return errors.Wrap(err, "failed to create get-app subscription")
 	}
-	defer appGet.Unsubscribe()
-	idGet, err := s.nats.Subscribe(fmt.Sprintf("%sget.%s.%s", s.NATSPrefix, s.Application, s.AsteriskID), requestHandler)
+	defer wg.Add(appGet.Unsubscribe)()
+	idGet, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "get", s.Application, s.AsteriskID), requestHandler)
 	if err != nil {
 		return errors.Wrap(err, "failed to create get-id subscription")
 	}
-	defer idGet.Unsubscribe()
+	defer wg.Add(idGet.Unsubscribe)()
+
+	// data handlers
+	allData, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "data", "", ""), requestHandler)
+	if err != nil {
+		return errors.Wrap(err, "failed to create data-all subscription")
+	}
+	defer wg.Add(allData.Unsubscribe)()
+	appData, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "data", s.Application, ""), requestHandler)
+	if err != nil {
+		return errors.Wrap(err, "failed to create data-app subscription")
+	}
+	defer wg.Add(appData.Unsubscribe)()
+	idData, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "data", s.Application, s.AsteriskID), requestHandler)
+	if err != nil {
+		return errors.Wrap(err, "failed to create data-id subscription")
+	}
+	defer wg.Add(idData.Unsubscribe)()
 
 	// command handlers
-	allCommand, err := s.nats.Subscribe(fmt.Sprintf("%scommand", s.NATSPrefix), requestHandler)
+	allCommand, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "command", "", ""), requestHandler)
 	if err != nil {
 		return errors.Wrap(err, "failed to create command-all subscription")
 	}
-	defer allCommand.Unsubscribe()
-	appCommand, err := s.nats.Subscribe(fmt.Sprintf("%scommand.%s", s.NATSPrefix, s.Application), requestHandler)
+	defer wg.Add(allCommand.Unsubscribe)()
+	appCommand, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "command", s.Application, ""), requestHandler)
 	if err != nil {
 		return errors.Wrap(err, "failed to create command-app subscription")
 	}
-	defer appCommand.Unsubscribe()
-	idCommand, err := s.nats.Subscribe(fmt.Sprintf("%scommand.%s.%s", s.NATSPrefix, s.Application, s.AsteriskID), requestHandler)
+	defer wg.Add(appCommand.Unsubscribe)()
+	idCommand, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "command", s.Application, s.AsteriskID), requestHandler)
 	if err != nil {
 		return errors.Wrap(err, "failed to create command-id subscription")
 	}
-	defer idCommand.Unsubscribe()
+	defer wg.Add(idCommand.Unsubscribe)()
 
 	// create handlers
-	allCreate, err := s.nats.QueueSubscribe(fmt.Sprintf("%screate", s.NATSPrefix), "ariproxy", requestHandler)
+	allCreate, err := s.nats.QueueSubscribe(proxy.Subject(s.NATSPrefix, "create", "", ""), "ariproxy", requestHandler)
 	if err != nil {
 		return errors.Wrap(err, "failed to create create-all subscription")
 	}
-	defer allCreate.Unsubscribe()
-	appCreate, err := s.nats.QueueSubscribe(fmt.Sprintf("%screate.%s", s.NATSPrefix, s.Application), "ariproxy", requestHandler)
+	defer wg.Add(allCreate.Unsubscribe)()
+	appCreate, err := s.nats.QueueSubscribe(proxy.Subject(s.NATSPrefix, "create", s.Application, ""), "ariproxy", requestHandler)
 	if err != nil {
 		return errors.Wrap(err, "failed to create create-app subscription")
 	}
-	defer appCreate.Unsubscribe()
-	idCreate, err := s.nats.QueueSubscribe(fmt.Sprintf("%screate.%s.%s", s.NATSPrefix, s.Application, s.AsteriskID), "ariproxy", requestHandler)
+	defer wg.Add(appCreate.Unsubscribe)()
+	idCreate, err := s.nats.QueueSubscribe(proxy.Subject(s.NATSPrefix, "create", s.Application, s.AsteriskID), "ariproxy", requestHandler)
 	if err != nil {
 		return errors.Wrap(err, "failed to create create-id subscription")
 	}
-	defer idCreate.Unsubscribe()
+	defer wg.Add(idCreate.Unsubscribe)()
 
 	// Run the periodic announcer
 	go s.runAnnouncer(ctx)
@@ -269,9 +299,14 @@ func (s *Server) newRequestHandler(ctx context.Context) func(subject string, rep
 	}
 }
 
+// nolint: gocyclo
 func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.Request) {
 	f := func(ctx context.Context, reply string, req *proxy.Request) {
 		s.sendError(reply, errors.New("Not implemented"))
+	}
+
+	if req.Metadata == nil {
+		req.Metadata = &proxy.Metadata{}
 	}
 
 	if req.ApplicationList != nil {
@@ -317,6 +352,9 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 	}
 	if req.BridgePlay != nil {
 		f = s.bridgePlay
+	}
+	if req.BridgeDelete != nil {
+		f = s.bridgeDelete
 	}
 	if req.BridgeRecord != nil {
 		f = s.bridgeRecord
@@ -528,6 +566,10 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 
 		if req.AsteriskLogging.Create != nil {
 			f = s.asteriskLoggingCreate
+		}
+
+		if req.AsteriskLogging.Data != nil {
+			f = s.asteriskLoggingData
 		}
 
 		if req.AsteriskLogging.Rotate != nil {

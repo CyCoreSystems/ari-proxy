@@ -15,7 +15,11 @@ func (s *Server) applicationData(ctx context.Context, reply string, req *proxy.R
 		return
 	}
 
-	s.nats.Publish(reply, &app)
+	s.nats.Publish(reply, &proxy.Response{
+		Data: &proxy.EntityData{
+			Application: app,
+		},
+	})
 }
 
 func (s *Server) applicationList(ctx context.Context, reply string, req *proxy.Request) {
@@ -32,7 +36,10 @@ func (s *Server) applicationList(ctx context.Context, reply string, req *proxy.R
 			ID:       i.ID(),
 		})
 	}
-	s.nats.Publish(reply, &resp)
+
+	s.nats.Publish(reply, &proxy.Response{
+		EntityList: &resp,
+	})
 }
 
 func (s *Server) applicationGet(ctx context.Context, reply string, req *proxy.Request) {
@@ -87,6 +94,6 @@ func (s *Server) applicationSubscribe(ctx context.Context, reply string, req *pr
 }
 
 func (s *Server) applicationUnsubscribe(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Application().Unsubscribe(req.ApplicationSubscribe.Name, req.ApplicationSubscribe.EventSource)
+	err := s.ari.Application().Unsubscribe(req.ApplicationUnsubscribe.Name, req.ApplicationUnsubscribe.EventSource)
 	s.sendError(reply, err)
 }

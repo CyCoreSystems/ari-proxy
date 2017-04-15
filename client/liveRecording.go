@@ -1,51 +1,155 @@
 package client
 
-import "github.com/CyCoreSystems/ari"
+import (
+	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari-proxy/proxy"
+)
 
-type natsLiveRecording struct {
-	conn *Conn
+type liveRecording struct {
+	c *Client
 }
 
-func (lr *natsLiveRecording) Get(name string) *ari.LiveRecordingHandle {
-	return ari.NewLiveRecordingHandle(name, lr)
+func (lr *liveRecording) Get(name string) ari.LiveRecordingHandle {
+	return &liveRecordingHandle{
+		name: name,
+		lr:   lr,
+	}
 }
 
-func (lr *natsLiveRecording) Data(name string) (lrd ari.LiveRecordingData, err error) {
-	err = lr.conn.ReadRequest("ari.recording.live.data", name, nil, &lrd)
+func (lr *liveRecording) Data(name string) (lrd *ari.LiveRecordingData, err error) {
+	nd, err := lr.c.dataRequest(&proxy.Request{
+		RecordingLiveData: &proxy.RecordingLiveData{
+			ID: name,
+		},
+	})
+	if err != nil {
+		return
+	}
+	lrd = nd.LiveRecording
 	return
 }
 
-func (lr *natsLiveRecording) Stop(name string) (err error) {
-	err = lr.conn.StandardRequest("ari.recording.live.stop", name, nil, nil)
+func (lr *liveRecording) Stop(name string) (err error) {
+	err = lr.c.commandRequest(&proxy.Request{
+		RecordingLiveStop: &proxy.RecordingLiveStop{
+			ID: name,
+		},
+	})
 	return
 }
 
-func (lr *natsLiveRecording) Pause(name string) (err error) {
-	err = lr.conn.StandardRequest("ari.recording.live.pause", name, nil, nil)
+func (lr *liveRecording) Pause(name string) (err error) {
+	err = lr.c.commandRequest(&proxy.Request{
+		RecordingLivePause: &proxy.RecordingLivePause{
+			ID: name,
+		},
+	})
 	return
 }
 
-func (lr *natsLiveRecording) Resume(name string) (err error) {
-	err = lr.conn.StandardRequest("ari.recording.live.resume", name, nil, nil)
+func (lr *liveRecording) Resume(name string) (err error) {
+	err = lr.c.commandRequest(&proxy.Request{
+		RecordingLiveResume: &proxy.RecordingLiveResume{
+			ID: name,
+		},
+	})
 	return
 }
 
-func (lr *natsLiveRecording) Mute(name string) (err error) {
-	err = lr.conn.StandardRequest("ari.recording.live.mute", name, nil, nil)
+func (lr *liveRecording) Mute(name string) (err error) {
+	err = lr.c.commandRequest(&proxy.Request{
+		RecordingLiveMute: &proxy.RecordingLiveMute{
+			ID: name,
+		},
+	})
 	return
 }
 
-func (lr *natsLiveRecording) Unmute(name string) (err error) {
-	err = lr.conn.StandardRequest("ari.recording.live.unmute", name, nil, nil)
+func (lr *liveRecording) Unmute(name string) (err error) {
+	err = lr.c.commandRequest(&proxy.Request{
+		RecordingLiveUnmute: &proxy.RecordingLiveUnmute{
+			ID: name,
+		},
+	})
 	return
 }
 
-func (lr *natsLiveRecording) Delete(name string) (err error) {
-	err = lr.conn.StandardRequest("ari.recording.live.delete", name, nil, nil)
+func (lr *liveRecording) Delete(name string) (err error) {
+	err = lr.c.commandRequest(&proxy.Request{
+		RecordingLiveDelete: &proxy.RecordingLiveDelete{
+			ID: name,
+		},
+	})
 	return
 }
 
-func (lr *natsLiveRecording) Scrap(name string) (err error) {
-	err = lr.conn.StandardRequest("ari.recording.live.scrap", name, nil, nil)
+func (lr *liveRecording) Scrap(name string) (err error) {
+	err = lr.c.commandRequest(&proxy.Request{
+		RecordingLiveScrap: &proxy.RecordingLiveScrap{
+			ID: name,
+		},
+	})
+	return
+}
+
+type liveRecordingHandle struct {
+	name string
+	lr   *liveRecording
+}
+
+func (lr *liveRecordingHandle) ID() string {
+	return lr.name
+}
+
+func (lr *liveRecordingHandle) Match(e ari.Event) (ok bool) {
+	v, ok := e.(ari.RecordingEvent)
+	if !ok {
+		return false
+	}
+	for _, i := range v.GetRecordingIDs() {
+		if i == lr.ID() {
+			return true
+		}
+	}
+	return false
+}
+
+func (lr *liveRecordingHandle) Data() (lrd *ari.LiveRecordingData, err error) {
+	lrd, err = lr.lr.Data(lr.name)
+	return
+}
+
+func (lr *liveRecordingHandle) Stop() (err error) {
+	err = lr.lr.Stop(lr.name)
+	return
+}
+
+func (lr *liveRecordingHandle) Pause() (err error) {
+	err = lr.lr.Pause(lr.name)
+	return
+}
+
+func (lr *liveRecordingHandle) Resume() (err error) {
+	err = lr.lr.Resume(lr.name)
+	return
+}
+
+func (lr *liveRecordingHandle) Mute() (err error) {
+	err = lr.lr.Mute(lr.name)
+	return
+}
+
+func (lr *liveRecordingHandle) Unmute() (err error) {
+	err = lr.lr.Unmute(lr.name)
+	return
+}
+
+func (lr *liveRecordingHandle) Delete() (err error) {
+	err = lr.lr.Delete(lr.name)
+	return
+}
+
+func (lr *liveRecordingHandle) Scrap() (err error) {
+	err = lr.lr.Scrap(lr.name)
 	return
 }

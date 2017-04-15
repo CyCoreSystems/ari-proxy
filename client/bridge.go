@@ -1,122 +1,200 @@
 package client
 
 import (
-	"time"
-
 	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari-proxy/proxy"
+	uuid "github.com/satori/go.uuid"
 )
 
-type natsBridge struct {
-	conn          *Conn
-	subscriber    ari.Subscriber
-	playback      ari.Playback
-	liveRecording ari.LiveRecording
+type bridge struct {
+	c *Client
 }
 
-// CreateBridgeRequest is the request for creating bridges
-type CreateBridgeRequest struct {
-	ID   string `json:"bridgeId,omitempty"`
-	Type string `json:"type,omitempty"`
-	Name string `json:"name,omitempty"`
-}
-
-func (b *natsBridge) Create(id string, t string, name string) (h *ari.BridgeHandle, err error) {
-	var bridgeID string
-	req := CreateBridgeRequest{id, t, name}
-	err = b.conn.StandardRequest("ari.bridges.create", "", &req, &bridgeID)
+func (b *bridge) Create(id string, t string, name string) (h ari.BridgeHandle, err error) {
+	resp, err := b.c.getRequest(&proxy.Request{
+		BridgeCreate: &proxy.BridgeCreate{
+			ID:   id,
+			Name: name,
+			Type: t,
+		},
+	})
 	if err != nil {
 		return
 	}
-	h = b.Get(bridgeID)
-	return
+	return b.Get(resp.ID), nil
 }
 
-func (b *natsBridge) Get(id string) *ari.BridgeHandle {
-	return ari.NewBridgeHandle(id, b)
+func (b *bridge) Get(id string) ari.BridgeHandle {
+	return &bridgeHandle{id: id, bridge: b}
 }
 
-func (b *natsBridge) List() (bx []*ari.BridgeHandle, err error) {
-	var bridges []string
-	err = b.conn.ReadRequest("ari.bridges.all", "", nil, &bridges)
-	for _, bridge := range bridges {
-		bx = append(bx, b.Get(bridge))
+func (b *bridge) List() (ret []ari.BridgeHandle, err error) {
+	resp, err := b.c.listRequest(&proxy.Request{
+		BridgeList: &proxy.BridgeList{},
+	})
+	if err != nil {
+		return nil, err
+	}
+	for _, i := range resp.List {
+		ret = append(ret, b.Get(i.ID))
 	}
 	return
 }
 
-func (b *natsBridge) Playback() ari.Playback {
-	return b.playback
+func (b *bridge) Playback() ari.Playback {
+	return b.c.Playback()
 }
 
-func (b *natsBridge) Data(id string) (d ari.BridgeData, err error) {
-	err = b.conn.ReadRequest("ari.bridges.data", id, nil, &d)
-	return
-}
-
-func (b *natsBridge) AddChannel(bridgeID string, channelID string) (err error) {
-	err = b.conn.StandardRequest("ari.bridges.addChannel", bridgeID, channelID, nil)
-	return
-}
-
-func (b *natsBridge) RemoveChannel(bridgeID string, channelID string) (err error) {
-	err = b.conn.StandardRequest("ari.bridges.removeChannel", bridgeID, channelID, nil)
-	return
-}
-
-func (b *natsBridge) Delete(id string) (err error) {
-	err = b.conn.StandardRequest("ari.bridges.delete", id, nil, nil)
-	return
-}
-
-// PlayRequest is the request for playback
-type PlayRequest struct {
-	PlaybackID string `json:"playback_id"`
-	MediaURI   string `json:"media_uri"`
-}
-
-func (b *natsBridge) Play(id string, playbackID string, mediaURI string) (h *ari.PlaybackHandle, err error) {
-	err = b.conn.StandardRequest("ari.bridges.play", id, &PlayRequest{PlaybackID: playbackID, MediaURI: mediaURI}, nil)
-	if err == nil {
-		h = b.playback.Get(playbackID)
+func (b *bridge) Data(id string) (*ari.BridgeData, error) {
+	resp, err := b.c.dataRequest(&proxy.Request{
+		BridgeData: &proxy.BridgeData{
+			ID: id,
+		},
+	})
+	if err != nil {
+		return nil, err
 	}
-	return
+	return resp.Bridge, nil
 }
 
-// RecordRequest is a request for recording
-type RecordRequest struct {
-	Name        string `json:"name"`
-	Format      string `json:"format"`
-	MaxDuration int    `json:"maxDurationSeconds"`
-	MaxSilence  int    `json:"maxSilenceSeconds"`
-	IfExists    string `json:"ifExists,omitempty"`
-	Beep        bool   `json:"beep"`
-	TerminateOn string `json:"terminateOn,omitempty"`
+func (b *bridge) AddChannel(bridgeID string, channelID string) error {
+	return b.c.commandRequest(&proxy.Request{
+		BridgeAddChannel: &proxy.BridgeAddChannel{
+			ID:      bridgeID,
+			Channel: channelID,
+		},
+	})
 }
 
-func (b *natsBridge) Record(id string, name string, opts *ari.RecordingOptions) (h *ari.LiveRecordingHandle, err error) {
+func (b *bridge) RemoveChannel(bridgeID string, channelID string) error {
+	return b.c.commandRequest(&proxy.Request{
+		BridgeRemoveChannel: &proxy.BridgeRemoveChannel{
+			ID:      bridgeID,
+			Channel: channelID,
+		},
+	})
+}
 
+func (b *bridge) Delete(id string) error {
+	return b.c.commandRequest(&proxy.Request{
+		BridgeDelete: &proxy.BridgeDelete{
+			ID: id,
+		},
+	})
+}
+
+func (b *bridge) Play(id string, playbackID string, mediaURI string) (ari.PlaybackHandle, error) {
+	err := b.c.commandRequest(&proxy.Request{
+		BridgePlay: &proxy.BridgePlay{
+			ID:         id,
+			MediaURI:   mediaURI,
+			PlaybackID: playbackID,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return b.c.Playback().Get(playbackID), nil
+}
+
+func (b *bridge) Record(id string, name string, opts *ari.RecordingOptions) (ari.LiveRecordingHandle, error) {
 	if opts == nil {
 		opts = &ari.RecordingOptions{}
 	}
+	if name == "" {
+		name = uuid.NewV1().String()
+	}
 
-	req := RecordRequest{
-		Name:        name,
-		Format:      opts.Format,
-		MaxDuration: int(opts.MaxDuration / time.Second),
-		MaxSilence:  int(opts.MaxSilence / time.Second),
-		IfExists:    opts.Exists,
-		Beep:        opts.Beep,
-		TerminateOn: opts.Terminate,
+	err := b.c.commandRequest(&proxy.Request{
+		BridgeRecord: &proxy.BridgeRecord{
+			ID:      id,
+			Options: opts,
+			Name:    name,
+		},
+	})
+	if err != nil {
+		return nil, err
 	}
-	err = b.conn.StandardRequest("ari.bridges.record", id, req, nil)
-	if err == nil {
-		h = b.liveRecording.Get(name)
-	}
-	return
+	return b.c.LiveRecording().Get(name), nil
 }
 
-func (b *natsBridge) Subscribe(id string, nx ...string) ari.Subscription {
-	ns := newSubscription(b.Get(id))
-	ns.Start(b.subscriber, nx...)
-	return ns
+func (b *bridge) Subscribe(id string, nx ...string) ari.Subscription {
+	// TODO
+	/*
+		inSub := b.c.Bus().Subscribe(n...)
+		outSub := newSubscription()
+
+		go func() {
+			defer inSub.Cancel()
+
+			br := b.Get(id)
+
+			for {
+				select {
+				case <-outSub.closedChan:
+					return
+				case e, ok := <-inSub.Events():
+					if !ok {
+						return
+					}
+					if br.Match(e) {
+						outSub.events <- e
+					}
+				}
+			}
+		}()
+
+		return outSub
+	*/
+	return nil
+}
+
+type bridgeHandle struct {
+	id     string
+	bridge ari.Bridge
+}
+
+func (bh *bridgeHandle) ID() string {
+	return bh.id
+}
+
+func (bh *bridgeHandle) Subscribe(nx ...string) ari.Subscription {
+	return bh.bridge.Subscribe(bh.id, nx...)
+}
+
+func (bh *bridgeHandle) AddChannel(channelID string) error {
+	return bh.bridge.AddChannel(bh.id, channelID)
+}
+
+func (bh *bridgeHandle) RemoveChannel(channelID string) error {
+	return bh.bridge.AddChannel(bh.id, channelID)
+}
+
+func (bh *bridgeHandle) Delete() error {
+	return bh.bridge.Delete(bh.id)
+}
+
+func (bh *bridgeHandle) Data() (*ari.BridgeData, error) {
+	return bh.bridge.Data(bh.id)
+}
+
+func (bh *bridgeHandle) Play(playbackID string, mediaURI string) (ari.PlaybackHandle, error) {
+	return bh.bridge.Play(bh.id, playbackID, mediaURI)
+}
+
+func (bh *bridgeHandle) Record(name string, opts *ari.RecordingOptions) (ari.LiveRecordingHandle, error) {
+	return bh.bridge.Record(bh.id, name, opts)
+}
+
+func (bh *bridgeHandle) Match(e ari.Event) (ok bool) {
+	v, ok := e.(ari.BridgeEvent)
+	if !ok {
+		return false
+	}
+	for _, i := range v.GetBridgeIDs() {
+		if i == bh.id {
+			return true
+		}
+	}
+	return false
 }

@@ -1,4 +1,5 @@
 # ari-proxy
+[![Build Status](https://travis-ci.org/CyCoreSystems/ari-proxy.png)](https://travis-ci.org/CyCoreSystems/ari-proxy)
 
 Proxy for the Asterisk REST interface.
 

@@ -1,42 +1,84 @@
 package client
 
-import "github.com/CyCoreSystems/ari"
+import (
+	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari-proxy/proxy"
+)
 
-type natsMailbox struct {
-	conn *Conn
+type mailbox struct {
+	c *Client
 }
 
-func (m *natsMailbox) Get(name string) *ari.MailboxHandle {
-	return ari.NewMailboxHandle(name, m)
+func (m *mailbox) Get(name string) ari.MailboxHandle {
+	return &mailboxHandle{
+		id:      name,
+		mailbox: m,
+	}
 }
 
-func (m *natsMailbox) List() (mx []*ari.MailboxHandle, err error) {
-	var boxes []string
-	err = m.conn.ReadRequest("ari.mailboxes.all", "", nil, &boxes)
-	for _, id := range boxes {
-		mx = append(mx, m.Get(id))
+func (m *mailbox) List() (mx []ari.MailboxHandle, err error) {
+	ml, err := m.c.listRequest(&proxy.Request{
+		MailboxList: &proxy.MailboxList{},
+	})
+	if err != nil {
+		return
+	}
+	for _, i := range ml.List {
+		mx = append(mx, m.Get(i.ID))
 	}
 	return
 }
 
-func (m *natsMailbox) Data(name string) (d ari.MailboxData, err error) {
-	err = m.conn.ReadRequest("ari.mailboxes.data", name, nil, &d)
+func (m *mailbox) Data(name string) (d *ari.MailboxData, err error) {
+	data, err := m.c.dataRequest(&proxy.Request{
+		MailboxData: &proxy.MailboxData{
+			Name: name,
+		},
+	})
+	if err != nil {
+		return
+	}
+	d = data.Mailbox
 	return
 }
 
-// UpdateMailboxRequest is the encoded request for updating the mailbox
-type UpdateMailboxRequest struct {
-	Old int `json:"old"`
-	New int `json:"new"`
-}
-
-func (m *natsMailbox) Update(name string, oldMessages int, newMessages int) (err error) {
-	request := UpdateMailboxRequest{Old: oldMessages, New: newMessages}
-	err = m.conn.StandardRequest("ari.mailboxes.update", name, &request, nil)
+func (m *mailbox) Update(name string, oldMessages int, newMessages int) (err error) {
+	err = m.c.commandRequest(&proxy.Request{
+		MailboxUpdate: &proxy.MailboxUpdate{
+			Name: name,
+			Old:  oldMessages,
+			New:  newMessages,
+		},
+	})
 	return
 }
 
-func (m *natsMailbox) Delete(name string) (err error) {
-	err = m.conn.StandardRequest("ari.mailboxes.delete", name, nil, nil)
+func (m *mailbox) Delete(name string) (err error) {
+	err = m.c.commandRequest(&proxy.Request{
+		MailboxDelete: &proxy.MailboxDelete{
+			Name: name,
+		},
+	})
 	return
+}
+
+type mailboxHandle struct {
+	id      string
+	mailbox *mailbox
+}
+
+func (m *mailboxHandle) Data() (*ari.MailboxData, error) {
+	return m.mailbox.Data(m.id)
+}
+
+func (m *mailboxHandle) Delete() error {
+	return m.mailbox.Delete(m.id)
+}
+
+func (m *mailboxHandle) ID() string {
+	return m.id
+}
+
+func (m *mailboxHandle) Update(old int, new int) error {
+	return m.mailbox.Update(m.id, old, new)
 }

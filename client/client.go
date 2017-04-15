@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -11,8 +10,8 @@ import (
 
 	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/proxy"
-	"github.com/CyCoreSystems/ari/stdbus"
 	"github.com/nats-io/nats"
+	"github.com/pkg/errors"
 )
 
 // DefaultRequestTimeout is the default timeout for a NATS request
@@ -114,8 +113,9 @@ func newClient(ctx context.Context, opts ...OptionFunc) (*Client, error) {
 	}
 
 	// Bind events from NATS to our bus
-	c.bus = stdbus.Start(ctx)
+	// TODO: c.bus = stdbus.Start(ctx)
 	go c.bindEvents(ctx)
+	return c, nil
 }
 
 // OptionFunc is a function which configures options on a Client
@@ -187,21 +187,14 @@ func WithLogHandler(h log15.Handler) OptionFunc {
 // WithNATS binds an existing NATS connection
 func WithNATS(nc *nats.EncodedConn) OptionFunc {
 	return func(c *Client) {
-		c.NATS = nc
-	}
-}
-
-// WithNATSURI configures the NATS URI for a Client
-func WithNATSURI(uri string) OptionFunc {
-	return func(c *Client) {
-		c.NATSURI = nc
+		c.nc = nc
 	}
 }
 
 // WithPrefix configures the NATS Prefix to use om a Client
 func WithPrefix(prefix string) OptionFunc {
 	return func(c *Client) {
-		c.NATSPrefix = prefix
+		c.prefix = prefix
 	}
 }
 
@@ -220,24 +213,24 @@ func (c *Client) Close() {
 		c.bus.Close()
 	}
 
-	if opts.closeNATSOnClose && c.nc != nil {
+	if c.closeNATSOnClose && c.nc != nil {
 		c.nc.Close()
 	}
 }
 
 // Application is the application operation accessor
 func (c *Client) Application() ari.Application {
-	return &Application{p}
+	return &application{c}
 }
 
 // Asterisk is the asterisk operation accessor
 func (c *Client) Asterisk() ari.Asterisk {
-	return &Asterisk{p}
+	return &asterisk{c}
 }
 
 // Bridge is the bridge operation accessor
 func (c *Client) Bridge() ari.Bridge {
-	return &Bridge{p}
+	return &bridge{c}
 }
 
 // Bus is the bus operation accessor
@@ -247,116 +240,116 @@ func (c *Client) Bus() ari.Bus {
 
 // Channel is the channel operation accessor
 func (c *Client) Channel() ari.Channel {
-	return &Channel{p}
+	return &channel{c}
 }
 
 // DeviceState is the device state operation accessor
 func (c *Client) DeviceState() ari.DeviceState {
-	return &DeviceState{p}
+	return &deviceState{c}
 }
 
 // Endpoint is the endpoint accessor
 func (c *Client) Endpoint() ari.Endpoint {
-	return &Endpoint{p}
+	return &endpoint{c}
 }
 
 // LiveRecording is the live recording accessor
 func (c *Client) LiveRecording() ari.LiveRecording {
-	return &LiveRecording{p}
+	return &liveRecording{c}
 }
 
 // Mailbox is the mailbox accessor
 func (c *Client) Mailbox() ari.Mailbox {
-	return &Mailbox{p}
+	return &mailbox{c}
 }
 
 // Playback is the media playback accessor
 func (c *Client) Playback() ari.Playback {
-	return &Playback{p}
+	return &playback{c}
 }
 
 // Sound is the sound accessor
 func (c *Client) Sound() ari.Sound {
-	return &Sound{p}
+	return &sound{c}
 }
 
 // StoredRecording is the stored recording accessor
 func (c *Client) StoredRecording() ari.StoredRecording {
-	return &StoredRecording{p}
+	return &storedRecording{c}
 }
 
 // TextMessage is the text message accessor
 func (c *Client) TextMessage() ari.TextMessage {
-	return &TextMessage{p}
+	return nil
 }
 
 func (c *Client) commandRequest(req interface{}) error {
 	var resp proxy.Response
-	err := c.makeRequest(subject("command"), req, &resp)
+	err := c.makeRequest(c.subject("command"), req, &resp)
 	if err != nil {
 		return err
 	}
-	return resc.Err()
+	return resp.Err()
 }
 
 func (c *Client) createRequest(req interface{}) (*proxy.Entity, error) {
 	var resp proxy.Response
-	err := c.makeRequest(subject("create"), req, &resp)
+	err := c.makeRequest(c.subject("create"), req, &resp)
 	if err != nil {
 		return nil, err
 	}
-	if resc.Err() != nil {
-		return nil, resc.Err()
+	if resp.Err() != nil {
+		return nil, resp.Err()
 	}
-	if resc.Entity == nil {
+	if resp.Entity == nil {
 		return nil, ErrNil
 	}
-	return resc.Entity, nil
+	return resp.Entity, nil
 }
 
 func (c *Client) getRequest(req interface{}) (*proxy.Entity, error) {
 	var resp proxy.Response
-	err := c.makeRequest(subject("get"), req, &resp)
+	err := c.makeRequest(c.subject("get"), req, &resp)
 	if err != nil {
 		return nil, err
 	}
-	if resc.Err() != nil {
-		return nil, resc.Err()
+	if resp.Err() != nil {
+		return nil, resp.Err()
 	}
-	if resc.Entity == nil {
+	if resp.Entity == nil {
 		return nil, ErrNil
 	}
-	return resc.Entity, nil
+	return resp.Entity, nil
 }
 
 func (c *Client) dataRequest(req interface{}) (*proxy.EntityData, error) {
 	var resp proxy.Response
-	err := c.makeRequest(subject("data"), req, &resp)
+	err := c.makeRequest(c.subject("data"), req, &resp)
 	if err != nil {
 		return nil, err
 	}
-	if resc.Err() != nil {
-		return nil, resc.Err()
+	if resp.Err() != nil {
+		return nil, resp.Err()
 	}
-	if resc.EntityData == nil {
+	if resp.Data == nil {
 		return nil, ErrNil
 	}
-	return resc.EntityData, nil
+	return resp.Data, nil
 }
 
 func (c *Client) listRequest(req interface{}) (*proxy.EntityList, error) {
 	var resp proxy.Response
-	err := c.makeRequest(subject("get"), req, &resp)
+	err := c.makeRequest(c.subject("get"), req, &resp)
 	if err != nil {
 		return nil, err
 	}
-	if resc.Err() != nil {
-		return nil, resc.Err()
+	if resp.Err() != nil {
+		return nil, resp.Err()
 	}
-	if resc.EntityList == nil {
+	if resp.EntityList == nil {
 		return nil, ErrNil
 	}
-	return resc.EntityList, nil
+	return resp.EntityList, nil
 }
 
 func (c *Client) makeRequest(subject string, req interface{}, resp interface{}) error {
@@ -364,13 +357,7 @@ func (c *Client) makeRequest(subject string, req interface{}, resp interface{}) 
 }
 
 func (c *Client) subject(class string) (ret string) {
-	ret = fmt.Sprintf("%s.%s", c.prefix, class)
-	if c.appName != "" {
-		ret += "." + c.appName
-		if c.asterisk != "" {
-			ret += "." + c.asterisk
-		}
-	}
+	ret = proxy.Subject(c.prefix, class, c.appName, c.asterisk)
 	return
 }
 

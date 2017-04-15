@@ -1,30 +1,63 @@
 package client
 
-import "github.com/CyCoreSystems/ari"
+import (
+	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari-proxy/proxy"
+)
 
-type natsSound struct {
-	conn *Conn
+type sound struct {
+	c *Client
 }
 
-func (s *natsSound) List(filters map[string]string) (sx []*ari.SoundHandle, err error) {
+func (s *sound) List(filters map[string]string) (ret []ari.SoundHandle, err error) {
 
 	if filters == nil {
 		filters = make(map[string]string)
 	}
 
-	var sounds []string
-	err = s.conn.ReadRequest("ari.sounds.all", "", &filters, &sounds)
-	for _, sh := range sounds {
-		sx = append(sx, s.Get(sh))
+	el, err := s.c.listRequest(&proxy.Request{
+		SoundList: &proxy.SoundList{
+			Filters: filters,
+		},
+	})
+	if err != nil {
+		return
+	}
+	for _, i := range el.List {
+		ret = append(ret, s.Get(i.ID))
 	}
 	return
 }
 
-func (s *natsSound) Get(name string) *ari.SoundHandle {
-	return ari.NewSoundHandle(name, s)
+func (s *sound) Get(name string) ari.SoundHandle {
+	return &soundHandle{
+		id: name,
+		s:  s,
+	}
 }
 
-func (s *natsSound) Data(name string) (sd ari.SoundData, err error) {
-	err = s.conn.ReadRequest("ari.sounds.data", name, nil, &sd)
+func (s *sound) Data(name string) (sd *ari.SoundData, err error) {
+	data, err := s.c.dataRequest(&proxy.Request{
+		SoundData: &proxy.SoundData{
+			Name: name,
+		},
+	})
+	if err != nil {
+		return
+	}
+	sd = data.Sound
 	return
+}
+
+type soundHandle struct {
+	id string
+	s  *sound
+}
+
+func (s *soundHandle) Data() (*ari.SoundData, error) {
+	return s.s.Data(s.id)
+}
+
+func (s *soundHandle) ID() string {
+	return s.id
 }

@@ -11,3 +11,13 @@ docker: all
 test:
 	go test `go list ./... | grep -v /vendor/`
 
+lint:
+	gometalinter --disable=gotype client/... server/... proxy/...
+
+check: all lint test
+
+deps:
+	glide cc
+	glide i
+
+ci: deps check

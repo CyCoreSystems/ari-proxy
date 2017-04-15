@@ -1,9 +1,6 @@
 package client
 
-import (
-	"errors"
-	"fmt"
-)
+import "errors"
 
 type wrappedError struct {
 	Message string
@@ -19,23 +16,6 @@ func (err *wrappedError) Error() string {
 }
 
 // remote error, used wrap the error response before sending
-
-type remoteError struct {
-	Subj string
-	Err  error
-}
-
-func (r *remoteError) Cause() error {
-	return r.Err
-}
-
-func (r *remoteError) Remote() bool {
-	return true
-}
-
-func (r *remoteError) Error() string {
-	return fmt.Sprintf("Remote Error in Endpoint '%s': %v", r.Subj, r.Err)
-}
 
 type codedError struct {
 	err  error

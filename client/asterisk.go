@@ -1,59 +1,69 @@
 package client
 
-import "github.com/CyCoreSystems/ari"
+import (
+	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari-proxy/proxy"
+)
 
-type natsAsterisk struct {
-	conn    *Conn
-	logging ari.Logging
-	modules ari.Modules
-	config  ari.Config
+type asterisk struct {
+	c *Client
 }
 
-func (a *natsAsterisk) Config() ari.Config {
-	return a.config
+func (a *asterisk) Config() ari.Config {
+	return &config{a.c}
 }
 
-type natsAsteriskVariables struct {
-	conn *Conn
+type asteriskVariables struct {
+	c *Client
 }
 
-// tests and other advanced utility functions can cast to an interface to get the NatsConnection object out
-func (a *natsAsterisk) NatsConnection() *Conn {
-	return a.conn
+func (a *asterisk) Logging() ari.Logging {
+	return &logging{a.c}
 }
 
-func (a *natsAsterisk) Logging() ari.Logging {
-	return a.logging
+func (a *asterisk) Modules() ari.Modules {
+	return &modules{a.c}
 }
 
-func (a *natsAsterisk) Modules() ari.Modules {
-	return a.modules
-}
-
-func (a *natsAsterisk) ReloadModule(name string) (err error) {
+func (a *asterisk) ReloadModule(name string) (err error) {
 	err = a.Modules().Reload(name)
 	return
 }
 
-func (a *natsAsterisk) Info(only string) (*ari.AsteriskInfo, error) {
-	ai := &ari.AsteriskInfo{}
-	err := a.conn.ReadRequest("ari.asterisk.info", "", only, ai)
+func (a *asterisk) Info(only string) (*ari.AsteriskInfo, error) {
+	resp, err := a.c.dataRequest(&proxy.Request{
+		AsteriskInfo: &proxy.AsteriskInfo{},
+	})
 	if err != nil {
 		return nil, err
 	}
-	return ai, nil
+	return resp.Asterisk, nil
 }
 
-func (a *natsAsterisk) Variables() ari.Variables {
-	return &natsAsteriskVariables{a.conn}
+func (a *asterisk) Variables() ari.Variables {
+	return &asteriskVariables{a.c}
 }
 
-func (a *natsAsteriskVariables) Get(variable string) (ret string, err error) {
-	err = a.conn.ReadRequest("ari.asterisk.variables.get", variable, nil, &ret)
-	return
+func (a *asteriskVariables) Get(key string) (ret string, err error) {
+	data, err := a.c.dataRequest(&proxy.Request{
+		AsteriskVariables: &proxy.AsteriskVariables{
+			Name: key,
+			Get:  &proxy.VariablesGet{},
+		},
+	})
+	if err != nil {
+		return "", err
+	}
+	return data.Variable, err
 }
 
-func (a *natsAsteriskVariables) Set(variable string, value string) (err error) {
-	err = a.conn.StandardRequest("ari.asterisk.variables.set", variable, value, nil)
-	return
+func (a *asteriskVariables) Set(key string, val string) (err error) {
+	return a.c.commandRequest(&proxy.Request{
+		AsteriskVariables: &proxy.AsteriskVariables{
+			Name: key,
+			Set: &proxy.VariablesSet{
+				Value: val,
+			},
+		},
+	})
 }

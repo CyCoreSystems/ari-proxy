@@ -22,7 +22,7 @@ func TestHash(t *testing.T) {
 }
 
 func TestAll(t *testing.T) {
-	c := make(Cluster)
+	c := New()
 	c.Update("A1", "TestApp")
 	c.Update("A2", "TestApp")
 
@@ -41,7 +41,7 @@ func TestAll(t *testing.T) {
 }
 
 func TestApp(t *testing.T) {
-	c := make(Cluster)
+	c := New()
 	c.Update("A1", "TestApp")
 	c.Update("A2", "TestApp")
 	c.Update("B1", "TestApp2")
@@ -71,7 +71,7 @@ func TestApp(t *testing.T) {
 }
 
 func TestPurge(t *testing.T) {
-	c := make(Cluster)
+	c := New()
 	c.Update("A1", "TestApp")
 	c.Update("A2", "TestApp")
 	c.Update("B1", "TestApp2")

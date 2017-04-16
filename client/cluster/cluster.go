@@ -6,10 +6,19 @@ import (
 	"time"
 )
 
-var mu sync.Mutex
-
 // Cluster describes the set of ari proxies in a system.  The list is indexed by a hash of the asterisk ID and the ARI application and indicates the time of last contact.
-type Cluster map[string]time.Time
+type Cluster struct {
+	members map[string]time.Time
+
+	mu sync.Mutex
+}
+
+// New returns a new Cluster
+func New() *Cluster {
+	return &Cluster{
+		members: make(map[string]time.Time),
+	}
+}
 
 // hash returns the key for a given proxy instance
 func hash(id, app string) string {
@@ -38,11 +47,11 @@ type Member struct {
 }
 
 // All returns a list of all cluster members whose LastActive time is no older thatn the given maxAge.
-func (c Cluster) All(maxAge time.Duration) (list []Member) {
-	mu.Lock()
-	defer mu.Unlock()
+func (c *Cluster) All(maxAge time.Duration) (list []Member) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
-	for k, v := range c {
+	for k, v := range c.members {
 		if maxAge == 0 || time.Since(v) < maxAge {
 			id, app := dehash(k)
 			list = append(list, Member{
@@ -56,11 +65,11 @@ func (c Cluster) All(maxAge time.Duration) (list []Member) {
 }
 
 // App returns a list of all cluster members for the given ARI Application whose LastActive time is no older than the given maxAge.
-func (c Cluster) App(app string, maxAge time.Duration) (list []Member) {
-	mu.Lock()
-	defer mu.Unlock()
+func (c *Cluster) App(app string, maxAge time.Duration) (list []Member) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
-	for k, v := range c {
+	for k, v := range c.members {
 		i, a := dehash(k)
 		if app == a && (maxAge == 0 || time.Since(v) < maxAge) {
 			list = append(list, Member{
@@ -74,26 +83,26 @@ func (c Cluster) App(app string, maxAge time.Duration) (list []Member) {
 }
 
 // Update adds (or updates) a proxy to/in the cluster
-func (c Cluster) Update(id, app string) {
-	mu.Lock()
-	c[hash(id, app)] = time.Now()
-	mu.Unlock()
+func (c *Cluster) Update(id, app string) {
+	c.mu.Lock()
+	c.members[hash(id, app)] = time.Now()
+	c.mu.Unlock()
 }
 
 // Purge removes any proxies in the cluster which are older than the given maxAge.
-func (c Cluster) Purge(maxAge time.Duration) {
-	mu.Lock()
-	defer mu.Unlock()
+func (c *Cluster) Purge(maxAge time.Duration) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
 	var removalKeys []string
 
-	for k, v := range c {
+	for k, v := range c.members {
 		if maxAge == 0 || time.Since(v) > maxAge {
 			removalKeys = append(removalKeys, k)
 		}
 	}
 
 	for _, key := range removalKeys {
-		delete(c, key)
+		delete(c.members, key)
 	}
 }

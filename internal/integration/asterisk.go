@@ -8,8 +8,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-func TestAsteriskInfo(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("noFilter", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestAsteriskInfo(t *testing.T, s Server) {
+	runTest("noFilter", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		var ai ari.AsteriskInfo
 		ai.SystemInfo.EntityID = "1"
 
@@ -28,7 +28,7 @@ func TestAsteriskInfo(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Asterisk.AssertCalled(t, "Info", "")
 	})
 
-	runTest("noFilterError", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("noFilterError", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		expected := errors.New("unknown error")
 
 		m.Asterisk.On("Info", "").Return(nil, expected)
@@ -46,7 +46,7 @@ func TestAsteriskInfo(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Asterisk.AssertCalled(t, "Info", "")
 	})
 
-	runTest("withFilter", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("withFilter", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		var ai ari.AsteriskInfo
 		ai.SystemInfo.EntityID = "1"
 
@@ -65,7 +65,7 @@ func TestAsteriskInfo(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Asterisk.AssertCalled(t, "Info", "") // filter gets stripped since it isn't supported
 	})
 
-	runTest("withFilterError", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("withFilterError", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		expected := errors.New("unknown error")
 
 		m.Asterisk.On("Info", "").Return(nil, expected)
@@ -84,8 +84,8 @@ func TestAsteriskInfo(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestAsteriskVariablesGet(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("simple", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestAsteriskVariablesGet(t *testing.T, s Server) {
+	runTest("simple", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		var ai ari.AsteriskInfo
 		ai.SystemInfo.EntityID = "1"
 
@@ -107,7 +107,7 @@ func TestAsteriskVariablesGet(t *testing.T, s Server, clientFactory ClientFactor
 		mv.AssertCalled(t, "Get", "s")
 	})
 
-	runTest("error", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		var expected = errors.New("unknown error")
 
 		mv := mocks.Variables{}
@@ -130,8 +130,8 @@ func TestAsteriskVariablesGet(t *testing.T, s Server, clientFactory ClientFactor
 	})
 }
 
-func TestAsteriskVariablesSet(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("simple", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestAsteriskVariablesSet(t *testing.T, s Server) {
+	runTest("simple", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		var ai ari.AsteriskInfo
 		ai.SystemInfo.EntityID = "1"
 
@@ -150,7 +150,7 @@ func TestAsteriskVariablesSet(t *testing.T, s Server, clientFactory ClientFactor
 		mv.AssertCalled(t, "Set", "s", "hello")
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		var ai ari.AsteriskInfo
 		ai.SystemInfo.EntityID = "1"
 

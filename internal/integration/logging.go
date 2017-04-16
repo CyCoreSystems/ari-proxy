@@ -7,8 +7,8 @@ import (
 	"github.com/CyCoreSystems/ari"
 )
 
-func TestLoggingList(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestLoggingList(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		var expected = []ari.LogData{
 			ari.LogData{
 				Configuration: "c1",
@@ -41,7 +41,7 @@ func TestLoggingList(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Logging.AssertCalled(t, "List")
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		var expected []ari.LogData
 
 		m.Logging.On("List").Return(expected, errors.New("error"))
@@ -68,8 +68,8 @@ func TestLoggingList(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestLoggingCreate(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestLoggingCreate(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Logging.On("Create", "n1", "l1").Return(nil)
 
@@ -81,7 +81,7 @@ func TestLoggingCreate(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Logging.AssertCalled(t, "Create", "n1", "l1")
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Logging.On("Create", "n1", "l1").Return(errors.New("error"))
 
@@ -94,8 +94,8 @@ func TestLoggingCreate(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestLoggingDelete(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestLoggingDelete(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Logging.On("Delete", "n1").Return(nil)
 
@@ -107,7 +107,7 @@ func TestLoggingDelete(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Logging.AssertCalled(t, "Delete", "n1")
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Logging.On("Delete", "n1").Return(errors.New("error"))
 
@@ -120,8 +120,8 @@ func TestLoggingDelete(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestLoggingRotate(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestLoggingRotate(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Logging.On("Rotate", "n1").Return(nil)
 
@@ -133,7 +133,7 @@ func TestLoggingRotate(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Logging.AssertCalled(t, "Rotate", "n1")
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Logging.On("Rotate", "n1").Return(errors.New("error"))
 

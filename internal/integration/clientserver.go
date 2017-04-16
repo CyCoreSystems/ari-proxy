@@ -2,8 +2,9 @@ package integration
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"testing"
-	"time"
 
 	"sync"
 
@@ -24,15 +25,9 @@ func natsConnect() (*nats.EncodedConn, error) {
 	return nc, err
 }
 
-// these hooks are designed to allow both client and server packages
-// to call this integration package without recursive imports
-
-// ClientFactory creates a client
-type ClientFactory func(ctx context.Context) (ari.Client, error)
-
 // Server represents a generalized ari-proxy server
 type Server interface {
-	Start(ctx context.Context, t *testing.T, client ari.Client, nc *nats.EncodedConn, completeCh chan struct{})
+	Start(ctx context.Context, t *testing.T, client ari.Client, nc *nats.EncodedConn, completeCh chan struct{}) (ari.Client, error)
 	Ready() <-chan struct{}
 	Close() error
 }
@@ -40,7 +35,7 @@ type Server interface {
 // TestHandler is the interface for test execution
 type testHandler func(t *testing.T, m *mock, cl ari.Client)
 
-func runTest(desc string, t *testing.T, s Server, clientFactory ClientFactory, fn testHandler) {
+func runTest(desc string, t *testing.T, s Server, fn testHandler) {
 	defer func() {
 		// recover from panic if one occured. Set err to nil otherwise.
 		if err := recover(); err != nil {
@@ -64,21 +59,13 @@ func runTest(desc string, t *testing.T, s Server, clientFactory ClientFactory, f
 
 		completeCh := make(chan struct{})
 
-		s.Start(ctx, t, m.Client, nc, completeCh)
-
-		select {
-		case <-s.Ready():
-		case <-time.After(2 * time.Second):
-			t.Errorf("Timeout waiting for server to be ready")
-		}
-
-		// setup client
-		cl, err := clientFactory(ctx)
+		cl, err := s.Start(ctx, t, m.Client, nc, completeCh)
 		if err != nil {
-			t.Errorf("Failed to build ari-proxy client: %s", err)
+			t.Errorf("Failed to start client/server: %s", err)
 			return
 		}
 		defer cl.Close()
+
 		var once sync.Once
 
 		m.Shutdown = func() {
@@ -93,5 +80,28 @@ func runTest(desc string, t *testing.T, s Server, clientFactory ClientFactory, f
 		fn(t, m, cl)
 
 		m.Shutdown()
+
+		timeout, ok := TimeoutCount(cl)
+		if !ok {
+			t.Errorf("Failed to get timeout count from ari-proxy client")
+		} else {
+			if timeout > 0 {
+				fmt.Fprintf(os.Stderr, "Timeouts: %d\n", timeout)
+			}
+		}
+
 	})
+}
+
+type timeoutCounter interface {
+	TimeoutCount() int64
+}
+
+// TimeoutCount gets the timeout count from the ari client, if available.
+func TimeoutCount(c ari.Client) (int64, bool) {
+	cl, ok := c.(timeoutCounter)
+	if !ok {
+		return 0, false
+	}
+	return cl.TimeoutCount(), true
 }

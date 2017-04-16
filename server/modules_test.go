@@ -7,21 +7,21 @@ import (
 )
 
 func TestModulesData(t *testing.T) {
-	integration.TestModulesData(t, &srv{}, clientFactory)
+	integration.TestModulesData(t, &srv{})
 }
 
 func TestModulesLoad(t *testing.T) {
-	integration.TestModulesLoad(t, &srv{}, clientFactory)
+	integration.TestModulesLoad(t, &srv{})
 }
 
 func TestModulesReload(t *testing.T) {
-	integration.TestModulesReload(t, &srv{}, clientFactory)
+	integration.TestModulesReload(t, &srv{})
 }
 
 func TestModulesUnload(t *testing.T) {
-	integration.TestModulesUnload(t, &srv{}, clientFactory)
+	integration.TestModulesUnload(t, &srv{})
 }
 
 func TestModulesList(t *testing.T) {
-	integration.TestModulesList(t, &srv{}, clientFactory)
+	integration.TestModulesList(t, &srv{})
 }

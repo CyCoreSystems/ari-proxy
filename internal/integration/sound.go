@@ -8,8 +8,8 @@ import (
 	"github.com/CyCoreSystems/ari-proxy/internal/mocks"
 )
 
-func TestSoundData(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestSoundData(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		var sd ari.SoundData
 		sd.ID = "s1"
 		sd.Text = "text"
@@ -32,7 +32,7 @@ func TestSoundData(t *testing.T, s Server, clientFactory ClientFactory) {
 
 		m.Sound.AssertCalled(t, "Data", "s1")
 	})
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Sound.On("Data", "s1").Return(nil, errors.New("error"))
 
@@ -47,8 +47,8 @@ func TestSoundData(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestSoundList(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestSoundList(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		sh1 := &mocks.SoundHandle{}
 		sh2 := &mocks.SoundHandle{}
 		sh1.On("ID").Return("sh1")
@@ -70,7 +70,7 @@ func TestSoundList(t *testing.T, s Server, clientFactory ClientFactory) {
 
 		m.Sound.AssertCalled(t, "List", filter)
 	})
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		var filter map[string]string
 
 		m.Sound.On("List", filter).Return(nil, errors.New("error"))

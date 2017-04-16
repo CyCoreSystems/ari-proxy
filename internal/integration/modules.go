@@ -8,8 +8,8 @@ import (
 	"github.com/CyCoreSystems/ari-proxy/internal/mocks"
 )
 
-func TestModulesLoad(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestModulesLoad(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Modules.On("Load", "m1").Return(nil)
 
@@ -22,7 +22,7 @@ func TestModulesLoad(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Asterisk.AssertCalled(t, "Modules")
 		m.Modules.AssertCalled(t, "Load", "m1")
 	})
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Modules.On("Load", "m1").Return(errors.New("error"))
 
@@ -37,8 +37,8 @@ func TestModulesLoad(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestModulesUnload(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestModulesUnload(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Modules.On("Unload", "m1").Return(nil)
 
@@ -51,7 +51,7 @@ func TestModulesUnload(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Asterisk.AssertCalled(t, "Modules")
 		m.Modules.AssertCalled(t, "Unload", "m1")
 	})
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Modules.On("Unload", "m1").Return(errors.New("error"))
 
@@ -66,8 +66,8 @@ func TestModulesUnload(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestModulesReload(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestModulesReload(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Modules.On("Reload", "m1").Return(nil)
 
@@ -80,7 +80,7 @@ func TestModulesReload(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Asterisk.AssertCalled(t, "Modules")
 		m.Modules.AssertCalled(t, "Reload", "m1")
 	})
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Modules.On("Reload", "m1").Return(errors.New("error"))
 
@@ -95,8 +95,8 @@ func TestModulesReload(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestModulesData(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestModulesData(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var d ari.ModuleData
 		d.Description = "Desc"
@@ -123,7 +123,7 @@ func TestModulesData(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Asterisk.AssertCalled(t, "Modules")
 		m.Modules.AssertCalled(t, "Data", "m1")
 	})
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Modules.On("Data", "m1").Return(nil, errors.New("error"))
 
@@ -139,8 +139,8 @@ func TestModulesData(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestModulesList(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestModulesList(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		m1 := mocks.ModuleHandle{}
 		m1.On("ID").Return("m1")
 		m2 := mocks.ModuleHandle{}
@@ -161,7 +161,7 @@ func TestModulesList(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Asterisk.AssertCalled(t, "Modules")
 		m.Modules.AssertCalled(t, "List")
 	})
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		m.Modules.On("List").Return([]ari.ModuleHandle{}, errors.New("error"))
 
 		_, err := cl.Asterisk().Modules().List()

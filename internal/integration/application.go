@@ -8,8 +8,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-func TestApplicationList(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("emptyList", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestApplicationList(t *testing.T, s Server) {
+	runTest("emptyList", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		m.Application.On("List").Return([]ari.ApplicationHandle{}, nil)
 
 		if _, err := cl.Application().List(); err != nil {
@@ -17,7 +17,7 @@ func TestApplicationList(t *testing.T, s Server, clientFactory ClientFactory) {
 		}
 	})
 
-	runTest("nonEmptyList", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("nonEmptyList", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		h1 := &mocks.ApplicationHandle{}
 		h1.On("ID").Return("1")
@@ -45,8 +45,8 @@ func TestApplicationList(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestApplicationData(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("simple", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestApplicationData(t *testing.T, s Server) {
+	runTest("simple", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		ad := &ari.ApplicationData{}
 		ad.Name = "app1"
 
@@ -61,7 +61,7 @@ func TestApplicationData(t *testing.T, s Server, clientFactory ClientFactory) {
 		}
 	})
 
-	runTest("error", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		expected := errors.New("unknown error")
 
 		m.Application.On("Data", "1").Return(nil, expected)
@@ -76,8 +76,8 @@ func TestApplicationData(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestApplicationSubscribe(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("simple", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestApplicationSubscribe(t *testing.T, s Server) {
+	runTest("simple", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		m.Application.On("Subscribe", "1", "2").Return(nil)
 
 		if err := cl.Application().Subscribe("1", "2"); err != nil {
@@ -89,7 +89,7 @@ func TestApplicationSubscribe(t *testing.T, s Server, clientFactory ClientFactor
 		m.Application.AssertCalled(t, "Subscribe", "1", "2")
 	})
 
-	runTest("error", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		expected := errors.New("unknown error")
 
 		m.Application.On("Subscribe", "1", "2").Return(expected)
@@ -104,8 +104,8 @@ func TestApplicationSubscribe(t *testing.T, s Server, clientFactory ClientFactor
 	})
 }
 
-func TestApplicationUnsubscribe(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("simple", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestApplicationUnsubscribe(t *testing.T, s Server) {
+	runTest("simple", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		m.Application.On("Unsubscribe", "1", "2").Return(nil)
 
 		if err := cl.Application().Unsubscribe("1", "2"); err != nil {
@@ -117,7 +117,7 @@ func TestApplicationUnsubscribe(t *testing.T, s Server, clientFactory ClientFact
 		m.Application.AssertCalled(t, "Unsubscribe", "1", "2")
 	})
 
-	runTest("error", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		expected := errors.New("unknown error")
 
 		m.Application.On("Unsubscribe", "1", "2").Return(expected)
@@ -130,8 +130,8 @@ func TestApplicationUnsubscribe(t *testing.T, s Server, clientFactory ClientFact
 	})
 }
 
-func TestApplicationGet(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("simple", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestApplicationGet(t *testing.T, s Server) {
+	runTest("simple", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		if h := cl.Application().Get("1"); h == nil {
 			t.Errorf("Unexpected nil-handle")
 		}

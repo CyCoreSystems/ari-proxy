@@ -7,13 +7,13 @@ import (
 )
 
 func TestConfigData(t *testing.T) {
-	integration.TestConfigData(t, &srv{}, clientFactory)
+	integration.TestConfigData(t, &srv{})
 }
 
 func TestConfigDelete(t *testing.T) {
-	integration.TestConfigDelete(t, &srv{}, clientFactory)
+	integration.TestConfigDelete(t, &srv{})
 }
 
 func TestConfigUpdate(t *testing.T) {
-	integration.TestConfigUpdate(t, &srv{}, clientFactory)
+	integration.TestConfigUpdate(t, &srv{})
 }

@@ -56,6 +56,12 @@ type Client struct {
 	// requestTimeout is the timeout duration of a request
 	requestTimeout time.Duration
 
+	// timeoutRetry is the amount of times to retry on nats timeout
+	timeoutRetry int64
+
+	// countTimeouts tracks how many timeouts the client has received, for metrics.
+	countTimeouts int64
+
 	log log15.Logger
 
 	bus ari.Bus
@@ -78,6 +84,7 @@ func newClient(ctx context.Context, opts ...OptionFunc) (*Client, error) {
 		uri:               "nats://localhost:4222",
 		requestTimeout:    DefaultRequestTimeout,
 		inputBufferLength: DefaultInputBufferLength,
+		timeoutRetry:      0,
 	}
 	c.log.SetHandler(log15.DiscardHandler())
 
@@ -139,6 +146,7 @@ func FromClient(cl ari.Client) OptionFunc {
 			c.prefix = old.prefix
 			c.log = old.log
 			c.requestTimeout = old.requestTimeout
+			c.timeoutRetry = old.timeoutRetry
 
 			// Make sure the old client does not close the NATS connection on us;
 			if old.closeNATSOnClose {
@@ -191,10 +199,17 @@ func WithNATS(nc *nats.EncodedConn) OptionFunc {
 	}
 }
 
-// WithPrefix configures the NATS Prefix to use om a Client
+// WithPrefix configures the NATS Prefix to use on a Client
 func WithPrefix(prefix string) OptionFunc {
 	return func(c *Client) {
 		c.prefix = prefix
+	}
+}
+
+// WithTimeoutRetry configures the amount of times to retry on request timeout for a Client
+func WithTimeoutRetry(count int64) OptionFunc {
+	return func(c *Client) {
+		c.timeoutRetry = count
 	}
 }
 
@@ -285,7 +300,20 @@ func (c *Client) TextMessage() ari.TextMessage {
 
 func (c *Client) commandRequest(req interface{}) error {
 	var resp proxy.Response
-	err := c.makeRequest(c.subject("command"), req, &resp)
+	var err error
+	var retries = int64(0)
+	for {
+		err = c.makeRequest(c.subject("command"), req, &resp)
+		if err != nil && err == nats.ErrTimeout {
+			c.countTimeouts++
+			retries++
+			if retries >= c.timeoutRetry {
+				return err
+			}
+			continue
+		}
+		break
+	}
 	if err != nil {
 		return err
 	}
@@ -294,7 +322,20 @@ func (c *Client) commandRequest(req interface{}) error {
 
 func (c *Client) createRequest(req interface{}) (*proxy.Entity, error) {
 	var resp proxy.Response
-	err := c.makeRequest(c.subject("create"), req, &resp)
+	var err error
+	var retries = int64(0)
+	for {
+		err = c.makeRequest(c.subject("create"), req, &resp)
+		if err != nil && err == nats.ErrTimeout {
+			c.countTimeouts++
+			retries++
+			if retries >= c.timeoutRetry {
+				return nil, err
+			}
+			continue
+		}
+		break
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -309,9 +350,19 @@ func (c *Client) createRequest(req interface{}) (*proxy.Entity, error) {
 
 func (c *Client) getRequest(req interface{}) (*proxy.Entity, error) {
 	var resp proxy.Response
-	err := c.makeRequest(c.subject("get"), req, &resp)
-	if err != nil {
-		return nil, err
+	var err error
+	var retries int64
+	for {
+		err = c.makeRequest(c.subject("get"), req, &resp)
+		if err != nil && err == nats.ErrTimeout {
+			c.countTimeouts++
+			retries++
+			if retries >= c.timeoutRetry {
+				return nil, err
+			}
+			continue
+		}
+		break
 	}
 	if resp.Err() != nil {
 		return nil, resp.Err()
@@ -324,7 +375,20 @@ func (c *Client) getRequest(req interface{}) (*proxy.Entity, error) {
 
 func (c *Client) dataRequest(req interface{}) (*proxy.EntityData, error) {
 	var resp proxy.Response
-	err := c.makeRequest(c.subject("data"), req, &resp)
+	var retries int64
+	var err error
+	for {
+		err = c.makeRequest(c.subject("data"), req, &resp)
+		if err != nil && err == nats.ErrTimeout {
+			c.countTimeouts++
+			retries++
+			if retries >= c.timeoutRetry {
+				return nil, err
+			}
+			continue
+		}
+		break
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -339,7 +403,20 @@ func (c *Client) dataRequest(req interface{}) (*proxy.EntityData, error) {
 
 func (c *Client) listRequest(req interface{}) (*proxy.EntityList, error) {
 	var resp proxy.Response
-	err := c.makeRequest(c.subject("get"), req, &resp)
+	var retries int64
+	var err error
+	for {
+		err = c.makeRequest(c.subject("data"), req, &resp)
+		if err != nil && err == nats.ErrTimeout {
+			c.countTimeouts++
+			retries++
+			if retries >= c.timeoutRetry {
+				return nil, err
+			}
+			continue
+		}
+		break
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -350,6 +427,20 @@ func (c *Client) listRequest(req interface{}) (*proxy.EntityList, error) {
 		return nil, ErrNil
 	}
 	return resp.EntityList, nil
+}
+
+// TimeoutCount gets the amount of timeouts that have occured on this client
+func (c *Client) TimeoutCount() int64 {
+	return c.countTimeouts
+}
+
+// TimeoutCount gets the timeout count from the ari client, if available.
+func TimeoutCount(c ari.Client) (int64, bool) {
+	cl, ok := c.(*Client)
+	if !ok {
+		return 0, false
+	}
+	return cl.TimeoutCount(), true
 }
 
 func (c *Client) makeRequest(subject string, req interface{}, resp interface{}) error {

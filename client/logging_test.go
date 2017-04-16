@@ -7,17 +7,17 @@ import (
 )
 
 func TestLoggingList(t *testing.T) {
-	integration.TestLoggingList(t, &srv{}, clientFactory)
+	integration.TestLoggingList(t, &srv{})
 }
 
 func TestLoggingCreate(t *testing.T) {
-	integration.TestLoggingCreate(t, &srv{}, clientFactory)
+	integration.TestLoggingCreate(t, &srv{})
 }
 
 func TestLoggingRotate(t *testing.T) {
-	integration.TestLoggingRotate(t, &srv{}, clientFactory)
+	integration.TestLoggingRotate(t, &srv{})
 }
 
 func TestLoggingDelete(t *testing.T) {
-	integration.TestLoggingDelete(t, &srv{}, clientFactory)
+	integration.TestLoggingDelete(t, &srv{})
 }

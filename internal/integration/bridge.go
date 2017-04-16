@@ -8,8 +8,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-func TestBridgeCreate(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("simple", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestBridgeCreate(t *testing.T, s Server) {
+	runTest("simple", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var bh mocks.BridgeHandle
 		bh.On("ID").Return("1234")
@@ -32,7 +32,7 @@ func TestBridgeCreate(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Bridge.AssertCalled(t, "Create", "bridgeID", "bridgeType", "bridgeName")
 	})
 
-	runTest("error", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		var expected = errors.New("unknown error")
 
 		m.Bridge.On("Create", "bridgeID", "bridgeType", "bridgeName").Return(nil, expected)
@@ -51,8 +51,8 @@ func TestBridgeCreate(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestBridgeList(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("simple", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestBridgeList(t *testing.T, s Server) {
+	runTest("simple", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var handles []ari.BridgeHandle
 		var h1 = &mocks.BridgeHandle{}
@@ -79,7 +79,7 @@ func TestBridgeList(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Bridge.AssertCalled(t, "List")
 	})
 
-	runTest("error", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		var expected = errors.New("unknown error")
 
 		m.Bridge.On("List").Return([]ari.BridgeHandle{}, expected)
@@ -98,8 +98,8 @@ func TestBridgeList(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestBridgeData(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("simple", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestBridgeData(t *testing.T, s Server) {
+	runTest("simple", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		bd := &ari.BridgeData{
 			ID:         "bridge1",
 			Class:      "class1",
@@ -120,7 +120,7 @@ func TestBridgeData(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Bridge.AssertCalled(t, "Data", "1")
 	})
 
-	runTest("error", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Bridge.On("Data", "1").Return(nil, errors.New("Error getting data"))
 
@@ -138,8 +138,8 @@ func TestBridgeData(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestBridgeAddChannel(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("simple", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestBridgeAddChannel(t *testing.T, s Server) {
+	runTest("simple", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		m.Bridge.On("AddChannel", "bridge1", "channel1").Return(nil)
 
 		err := cl.Bridge().AddChannel("bridge1", "channel1")
@@ -152,7 +152,7 @@ func TestBridgeAddChannel(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Bridge.AssertCalled(t, "AddChannel", "bridge1", "channel1")
 	})
 
-	runTest("error", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Bridge.On("AddChannel", "bridge1", "channel1").Return(errors.New("unknown error"))
 
@@ -167,8 +167,8 @@ func TestBridgeAddChannel(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestBridgeRemoveChannel(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("simple", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestBridgeRemoveChannel(t *testing.T, s Server) {
+	runTest("simple", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		m.Bridge.On("RemoveChannel", "bridge1", "channel1").Return(nil)
 
 		err := cl.Bridge().RemoveChannel("bridge1", "channel1")
@@ -181,7 +181,7 @@ func TestBridgeRemoveChannel(t *testing.T, s Server, clientFactory ClientFactory
 		m.Bridge.AssertCalled(t, "RemoveChannel", "bridge1", "channel1")
 	})
 
-	runTest("error", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Bridge.On("RemoveChannel", "bridge1", "channel1").Return(errors.New("unknown error"))
 
@@ -196,8 +196,8 @@ func TestBridgeRemoveChannel(t *testing.T, s Server, clientFactory ClientFactory
 	})
 }
 
-func TestBridgeDelete(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("simple", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestBridgeDelete(t *testing.T, s Server) {
+	runTest("simple", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		m.Bridge.On("Delete", "bridge1").Return(nil)
 
 		err := cl.Bridge().Delete("bridge1")
@@ -210,7 +210,7 @@ func TestBridgeDelete(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Bridge.AssertCalled(t, "Delete", "bridge1")
 	})
 
-	runTest("error", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Bridge.On("Delete", "bridge1").Return(errors.New("unknown error"))
 
@@ -225,8 +225,8 @@ func TestBridgeDelete(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestBridgePlay(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("simple", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestBridgePlay(t *testing.T, s Server) {
+	runTest("simple", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var ph = &mocks.PlaybackHandle{}
 		ph.On("ID").Return("playback1")
@@ -246,7 +246,7 @@ func TestBridgePlay(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Bridge.AssertCalled(t, "Play", "bridge1", "playback1", "mediaURI")
 	})
 
-	runTest("error", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Bridge.On("Play", "bridge1", "playback1", "mediaURI").Return(nil, errors.New("unknown error"))
 
@@ -264,8 +264,8 @@ func TestBridgePlay(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestBridgeRecord(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("customOpts", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestBridgeRecord(t *testing.T, s Server) {
+	runTest("customOpts", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var opts = &ari.RecordingOptions{Format: "", MaxDuration: 0, MaxSilence: 0, Exists: "", Beep: false, Terminate: "#"}
 
@@ -287,7 +287,7 @@ func TestBridgeRecord(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Bridge.AssertCalled(t, "Record", "bridge1", "recording1", opts)
 	})
 
-	runTest("nilOpts", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("nilOpts", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var opts = &ari.RecordingOptions{}
 
@@ -309,7 +309,7 @@ func TestBridgeRecord(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Bridge.AssertCalled(t, "Record", "bridge1", "recording1", opts)
 	})
 
-	runTest("error", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var opts = &ari.RecordingOptions{}
 		m.Bridge.On("Record", "bridge1", "recording1", opts).Return(nil, errors.New("unknown error"))

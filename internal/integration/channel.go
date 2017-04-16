@@ -14,8 +14,8 @@ var _ = tmock.Anything
 
 var nonEmpty = tmock.MatchedBy(func(s string) bool { return s != "" })
 
-func TestChannelData(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("simple", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestChannelData(t *testing.T, s Server) {
+	runTest("simple", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var expected ari.ChannelData
 		expected.ID = "c1"
@@ -38,7 +38,7 @@ func TestChannelData(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Channel.AssertCalled(t, "Data", "c1")
 	})
 
-	runTest("error", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var expected = errors.New("Unknown error")
 
@@ -59,8 +59,8 @@ func TestChannelData(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestChannelAnswer(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("simple", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestChannelAnswer(t *testing.T, s Server) {
+	runTest("simple", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Channel.On("Answer", "c1").Return(nil)
 
@@ -74,7 +74,7 @@ func TestChannelAnswer(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Channel.AssertCalled(t, "Answer", "c1")
 	})
 
-	runTest("error", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var expected = errors.New("Unknown error")
 
@@ -91,8 +91,8 @@ func TestChannelAnswer(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestChannelBusy(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("simple", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestChannelBusy(t *testing.T, s Server) {
+	runTest("simple", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Channel.On("Busy", "c1").Return(nil)
 
@@ -106,7 +106,7 @@ func TestChannelBusy(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Channel.AssertCalled(t, "Busy", "c1")
 	})
 
-	runTest("error", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var expected = errors.New("Unknown error")
 
@@ -123,8 +123,8 @@ func TestChannelBusy(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestChannelCongestion(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("simple", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestChannelCongestion(t *testing.T, s Server) {
+	runTest("simple", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Channel.On("Congestion", "c1").Return(nil)
 
@@ -138,7 +138,7 @@ func TestChannelCongestion(t *testing.T, s Server, clientFactory ClientFactory) 
 		m.Channel.AssertCalled(t, "Congestion", "c1")
 	})
 
-	runTest("error", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var expected = errors.New("Unknown error")
 
@@ -155,8 +155,8 @@ func TestChannelCongestion(t *testing.T, s Server, clientFactory ClientFactory) 
 	})
 }
 
-func TestChannelHangup(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("noReason", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestChannelHangup(t *testing.T, s Server) {
+	runTest("noReason", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Channel.On("Hangup", "c1", "").Return(nil)
 
@@ -170,7 +170,7 @@ func TestChannelHangup(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Channel.AssertCalled(t, "Hangup", "c1", "")
 	})
 
-	runTest("aReason", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("aReason", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Channel.On("Hangup", "c1", "busy").Return(nil)
 
@@ -184,7 +184,7 @@ func TestChannelHangup(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Channel.AssertCalled(t, "Hangup", "c1", "busy")
 	})
 
-	runTest("error", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var expected = errors.New("Unknown error")
 
@@ -201,13 +201,13 @@ func TestChannelHangup(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestChannelList(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("empty", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestChannelList(t *testing.T, s Server) {
+	runTest("empty", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		m.Channel.On("List").Return([]ari.ChannelHandle{}, nil)
 
 		ret, err := cl.Channel().List()
 		if err != nil {
-			t.Errorf("Unexpected error in remote List call")
+			t.Errorf("Unexpected error in remote List call: %s", err)
 		}
 		if len(ret) != 0 {
 			t.Errorf("Expected return length to be 0, got %d", len(ret))
@@ -218,7 +218,7 @@ func TestChannelList(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Channel.AssertCalled(t, "List")
 	})
 
-	runTest("nonEmpty", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("nonEmpty", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var h1 = &mocks.ChannelHandle{}
 		var h2 = &mocks.ChannelHandle{}
@@ -230,7 +230,7 @@ func TestChannelList(t *testing.T, s Server, clientFactory ClientFactory) {
 
 		ret, err := cl.Channel().List()
 		if err != nil {
-			t.Errorf("Unexpected error in remote List call")
+			t.Errorf("Unexpected error in remote List call: %s", err)
 		}
 		if len(ret) != 2 {
 			t.Errorf("Expected return length to be 2, got %d", len(ret))
@@ -243,7 +243,7 @@ func TestChannelList(t *testing.T, s Server, clientFactory ClientFactory) {
 		h2.AssertCalled(t, "ID")
 	})
 
-	runTest("error", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		m.Channel.On("List").Return(nil, errors.New("unknown error"))
 
 		ret, err := cl.Channel().List()
@@ -260,13 +260,13 @@ func TestChannelList(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestChannelMute(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("both-ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestChannelMute(t *testing.T, s Server) {
+	runTest("both-ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		m.Channel.On("Mute", "ch1", ari.DirectionBoth).Return(nil)
 
 		err := cl.Channel().Mute("ch1", ari.DirectionBoth)
 		if err != nil {
-			t.Errorf("Unexpected error in remote Mute call")
+			t.Errorf("Unexpected error in remote Mute call: %s", err)
 		}
 
 		m.Shutdown()
@@ -274,7 +274,7 @@ func TestChannelMute(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Channel.AssertCalled(t, "Mute", "ch1", ari.DirectionBoth)
 	})
 
-	runTest("both-err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("both-err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		m.Channel.On("Mute", "ch1", ari.DirectionBoth).Return(errors.New("error"))
 
 		err := cl.Channel().Mute("ch1", ari.DirectionBoth)
@@ -287,12 +287,12 @@ func TestChannelMute(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Channel.AssertCalled(t, "Mute", "ch1", ari.DirectionBoth)
 	})
 
-	runTest("none-ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("none-ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		m.Channel.On("Mute", "ch1", ari.DirectionNone).Return(nil)
 
 		err := cl.Channel().Mute("ch1", ari.DirectionNone)
 		if err != nil {
-			t.Errorf("Unexpected error in remote Mute call")
+			t.Errorf("Unexpected error in remote Mute call: %s", err)
 		}
 
 		m.Shutdown()
@@ -300,7 +300,7 @@ func TestChannelMute(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Channel.AssertCalled(t, "Mute", "ch1", ari.DirectionNone)
 	})
 
-	runTest("none-err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("none-err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		m.Channel.On("Mute", "ch1", ari.DirectionNone).Return(errors.New("error"))
 
 		err := cl.Channel().Mute("ch1", ari.DirectionNone)
@@ -314,13 +314,13 @@ func TestChannelMute(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestChannelUnmute(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("both-ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestChannelUnmute(t *testing.T, s Server) {
+	runTest("both-ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		m.Channel.On("Unmute", "ch1", ari.DirectionBoth).Return(nil)
 
 		err := cl.Channel().Unmute("ch1", ari.DirectionBoth)
 		if err != nil {
-			t.Errorf("Unexpected error in remote Unmute call")
+			t.Errorf("Unexpected error in remote Unmute call: %s", err)
 		}
 
 		m.Shutdown()
@@ -328,7 +328,7 @@ func TestChannelUnmute(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Channel.AssertCalled(t, "Unmute", "ch1", ari.DirectionBoth)
 	})
 
-	runTest("both-err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("both-err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		m.Channel.On("Unmute", "ch1", ari.DirectionBoth).Return(errors.New("error"))
 
 		err := cl.Channel().Unmute("ch1", ari.DirectionBoth)
@@ -341,12 +341,12 @@ func TestChannelUnmute(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Channel.AssertCalled(t, "Unmute", "ch1", ari.DirectionBoth)
 	})
 
-	runTest("none-ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("none-ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		m.Channel.On("Unmute", "ch1", ari.DirectionNone).Return(nil)
 
 		err := cl.Channel().Unmute("ch1", ari.DirectionNone)
 		if err != nil {
-			t.Errorf("Unexpected error in remote Unmute call")
+			t.Errorf("Unexpected error in remote Unmute call: %s", err)
 		}
 
 		m.Shutdown()
@@ -354,7 +354,7 @@ func TestChannelUnmute(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Channel.AssertCalled(t, "Unmute", "ch1", ari.DirectionNone)
 	})
 
-	runTest("none-err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("none-err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		m.Channel.On("Unmute", "ch1", ari.DirectionNone).Return(errors.New("error"))
 
 		err := cl.Channel().Unmute("ch1", ari.DirectionNone)
@@ -368,13 +368,13 @@ func TestChannelUnmute(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestChannelMOH(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestChannelMOH(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		m.Channel.On("MOH", "ch1", "music").Return(nil)
 
 		err := cl.Channel().MOH("ch1", "music")
 		if err != nil {
-			t.Errorf("Unexpected error in remote MOH call")
+			t.Errorf("Unexpected error in remote MOH call: %s", err)
 		}
 
 		m.Shutdown()
@@ -382,7 +382,7 @@ func TestChannelMOH(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Channel.AssertCalled(t, "MOH", "ch1", "music")
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		m.Channel.On("MOH", "ch1", "music").Return(errors.New("error"))
 
 		err := cl.Channel().MOH("ch1", "music")
@@ -397,13 +397,13 @@ func TestChannelMOH(t *testing.T, s Server, clientFactory ClientFactory) {
 
 }
 
-func TestChannelStopMOH(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestChannelStopMOH(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		m.Channel.On("StopMOH", "ch1").Return(nil)
 
 		err := cl.Channel().StopMOH("ch1")
 		if err != nil {
-			t.Errorf("Unexpected error in remote StopMOH call")
+			t.Errorf("Unexpected error in remote StopMOH call: %s", err)
 		}
 
 		m.Shutdown()
@@ -411,7 +411,7 @@ func TestChannelStopMOH(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Channel.AssertCalled(t, "StopMOH", "ch1")
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		m.Channel.On("StopMOH", "ch1").Return(errors.New("error"))
 
 		err := cl.Channel().StopMOH("ch1")
@@ -426,8 +426,8 @@ func TestChannelStopMOH(t *testing.T, s Server, clientFactory ClientFactory) {
 
 }
 
-func TestChannelCreate(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestChannelCreate(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		req := ari.ChannelCreateRequest{}
 		req.App = "App"
@@ -439,7 +439,7 @@ func TestChannelCreate(t *testing.T, s Server, clientFactory ClientFactory) {
 
 		h, err := cl.Channel().Create(req)
 		if err != nil {
-			t.Errorf("Unexpected error in remote Create call")
+			t.Errorf("Unexpected error in remote Create call: %s", err)
 		}
 		if h == nil {
 			t.Errorf("Expected non-nil channel handle")
@@ -452,7 +452,7 @@ func TestChannelCreate(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Channel.AssertCalled(t, "Create", ari.ChannelCreateRequest{App: "App"})
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		req := ari.ChannelCreateRequest{}
 		req.App = "App"
@@ -476,14 +476,14 @@ func TestChannelCreate(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestChannelContinue(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestChannelContinue(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Channel.On("Continue", "ch1", "ctx1", "ext1", 0).Return(nil)
 
 		err := cl.Channel().Continue("ch1", "ctx1", "ext1", 0)
 		if err != nil {
-			t.Errorf("Unexpected error in remote Continue call")
+			t.Errorf("Unexpected error in remote Continue call: %s", err)
 		}
 
 		m.Shutdown()
@@ -491,7 +491,7 @@ func TestChannelContinue(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Channel.AssertCalled(t, "Continue", "ch1", "ctx1", "ext1", 0)
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Channel.On("Continue", "ch1", "ctx1", "ext1", 0).Return(errors.New("error"))
 
@@ -506,14 +506,14 @@ func TestChannelContinue(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestChannelDial(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestChannelDial(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Channel.On("Dial", "ch1", "caller", 5*time.Second).Return(nil)
 
 		err := cl.Channel().Dial("ch1", "caller", 5*time.Second)
 		if err != nil {
-			t.Errorf("Unexpected error in remote Dial call")
+			t.Errorf("Unexpected error in remote Dial call: %s", err)
 		}
 
 		m.Shutdown()
@@ -521,7 +521,7 @@ func TestChannelDial(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Channel.AssertCalled(t, "Dial", "ch1", "caller", 5*time.Second)
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Channel.On("Dial", "ch1", "caller", 5*time.Second).Return(errors.New("error"))
 
@@ -536,14 +536,14 @@ func TestChannelDial(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestChannelHold(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestChannelHold(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Channel.On("Hold", "ch1").Return(nil)
 
 		err := cl.Channel().Hold("ch1")
 		if err != nil {
-			t.Errorf("Unexpected error in remote Hold call")
+			t.Errorf("Unexpected error in remote Hold call: %s", err)
 		}
 
 		m.Shutdown()
@@ -551,7 +551,7 @@ func TestChannelHold(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Channel.AssertCalled(t, "Hold", "ch1")
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Channel.On("Hold", "ch1").Return(errors.New("error"))
 
@@ -566,14 +566,14 @@ func TestChannelHold(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestChannelStopHold(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestChannelStopHold(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Channel.On("StopHold", "ch1").Return(nil)
 
 		err := cl.Channel().StopHold("ch1")
 		if err != nil {
-			t.Errorf("Unexpected error in remote StopHold call")
+			t.Errorf("Unexpected error in remote StopHold call: %s", err)
 		}
 
 		m.Shutdown()
@@ -581,7 +581,7 @@ func TestChannelStopHold(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Channel.AssertCalled(t, "StopHold", "ch1")
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Channel.On("StopHold", "ch1").Return(errors.New("error"))
 
@@ -596,14 +596,14 @@ func TestChannelStopHold(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestChannelRing(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestChannelRing(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Channel.On("Ring", "ch1").Return(nil)
 
 		err := cl.Channel().Ring("ch1")
 		if err != nil {
-			t.Errorf("Unexpected error in remote Ring call")
+			t.Errorf("Unexpected error in remote Ring call: %s", err)
 		}
 
 		m.Shutdown()
@@ -611,7 +611,7 @@ func TestChannelRing(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Channel.AssertCalled(t, "Ring", "ch1")
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Channel.On("Ring", "ch1").Return(errors.New("error"))
 
@@ -626,14 +626,14 @@ func TestChannelRing(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestChannelSilence(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestChannelSilence(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Channel.On("Silence", "ch1").Return(nil)
 
 		err := cl.Channel().Silence("ch1")
 		if err != nil {
-			t.Errorf("Unexpected error in remote Silence call")
+			t.Errorf("Unexpected error in remote Silence call: %s", err)
 		}
 
 		m.Shutdown()
@@ -641,7 +641,7 @@ func TestChannelSilence(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Channel.AssertCalled(t, "Silence", "ch1")
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Channel.On("Silence", "ch1").Return(errors.New("error"))
 
@@ -656,14 +656,14 @@ func TestChannelSilence(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestChannelStopSilence(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestChannelStopSilence(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Channel.On("StopSilence", "ch1").Return(nil)
 
 		err := cl.Channel().StopSilence("ch1")
 		if err != nil {
-			t.Errorf("Unexpected error in remote StopSilence call")
+			t.Errorf("Unexpected error in remote StopSilence call: %s", err)
 		}
 
 		m.Shutdown()
@@ -671,7 +671,7 @@ func TestChannelStopSilence(t *testing.T, s Server, clientFactory ClientFactory)
 		m.Channel.AssertCalled(t, "StopSilence", "ch1")
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Channel.On("StopSilence", "ch1").Return(errors.New("error"))
 
@@ -686,14 +686,14 @@ func TestChannelStopSilence(t *testing.T, s Server, clientFactory ClientFactory)
 	})
 }
 
-func TestChannelStopRing(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestChannelStopRing(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Channel.On("StopRing", "ch1").Return(nil)
 
 		err := cl.Channel().StopRing("ch1")
 		if err != nil {
-			t.Errorf("Unexpected error in remote StopRing call")
+			t.Errorf("Unexpected error in remote StopRing call: %s", err)
 		}
 
 		m.Shutdown()
@@ -701,7 +701,7 @@ func TestChannelStopRing(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Channel.AssertCalled(t, "StopRing", "ch1")
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Channel.On("StopRing", "ch1").Return(errors.New("error"))
 
@@ -716,8 +716,8 @@ func TestChannelStopRing(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestChannelOriginate(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestChannelOriginate(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var expected = &mocks.ChannelHandle{}
 		expected.On("ID").Return("ch1")
@@ -729,7 +729,7 @@ func TestChannelOriginate(t *testing.T, s Server, clientFactory ClientFactory) {
 
 		h, err := cl.Channel().Originate(req)
 		if err != nil {
-			t.Errorf("Unexpected error in remote Originate call")
+			t.Errorf("Unexpected error in remote Originate call: %s", err)
 		}
 		if h == nil {
 			t.Error("Expected non-nil handle")
@@ -743,7 +743,7 @@ func TestChannelOriginate(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Channel.AssertCalled(t, "Originate", req)
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var req ari.OriginateRequest
 		req.App = "App"
@@ -764,8 +764,8 @@ func TestChannelOriginate(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestChannelPlay(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestChannelPlay(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var expected = &mocks.PlaybackHandle{}
 		expected.On("ID").Return("pb1")
@@ -774,7 +774,7 @@ func TestChannelPlay(t *testing.T, s Server, clientFactory ClientFactory) {
 
 		h, err := cl.Channel().Play("ch1", "playbackID", "sound:hello")
 		if err != nil {
-			t.Errorf("Unexpected error in remote Play call")
+			t.Errorf("Unexpected error in remote Play call: %s", err)
 		}
 		if h == nil {
 			t.Error("Expected non-nil handle")
@@ -788,7 +788,7 @@ func TestChannelPlay(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Channel.AssertCalled(t, "Play", "ch1", "playbackID", "sound:hello")
 	})
 
-	runTest("no-id", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("no-id", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var expected = &mocks.PlaybackHandle{}
 		expected.On("ID").Return("pb1")
@@ -797,7 +797,7 @@ func TestChannelPlay(t *testing.T, s Server, clientFactory ClientFactory) {
 
 		h, err := cl.Channel().Play("ch1", "", "sound:hello")
 		if err != nil {
-			t.Errorf("Unexpected error in remote Play call")
+			t.Errorf("Unexpected error in remote Play call: %s", err)
 		}
 		if h == nil {
 			t.Error("Expected non-nil handle")
@@ -811,7 +811,7 @@ func TestChannelPlay(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Channel.AssertCalled(t, "Play", "ch1", nonEmpty, "sound:hello")
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Channel.On("Play", "ch1", "playbackID", "sound:hello").Return(nil, errors.New("error"))
 
@@ -829,8 +829,8 @@ func TestChannelPlay(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestChannelRecord(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestChannelRecord(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var opts *ari.RecordingOptions
 
@@ -841,7 +841,7 @@ func TestChannelRecord(t *testing.T, s Server, clientFactory ClientFactory) {
 
 		h, err := cl.Channel().Record("ch1", "recordid", nil)
 		if err != nil {
-			t.Errorf("Unexpected error in remote Record call")
+			t.Errorf("Unexpected error in remote Record call: %s", err)
 		}
 		if h == nil {
 			t.Error("Expected non-nil handle")
@@ -855,7 +855,7 @@ func TestChannelRecord(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Channel.AssertCalled(t, "Record", "ch1", "recordid", opts)
 	})
 
-	runTest("no-id", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("no-id", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var opts *ari.RecordingOptions
 
@@ -866,7 +866,7 @@ func TestChannelRecord(t *testing.T, s Server, clientFactory ClientFactory) {
 
 		h, err := cl.Channel().Record("ch1", "", nil)
 		if err != nil {
-			t.Errorf("Unexpected error in remote Record call")
+			t.Errorf("Unexpected error in remote Record call: %s", err)
 		}
 		if h == nil {
 			t.Error("Expected non-nil handle")
@@ -880,7 +880,7 @@ func TestChannelRecord(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Channel.AssertCalled(t, "Record", "ch1", nonEmpty, opts)
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var opts *ari.RecordingOptions
 
@@ -900,8 +900,8 @@ func TestChannelRecord(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestChannelSnoop(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestChannelSnoop(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var opts *ari.SnoopOptions
 
@@ -912,7 +912,7 @@ func TestChannelSnoop(t *testing.T, s Server, clientFactory ClientFactory) {
 
 		h, err := cl.Channel().Snoop("ch1", "snoopID", nil)
 		if err != nil {
-			t.Errorf("Unexpected error in remote Snoop call")
+			t.Errorf("Unexpected error in remote Snoop call: %s", err)
 		}
 		if h == nil {
 			t.Error("Expected non-nil handle")
@@ -926,7 +926,7 @@ func TestChannelSnoop(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Channel.AssertCalled(t, "Snoop", "ch1", "snoopID", opts)
 	})
 
-	runTest("no-id", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("no-id", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var opts *ari.SnoopOptions
 
@@ -937,7 +937,7 @@ func TestChannelSnoop(t *testing.T, s Server, clientFactory ClientFactory) {
 
 		h, err := cl.Channel().Snoop("ch1", "", nil)
 		if err != nil {
-			t.Errorf("Unexpected error in remote Snoop call")
+			t.Errorf("Unexpected error in remote Snoop call: %s", err)
 		}
 		if h == nil {
 			t.Error("Expected non-nil handle")
@@ -951,7 +951,7 @@ func TestChannelSnoop(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Channel.AssertCalled(t, "Snoop", "ch1", "", opts)
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var opts *ari.SnoopOptions
 
@@ -971,14 +971,14 @@ func TestChannelSnoop(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestChannelSendDTMF(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestChannelSendDTMF(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Channel.On("SendDTMF", "ch1", "1", &ari.DTMFOptions{}).Return(nil)
 
 		err := cl.Channel().SendDTMF("ch1", "1", nil)
 		if err != nil {
-			t.Errorf("Unexpected error in remote SendDTMF call")
+			t.Errorf("Unexpected error in remote SendDTMF call: %s", err)
 		}
 
 		m.Shutdown()
@@ -986,7 +986,7 @@ func TestChannelSendDTMF(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Channel.AssertCalled(t, "SendDTMF", "ch1", "1", &ari.DTMFOptions{})
 	})
 
-	runTest("with-options", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("with-options", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		opts := &ari.DTMFOptions{
 			After: 4 * time.Second,
@@ -996,7 +996,7 @@ func TestChannelSendDTMF(t *testing.T, s Server, clientFactory ClientFactory) {
 
 		err := cl.Channel().SendDTMF("ch1", "1", opts)
 		if err != nil {
-			t.Errorf("Unexpected error in remote SendDTMF call")
+			t.Errorf("Unexpected error in remote SendDTMF call: %s", err)
 		}
 
 		m.Shutdown()
@@ -1004,7 +1004,7 @@ func TestChannelSendDTMF(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Channel.AssertCalled(t, "SendDTMF", "ch1", "1", opts)
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Channel.On("SendDTMF", "ch1", "1", &ari.DTMFOptions{}).Return(errors.New("err"))
 
@@ -1020,8 +1020,8 @@ func TestChannelSendDTMF(t *testing.T, s Server, clientFactory ClientFactory) {
 
 }
 
-func TestChannelVariableGet(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestChannelVariableGet(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		mv := mocks.Variables{}
 		mv.On("Get", "v1").Return("value", nil)
@@ -1029,7 +1029,7 @@ func TestChannelVariableGet(t *testing.T, s Server, clientFactory ClientFactory)
 
 		val, err := cl.Channel().Variables("ch1").Get("v1")
 		if err != nil {
-			t.Errorf("Unexpected error in remote Variables Get call")
+			t.Errorf("Unexpected error in remote Variables Get call: %s", err)
 		}
 		if val != "value" {
 			t.Errorf("Expected channel variable to be 'value', got '%s'", val)
@@ -1041,7 +1041,7 @@ func TestChannelVariableGet(t *testing.T, s Server, clientFactory ClientFactory)
 		mv.AssertCalled(t, "Get", "v1")
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		mv := mocks.Variables{}
 		mv.On("Get", "v1").Return("", errors.New("error"))
@@ -1063,8 +1063,8 @@ func TestChannelVariableGet(t *testing.T, s Server, clientFactory ClientFactory)
 
 }
 
-func TestChannelVariableSet(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestChannelVariableSet(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		mv := mocks.Variables{}
 		mv.On("Set", "v1", "value").Return(nil)
@@ -1072,7 +1072,7 @@ func TestChannelVariableSet(t *testing.T, s Server, clientFactory ClientFactory)
 
 		err := cl.Channel().Variables("ch1").Set("v1", "value")
 		if err != nil {
-			t.Errorf("Unexpected error in remote Variables Set call")
+			t.Errorf("Unexpected error in remote Variables Set call: %s", err)
 		}
 
 		m.Shutdown()
@@ -1081,7 +1081,7 @@ func TestChannelVariableSet(t *testing.T, s Server, clientFactory ClientFactory)
 		mv.AssertCalled(t, "Set", "v1", "value")
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		mv := mocks.Variables{}
 		mv.On("Set", "v1", "value").Return(errors.New("error"))
 		m.Channel.On("Variables", "ch1").Return(&mv)

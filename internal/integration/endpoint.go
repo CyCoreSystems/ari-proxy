@@ -8,8 +8,8 @@ import (
 	"github.com/CyCoreSystems/ari-proxy/internal/mocks"
 )
 
-func TestEndpointList(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestEndpointList(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		h1 := &mocks.EndpointHandle{}
 		h2 := &mocks.EndpointHandle{}
@@ -31,7 +31,7 @@ func TestEndpointList(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Endpoint.AssertCalled(t, "List")
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Endpoint.On("List").Return([]ari.EndpointHandle{}, errors.New("error"))
 
@@ -47,8 +47,8 @@ func TestEndpointList(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestEndpointListByTech(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestEndpointListByTech(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		h1 := &mocks.EndpointHandle{}
 		h2 := &mocks.EndpointHandle{}
@@ -70,7 +70,7 @@ func TestEndpointListByTech(t *testing.T, s Server, clientFactory ClientFactory)
 		m.Endpoint.AssertCalled(t, "ListByTech", "tech")
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Endpoint.On("ListByTech", "tech").Return([]ari.EndpointHandle{}, errors.New("error"))
 
@@ -86,8 +86,8 @@ func TestEndpointListByTech(t *testing.T, s Server, clientFactory ClientFactory)
 	})
 }
 
-func TestEndpointData(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestEndpointData(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var expected ari.EndpointData
 		expected.State = "st1"
@@ -115,7 +115,7 @@ func TestEndpointData(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Endpoint.AssertCalled(t, "Data", "tech", "resource")
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Endpoint.On("Data", "tech", "resource").Return(nil, errors.New("error"))
 

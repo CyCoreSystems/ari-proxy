@@ -8,8 +8,8 @@ import (
 	"github.com/CyCoreSystems/ari-proxy/internal/mocks"
 )
 
-func TestDeviceData(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestDeviceData(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		var expected ari.DeviceStateData = "deviceData"
 		m.DeviceState.On("Data", "d1").Return(&expected, nil)
 
@@ -24,7 +24,7 @@ func TestDeviceData(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.DeviceState.AssertCalled(t, "Data", "d1")
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		m.DeviceState.On("Data", "d1").Return(nil, errors.New("err"))
 
 		data, err := cl.DeviceState().Data("d1")
@@ -39,8 +39,8 @@ func TestDeviceData(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestDeviceDelete(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestDeviceDelete(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		m.DeviceState.On("Delete", "d1").Return(nil)
 
 		err := cl.DeviceState().Delete("d1")
@@ -51,7 +51,7 @@ func TestDeviceDelete(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.DeviceState.AssertCalled(t, "Delete", "d1")
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		m.DeviceState.On("Delete", "d1").Return(errors.New("err"))
 
 		err := cl.DeviceState().Delete("d1")
@@ -63,8 +63,8 @@ func TestDeviceDelete(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestDeviceUpdate(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestDeviceUpdate(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		m.DeviceState.On("Update", "d1", "st1").Return(nil)
 
 		err := cl.DeviceState().Update("d1", "st1")
@@ -75,7 +75,7 @@ func TestDeviceUpdate(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.DeviceState.AssertCalled(t, "Update", "d1", "st1")
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		m.DeviceState.On("Update", "d1", "st1").Return(errors.New("err"))
 
 		err := cl.DeviceState().Update("d1", "st1")
@@ -87,8 +87,8 @@ func TestDeviceUpdate(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestDeviceList(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestDeviceList(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		h1 := &mocks.DeviceStateHandle{}
 		h2 := &mocks.DeviceStateHandle{}
@@ -110,7 +110,7 @@ func TestDeviceList(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.DeviceState.AssertCalled(t, "List")
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.DeviceState.On("List").Return([]ari.DeviceStateHandle{}, errors.New("error"))
 

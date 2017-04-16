@@ -7,8 +7,8 @@ import (
 	"github.com/CyCoreSystems/ari"
 )
 
-func TestPlaybackData(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestPlaybackData(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var pb ari.PlaybackData
 		pb.ID = "pb1"
@@ -32,7 +32,7 @@ func TestPlaybackData(t *testing.T, s Server, clientFactory ClientFactory) {
 
 		m.Playback.AssertCalled(t, "Data", "pb1")
 	})
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Playback.On("Data", "pb1").Return(nil, errors.New("error"))
 
@@ -47,8 +47,8 @@ func TestPlaybackData(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestPlaybackControl(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestPlaybackControl(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Playback.On("Control", "m1", "op").Return(nil)
 
@@ -61,7 +61,7 @@ func TestPlaybackControl(t *testing.T, s Server, clientFactory ClientFactory) {
 
 		m.Playback.AssertCalled(t, "Control", "m1", "op")
 	})
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Playback.On("Control", "m1", "op").Return(errors.New("error"))
 
@@ -76,8 +76,8 @@ func TestPlaybackControl(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestPlaybackStop(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestPlaybackStop(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Playback.On("Stop", "m1").Return(nil)
 
@@ -90,7 +90,7 @@ func TestPlaybackStop(t *testing.T, s Server, clientFactory ClientFactory) {
 
 		m.Playback.AssertCalled(t, "Stop", "m1")
 	})
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Playback.On("Stop", "m1").Return(errors.New("error"))
 

@@ -8,8 +8,8 @@ import (
 	"github.com/CyCoreSystems/ari-proxy/internal/mocks"
 )
 
-func TestMailboxList(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("empty", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestMailboxList(t *testing.T, s Server) {
+	runTest("empty", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		m.Mailbox.On("List").Return([]ari.MailboxHandle{}, nil)
 
 		ret, err := cl.Mailbox().List()
@@ -25,7 +25,7 @@ func TestMailboxList(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Mailbox.AssertCalled(t, "List")
 	})
 
-	runTest("nonEmpty", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("nonEmpty", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var h1 = &mocks.MailboxHandle{}
 		var h2 = &mocks.MailboxHandle{}
@@ -50,7 +50,7 @@ func TestMailboxList(t *testing.T, s Server, clientFactory ClientFactory) {
 		h2.AssertCalled(t, "ID")
 	})
 
-	runTest("error", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		m.Mailbox.On("List").Return(nil, errors.New("unknown error"))
 
 		ret, err := cl.Mailbox().List()
@@ -82,17 +82,17 @@ func testMailboxCommand(t *testing.T, m *mock, name string, id string, expected 
 	m.Mailbox.AssertCalled(t, name, id)
 }
 
-func TestMailboxDelete(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestMailboxDelete(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		testMailboxCommand(t, m, "Delete", "mbox1", nil, cl.Mailbox().Delete)
 	})
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		testMailboxCommand(t, m, "Delete", "mbox1", errors.New("err"), cl.Mailbox().Delete)
 	})
 }
 
-func TestMailboxUpdate(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestMailboxUpdate(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		var expected error
 
 		m.Mailbox.On("Update", "mbox1", 1, 1).Return(expected)
@@ -112,7 +112,7 @@ func TestMailboxUpdate(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Mailbox.AssertCalled(t, "Update", "mbox1", 1, 1)
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		var expected = errors.New("error")
 
 		m.Mailbox.On("Update", "mbox1", 1, 1).Return(expected)
@@ -133,8 +133,8 @@ func TestMailboxUpdate(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestMailboxData(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestMailboxData(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var expected ari.MailboxData
 		expected.Name = "mbox1"
@@ -161,7 +161,7 @@ func TestMailboxData(t *testing.T, s Server, clientFactory ClientFactory) {
 		m.Mailbox.AssertCalled(t, "Data", "mbox1")
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		var expected = errors.New("error")
 
 		m.Mailbox.On("Data", "mbox1").Return(nil, expected)

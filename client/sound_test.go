@@ -7,9 +7,9 @@ import (
 )
 
 func TestSoundData(t *testing.T) {
-	integration.TestSoundData(t, &srv{}, clientFactory)
+	integration.TestSoundData(t, &srv{})
 }
 
 func TestSoundList(t *testing.T) {
-	integration.TestSoundList(t, &srv{}, clientFactory)
+	integration.TestSoundList(t, &srv{})
 }

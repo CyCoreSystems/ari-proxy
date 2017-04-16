@@ -11,8 +11,8 @@ import (
 
 var _ = tmock.Anything
 
-func TestConfigData(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestConfigData(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var expected ari.ConfigData
 		expected.Class = "c1"
@@ -54,7 +54,7 @@ func TestConfigData(t *testing.T, s Server, clientFactory ClientFactory) {
 		cfg.AssertCalled(t, "Data", "c1", "o1", "id1")
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		cfg := mocks.Config{}
 		m.Asterisk.On("Config").Return(&cfg)
@@ -73,8 +73,8 @@ func TestConfigData(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestConfigDelete(t *testing.T, s Server, clientFactory ClientFactory) {
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+func TestConfigDelete(t *testing.T, s Server) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		cfg := mocks.Config{}
 		m.Asterisk.On("Config").Return(&cfg)
@@ -89,7 +89,7 @@ func TestConfigDelete(t *testing.T, s Server, clientFactory ClientFactory) {
 		cfg.AssertCalled(t, "Delete", "c1", "o1", "id1")
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		cfg := mocks.Config{}
 		m.Asterisk.On("Config").Return(&cfg)
@@ -105,7 +105,7 @@ func TestConfigDelete(t *testing.T, s Server, clientFactory ClientFactory) {
 	})
 }
 
-func TestConfigUpdate(t *testing.T, s Server, clientFactory ClientFactory) {
+func TestConfigUpdate(t *testing.T, s Server) {
 
 	tuples := []ari.ConfigTuple{
 		ari.ConfigTuple{
@@ -118,7 +118,7 @@ func TestConfigUpdate(t *testing.T, s Server, clientFactory ClientFactory) {
 		},
 	}
 
-	runTest("ok", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		cfg := mocks.Config{}
 		m.Asterisk.On("Config").Return(&cfg)
@@ -133,7 +133,7 @@ func TestConfigUpdate(t *testing.T, s Server, clientFactory ClientFactory) {
 		cfg.AssertCalled(t, "Update", "c1", "o1", "id1", tuples)
 	})
 
-	runTest("err", t, s, clientFactory, func(t *testing.T, m *mock, cl ari.Client) {
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		cfg := mocks.Config{}
 		m.Asterisk.On("Config").Return(&cfg)

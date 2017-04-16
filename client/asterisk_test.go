@@ -7,13 +7,13 @@ import (
 )
 
 func TestAsteriskInfo(t *testing.T) {
-	integration.TestAsteriskInfo(t, &srv{}, clientFactory)
+	integration.TestAsteriskInfo(t, &srv{})
 }
 
 func TestAsteriskVariablesGet(t *testing.T) {
-	integration.TestAsteriskVariablesGet(t, &srv{}, clientFactory)
+	integration.TestAsteriskVariablesGet(t, &srv{})
 }
 
 func TestAsteriskVariablesSet(t *testing.T) {
-	integration.TestAsteriskVariablesSet(t, &srv{}, clientFactory)
+	integration.TestAsteriskVariablesSet(t, &srv{})
 }

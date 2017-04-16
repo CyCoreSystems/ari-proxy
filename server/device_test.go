@@ -7,17 +7,17 @@ import (
 )
 
 func TestDeviceData(t *testing.T) {
-	integration.TestDeviceData(t, &srv{}, clientFactory)
+	integration.TestDeviceData(t, &srv{})
 }
 
 func TestDeviceDelete(t *testing.T) {
-	integration.TestDeviceDelete(t, &srv{}, clientFactory)
+	integration.TestDeviceDelete(t, &srv{})
 }
 
 func TestDeviceUpdate(t *testing.T) {
-	integration.TestDeviceUpdate(t, &srv{}, clientFactory)
+	integration.TestDeviceUpdate(t, &srv{})
 }
 
 func TestDeviceList(t *testing.T) {
-	integration.TestDeviceList(t, &srv{}, clientFactory)
+	integration.TestDeviceList(t, &srv{})
 }

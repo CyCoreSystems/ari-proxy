@@ -7,21 +7,21 @@ import (
 )
 
 func TestApplicationList(t *testing.T) {
-	integration.TestApplicationList(t, &srv{}, clientFactory)
+	integration.TestApplicationList(t, &srv{})
 }
 
 func TestApplicationData(t *testing.T) {
-	integration.TestApplicationData(t, &srv{}, clientFactory)
+	integration.TestApplicationData(t, &srv{})
 }
 
 func TestApplicationSubscribe(t *testing.T) {
-	integration.TestApplicationSubscribe(t, &srv{}, clientFactory)
+	integration.TestApplicationSubscribe(t, &srv{})
 }
 
 func TestApplicationUnsubscribe(t *testing.T) {
-	integration.TestApplicationUnsubscribe(t, &srv{}, clientFactory)
+	integration.TestApplicationUnsubscribe(t, &srv{})
 }
 
 func TestApplicationGet(t *testing.T) {
-	integration.TestApplicationGet(t, &srv{}, clientFactory)
+	integration.TestApplicationGet(t, &srv{})
 }

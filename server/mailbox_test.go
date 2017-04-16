@@ -7,17 +7,17 @@ import (
 )
 
 func TestMailboxList(t *testing.T) {
-	integration.TestMailboxList(t, &srv{}, clientFactory)
+	integration.TestMailboxList(t, &srv{})
 }
 
 func TestMailboxUpdate(t *testing.T) {
-	integration.TestMailboxUpdate(t, &srv{}, clientFactory)
+	integration.TestMailboxUpdate(t, &srv{})
 }
 
 func TestMailboxDelete(t *testing.T) {
-	integration.TestMailboxDelete(t, &srv{}, clientFactory)
+	integration.TestMailboxDelete(t, &srv{})
 }
 
 func TestMailboxData(t *testing.T) {
-	integration.TestMailboxData(t, &srv{}, clientFactory)
+	integration.TestMailboxData(t, &srv{})
 }

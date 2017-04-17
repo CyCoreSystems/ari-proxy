@@ -6,8 +6,16 @@ import (
 	"time"
 )
 
+// AutoPurgeInterval is the maximum amount of time to wait before automatically purging the cluster of stale members
+var AutoPurgeInterval = 24 * time.Hour
+
+// AutoPurgeAge is the maximum age allowed for members' last update when automatically purging.
+var AutoPurgeAge = 12 * time.Hour
+
 // Cluster describes the set of ari proxies in a system.  The list is indexed by a hash of the asterisk ID and the ARI application and indicates the time of last contact.
 type Cluster struct {
+	lastPurge time.Time
+
 	members map[string]time.Time
 
 	mu sync.Mutex
@@ -87,12 +95,19 @@ func (c *Cluster) Update(id, app string) {
 	c.mu.Lock()
 	c.members[hash(id, app)] = time.Now()
 	c.mu.Unlock()
+
+	// See if it is time to auto-purge
+	if time.Since(c.lastPurge) > AutoPurgeInterval {
+		c.Purge(AutoPurgeAge)
+	}
 }
 
 // Purge removes any proxies in the cluster which are older than the given maxAge.
 func (c *Cluster) Purge(maxAge time.Duration) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+
+	c.lastPurge = time.Now()
 
 	var removalKeys []string
 

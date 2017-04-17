@@ -165,7 +165,7 @@ func (c *channel) Hold(id string) (err error) {
 }
 
 func (c *channel) StopHold(id string) (err error) {
-	err = c.c.commandRequest(proxy.Request{
+	err = c.c.commandRequest(&proxy.Request{
 		ChannelStopHold: &proxy.ChannelStopHold{
 			ID: id,
 		},

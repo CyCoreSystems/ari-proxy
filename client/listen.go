@@ -14,6 +14,9 @@ import (
 type Handler func(context.Context, ari.Client, *session.Dialog, *session.AppStart)
 
 // Listen listens for an AppStart event and calls the handler when an event comes in
+//
+// TODO:  this should go away, with V2.  similar functionality can be offered by a method on Client which generates a dialog and a new client for each StasisStart.
+//
 func Listen(ctx context.Context, nc *nats.EncodedConn, appName string, h Handler) error {
 
 	Logger.Debug("Listening on endpoint", "endpoint", "ari.app."+appName)
@@ -85,7 +88,7 @@ func handler(ctx context.Context, nc *nats.EncodedConn, appStart session.AppStar
 	d.ChannelID = appStart.ChannelID
 
 	// Construct the new ARI client
-	cl, err := newClient(ctx, WithApplication(appStart.Application), WithDialog(d.ID), WithNATS(nc))
+	cl, err := New(ctx, WithApplication(appStart.Application), WithDialog(d.ID), WithNATS(nc))
 	if err != nil {
 		Logger.Error("error creating client", "error", err)
 		return

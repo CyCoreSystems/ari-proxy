@@ -37,7 +37,7 @@ func (s *srv) Start(ctx context.Context, t *testing.T, mockClient ari.Client, nc
 		return nil, errors.New("Timeout waiting for server ready")
 	}
 
-	cl, err := New(ctx, WithTimeoutRetry(4), WithPrefix(s.s.NATSPrefix), WithApplication("asdf"), WithDialog("1234"))
+	cl, err := New(ctx, WithTimeoutRetries(4), WithPrefix(s.s.NATSPrefix), WithApplication("asdf"), WithDialog("1234"))
 	if err != nil {
 		return nil, err
 	}

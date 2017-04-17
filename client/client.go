@@ -9,9 +9,12 @@ import (
 	log15 "gopkg.in/inconshreveable/log15.v2"
 
 	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari-proxy/client/cluster"
 	"github.com/CyCoreSystems/ari-proxy/proxy"
+	"github.com/CyCoreSystems/ari/stdbus"
 	"github.com/nats-io/nats"
 	"github.com/pkg/errors"
+	uuid "github.com/satori/go.uuid"
 )
 
 // DefaultRequestTimeout is the default timeout for a NATS request
@@ -20,80 +23,187 @@ const DefaultRequestTimeout = 200 * time.Millisecond
 // DefaultInputBufferLength is the default size of the event buffer for events coming in from NATS
 const DefaultInputBufferLength = 100
 
+// DefaultClusterMaxAge is the default maximum age for cluster members to be considered by this client
+var DefaultClusterMaxAge = 5 * time.Minute
+
 // ErrNil indicates that the request returned an empty response
 var ErrNil = errors.New("Nil")
 
-// Client provides an ari.Client for an ari-proxy server
-type Client struct {
+// core is the core, functional piece of a Client which is the same across the family of derived clients.  It manages stateful elements such as the bus, the NATS connection, and the cluster membership
+type core struct {
+	// cluster describes the cluster of ARI proxies
+	cluster *cluster.Cluster
 
-	// appName provides an ARI application to which to bind.  At least one of Application or Dialog must be specified.  This option may also be supplied by the `ARI_APPLICATION` environment variable.
-	appName string
-
-	// asterisk is a unique identifier for a specific Asterisk node.  If specified, all events and all commands will be filtered to/by this Asterisk node.
-	asterisk string
-
-	// dialog provides a dialog ID to which to bind.  At least one of Application or Dialog must be specified.
-	dialog string
+	// clusterMaxAge is the maximum age of cluster members to include in queries
+	clusterMaxAge time.Duration
 
 	// inputBufferLength is the size of the buffer for events coming in from NATS
 	inputBufferLength int
 
+	log log15.Logger
+
 	// nc provides the nats.EncodedConn over which messages will be transceived.  One of NATS or NATSURI must be specified.
 	nc *nats.EncodedConn
-
-	// uri provies the URI to which a NATS connection should be established. One of NATS or NATSURI must be specified. This option may also be supplied by the `NATS_URI` environment variable.
-	uri string
 
 	// prefix is the prefix to use on all NATS subjects.  It defaults to "ari.".
 	prefix string
 
-	// closeNATSOnClose indicates that the NATS connection should be closed when the ari.Client is closed
-	closeNATSOnClose bool
-
 	// readOperationRetryCount is the amount of times to retry a read operation
 	readOperationRetryCount int
+
+	// refCounter is the reference counter for derived clients.  When there are no more referenced clients, the core is shut down.
+	refCounter int
 
 	// requestTimeout is the timeout duration of a request
 	requestTimeout time.Duration
 
-	// timeoutRetry is the amount of times to retry on nats timeout
-	timeoutRetry int64
+	// timeoutRetries is the amount of times to retry on nats timeout
+	timeoutRetries int
 
 	// countTimeouts tracks how many timeouts the client has received, for metrics.
 	countTimeouts int64
 
-	log log15.Logger
+	// uri provies the URI to which a NATS connection should be established. One of NATS or NATSURI must be specified. This option may also be supplied by the `NATS_URI` environment variable.
+	uri string
+
+	// annSub is the NATS subscription to proxy announcements
+	annSub *nats.Subscription
+
+	// closeChan is the signal channel responsible for shutting down core services.  When it is closed, all core services should exit.
+	closeChan chan struct{}
+
+	// closed indicates the core has been closed
+	closed bool
+
+	// closeNATSOnClose indicates that the NATS connection should be closed when the ari.Client is closed
+	closeNATSOnClose bool
+
+	// started indicates whether this core has been started; a started core will no-op core.start()
+	started bool
+}
+
+// clientClosed is called any time a derived ARI client is closed; if the reference counter is ever dropped to zero, the core is also shut down
+func (c *core) ClientClosed() {
+	c.refCounter--
+
+	if c.refCounter < 1 {
+		c.close()
+	}
+}
+
+// close shuts down the core
+func (c *core) close() {
+	if !c.closed {
+		c.closed = true
+		close(c.closeChan)
+	}
+
+	if c.annSub != nil {
+		err := c.annSub.Unsubscribe()
+		if err != nil {
+			c.log.Debug("failed to unsubscribe from NATS proxy announcements", "error", err)
+		}
+	}
+
+	if c.closeNATSOnClose && c.nc != nil {
+		c.nc.Close()
+	}
+}
+
+func (c *core) Start() error {
+	// increment the client reference counter
+	c.refCounter++
+
+	// Only start the core once
+	if c.started {
+		return nil
+	}
+	c.started = true
+
+	c.closeChan = make(chan struct{})
+
+	// Connect to NATS, if we do not already have a connection
+	if c.nc == nil {
+		n, err := nats.Connect(c.uri)
+		if err != nil {
+			c.close()
+			return errors.Wrap(err, "failed to connect to NATS")
+		}
+
+		c.nc, err = nats.NewEncodedConn(n, nats.JSON_ENCODER)
+		if err != nil {
+			n.Close() // need this here because nc is not yet bound to the core
+			c.close()
+			return errors.Wrap(err, "failed to encode NATS connection")
+		}
+
+		c.closeNATSOnClose = true
+	}
+
+	// Create and start the cluster
+	c.cluster = cluster.New()
+
+	// Maintain the cluster
+	err := c.maintainCluster()
+	if err != nil {
+		c.close()
+		return errors.Wrap(err, "failed to start cluster maintenance")
+	}
+
+	return nil
+}
+
+func (c *core) maintainCluster() (err error) {
+	c.annSub, err = c.nc.Subscribe(proxy.AnnouncementSubject(c.prefix), func(o *proxy.Announcement) {
+		c.cluster.Update(o.Node, o.Application)
+	})
+	if err != nil {
+		return errors.Wrap(err, "failed to listen to proxy announcements")
+	}
+
+	// Send an initial ping for proxy announcements
+	return c.nc.Publish(proxy.PingSubject(c.prefix), &proxy.Request{})
+}
+
+// Client provides an ari.Client for an ari-proxy server
+type Client struct {
+	*core
 
 	bus ari.Bus
 
+	metadata *proxy.Metadata
+
 	cancel context.CancelFunc
+
+	// closed indicates that this client has been closed and is no longer attached to a core
+	closed bool
 }
 
 // New creates a new Client to the Asterisk ARI NATS proxy.
-func New(ctx context.Context, opts ...OptionFunc) (ari.Client, error) {
-	return newClient(ctx, opts...)
-}
-
-func newClient(ctx context.Context, opts ...OptionFunc) (*Client, error) {
+func New(ctx context.Context, opts ...OptionFunc) (*Client, error) {
 	ctx, cancel := context.WithCancel(ctx)
 
 	c := &Client{
-		cancel:            cancel,
-		log:               log15.New(),
-		prefix:            "ari.",
-		uri:               "nats://localhost:4222",
-		requestTimeout:    DefaultRequestTimeout,
-		inputBufferLength: DefaultInputBufferLength,
-		timeoutRetry:      0,
+		core: &core{
+			cluster:           cluster.New(),
+			clusterMaxAge:     DefaultClusterMaxAge,
+			inputBufferLength: DefaultInputBufferLength,
+			log:               log15.New(),
+			prefix:            "ari.",
+			requestTimeout:    DefaultRequestTimeout,
+			uri:               "nats://localhost:4222",
+		},
+		bus: stdbus.New(),
+		metadata: &proxy.Metadata{
+			Application: os.Getenv("ARI_APPLICATION"),
+		},
+		cancel: cancel,
 	}
 	c.log.SetHandler(log15.DiscardHandler())
 
-	// Load environment-based configurations if such configurations are not explicitly set
-	if os.Getenv("ARI_APPLICATION") != "" {
-		c.appName = os.Getenv("ARI_APPLICATION")
-	}
+	// Load environment-based configurations
 	if os.Getenv("NATS_URI") != "" {
-		c.uri = os.Getenv("NATS_URI")
+		c.core.uri = os.Getenv("NATS_URI")
 	}
 
 	// Load explicit configurations
@@ -101,27 +211,18 @@ func newClient(ctx context.Context, opts ...OptionFunc) (*Client, error) {
 		opt(c)
 	}
 
-	// Make sure at least one of appName or dialog are set
-	if c.appName == "" && c.dialog == "" {
-		return nil, errors.New("at least one of Application and Dialog must be supplied")
-	}
-
-	// Connect to NATS, if we do not already have a connection
-	if c.nc == nil {
-		n, err := nats.Connect(c.uri)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to connect to NATS")
-		}
-		c.nc, err = nats.NewEncodedConn(n, nats.JSON_ENCODER)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to encode NATS connection")
-		}
-		c.closeNATSOnClose = true
-	}
+	// Start the core, if it is not already started
+	c.core.Start()
 
 	// Bind events from NATS to our bus
-	// TODO: c.bus = stdbus.Start(ctx)
 	go c.bindEvents(ctx)
+
+	// Call Close whenever the context is closed
+	go func() {
+		<-ctx.Done()
+		c.Close()
+	}()
+
 	return c, nil
 }
 
@@ -142,39 +243,38 @@ func FromClient(cl ari.Client) OptionFunc {
 	return func(c *Client) {
 		old, ok := cl.(*Client)
 		if ok {
-			c.nc = old.nc
-			c.prefix = old.prefix
-			c.log = old.log
-			c.requestTimeout = old.requestTimeout
-			c.timeoutRetry = old.timeoutRetry
-
-			// Make sure the old client does not close the NATS connection on us;
-			if old.closeNATSOnClose {
-				c.log.Warn("Disabling parent NATS connection closure; this will leak NATS connections")
-				old.closeNATSOnClose = false
-			}
+			c.core = old.core
 		}
 	}
 }
 
-// WithApplication configures the ARI Application to use for a Client
+// WithApplication configures the ARI Client to use the provided ARI Application
 func WithApplication(name string) OptionFunc {
 	return func(c *Client) {
-		c.appName = name
+		c.metadata.Application = name
 	}
 }
 
-// WithAsterisk configures the ID of an Asterisk Node by which the Client should filter.
-func WithAsterisk(id string) OptionFunc {
+// WithMetadata configures the ARI client to use the provided metadata
+func WithMetadata(m *proxy.Metadata) OptionFunc {
 	return func(c *Client) {
-		c.asterisk = id
+		if m != nil {
+			c.metadata = m
+		}
 	}
 }
 
-// WithDialog configures the Dialog ID to use for a Client
+// WithNode configures the ID of an Asterisk Node to which this Client should send requests.
+func WithNode(id string) OptionFunc {
+	return func(c *Client) {
+		c.metadata.Node = id
+	}
+}
+
+// WithDialog configures the Dialog ID to use for this Client
 func WithDialog(id string) OptionFunc {
 	return func(c *Client) {
-		c.dialog = id
+		c.metadata.Dialog = id
 	}
 }
 
@@ -202,20 +302,23 @@ func WithNATS(nc *nats.EncodedConn) OptionFunc {
 // WithPrefix configures the NATS Prefix to use on a Client
 func WithPrefix(prefix string) OptionFunc {
 	return func(c *Client) {
-		c.prefix = prefix
+		c.core.prefix = prefix
 	}
 }
 
-// WithTimeoutRetry configures the amount of times to retry on request timeout for a Client
-func WithTimeoutRetry(count int64) OptionFunc {
+// WithTimeoutRetries configures the amount of times to retry on request timeout for a Client
+func WithTimeoutRetries(count int) OptionFunc {
 	return func(c *Client) {
-		c.timeoutRetry = count
+		c.core.timeoutRetries = count
 	}
 }
 
 // ApplicationName returns the ARI application's name
 func (c *Client) ApplicationName() string {
-	return c.appName
+	if c.metadata == nil {
+		return ""
+	}
+	return c.metadata.Application
 }
 
 // Close shuts down the client
@@ -228,8 +331,9 @@ func (c *Client) Close() {
 		c.bus.Close()
 	}
 
-	if c.closeNATSOnClose && c.nc != nil {
-		c.nc.Close()
+	if !c.closed && c.core != nil {
+		c.closed = true
+		c.core.ClientClosed()
 	}
 }
 
@@ -298,44 +402,25 @@ func (c *Client) TextMessage() ari.TextMessage {
 	return nil
 }
 
-func (c *Client) commandRequest(req interface{}) error {
-	var resp proxy.Response
+func (c *Client) commandRequest(req *proxy.Request) error {
+	var resp *proxy.Response
 	var err error
-	var retries = int64(0)
-	for {
-		err = c.makeRequest(c.subject("command"), req, &resp)
-		if err != nil && err == nats.ErrTimeout {
-			c.countTimeouts++
-			retries++
-			if retries >= c.timeoutRetry {
-				return err
-			}
-			continue
-		}
-		break
+
+	// if we have complete coordinates, we can make a direct request
+	if c.completeCoordinates(req) {
+		resp, err = c.makeRequest("command", req)
+	} else {
+		resp, err = c.makeBroadcastRequestReturnFirstGoodResponse("command", req)
 	}
+
 	if err != nil {
 		return err
 	}
 	return resp.Err()
 }
 
-func (c *Client) createRequest(req interface{}) (*proxy.Entity, error) {
-	var resp proxy.Response
-	var err error
-	var retries = int64(0)
-	for {
-		err = c.makeRequest(c.subject("create"), req, &resp)
-		if err != nil && err == nats.ErrTimeout {
-			c.countTimeouts++
-			retries++
-			if retries >= c.timeoutRetry {
-				return nil, err
-			}
-			continue
-		}
-		break
-	}
+func (c *Client) createRequest(req *proxy.Request) (*proxy.Entity, error) {
+	resp, err := c.makeRequest("create", req)
 	if err != nil {
 		return nil, err
 	}
@@ -348,21 +433,15 @@ func (c *Client) createRequest(req interface{}) (*proxy.Entity, error) {
 	return resp.Entity, nil
 }
 
-func (c *Client) getRequest(req interface{}) (*proxy.Entity, error) {
-	var resp proxy.Response
-	var err error
-	var retries int64
-	for {
-		err = c.makeRequest(c.subject("get"), req, &resp)
-		if err != nil && err == nats.ErrTimeout {
-			c.countTimeouts++
-			retries++
-			if retries >= c.timeoutRetry {
-				return nil, err
-			}
-			continue
-		}
-		break
+func (c *Client) getRequest(req *proxy.Request) (*proxy.Entity, error) {
+	// If we do not have complete coordinates, we cannot make a reasonable get request
+	if !c.completeCoordinates(req) {
+		return nil, errors.New("Incomplete coordinates")
+	}
+
+	resp, err := c.makeRequest("get", req)
+	if err != nil {
+		return nil, err
 	}
 	if resp.Err() != nil {
 		return nil, resp.Err()
@@ -373,22 +452,17 @@ func (c *Client) getRequest(req interface{}) (*proxy.Entity, error) {
 	return resp.Entity, nil
 }
 
-func (c *Client) dataRequest(req interface{}) (*proxy.EntityData, error) {
-	var resp proxy.Response
-	var retries int64
+func (c *Client) dataRequest(req *proxy.Request) (*proxy.EntityData, error) {
+	var resp *proxy.Response
 	var err error
-	for {
-		err = c.makeRequest(c.subject("data"), req, &resp)
-		if err != nil && err == nats.ErrTimeout {
-			c.countTimeouts++
-			retries++
-			if retries >= c.timeoutRetry {
-				return nil, err
-			}
-			continue
-		}
-		break
+
+	// if we have complete coordinates, we can make a direct request
+	if c.completeCoordinates(req) {
+		resp, err = c.makeRequest("data", req)
+	} else {
+		resp, err = c.makeBroadcastRequestReturnFirstGoodResponse("data", req)
 	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -401,69 +475,175 @@ func (c *Client) dataRequest(req interface{}) (*proxy.EntityData, error) {
 	return resp.Data, nil
 }
 
-func (c *Client) listRequest(req interface{}) (*proxy.EntityList, error) {
-	var resp proxy.Response
-	var retries int64
-	var err error
-	for {
-		err = c.makeRequest(c.subject("data"), req, &resp)
-		if err != nil && err == nats.ErrTimeout {
-			c.countTimeouts++
-			retries++
-			if retries >= c.timeoutRetry {
-				return nil, err
-			}
-			continue
-		}
-		break
-	}
+func (c *Client) listRequest(req *proxy.Request) (*proxy.EntityList, error) {
+	var list proxy.EntityList
+
+	responses, err := c.makeBroadcastRequest("get", req)
 	if err != nil {
 		return nil, err
 	}
-	if resp.Err() != nil {
-		return nil, resp.Err()
+
+	for _, r := range responses {
+		if r.Err() != nil || r.EntityList == nil {
+			continue
+		}
+		list.List = append(list.List, r.EntityList.List...)
 	}
-	if resp.EntityList == nil {
-		return nil, ErrNil
+	return &list, nil
+}
+
+func (c *Client) makeRequest(class string, req *proxy.Request) (*proxy.Response, error) {
+	var resp proxy.Response
+	var err error
+	var retries int
+
+	for retries <= c.core.timeoutRetries {
+		retries++
+		err = c.nc.Request(c.subject(class, req), req, &resp, c.requestTimeout)
+		if err == nats.ErrTimeout {
+			continue
+		}
+		return &resp, err
 	}
-	return resp.EntityList, nil
+
+	return nil, err
 }
 
-// TimeoutCount gets the amount of timeouts that have occured on this client
-func (c *Client) TimeoutCount() int64 {
-	return c.countTimeouts
-}
+func (c *Client) makeBroadcastRequest(class string, req *proxy.Request) ([]*proxy.Response, error) {
+	var responses []*proxy.Response
+	var err error
 
-// TimeoutCount gets the timeout count from the ari client, if available.
-func TimeoutCount(c ari.Client) (int64, bool) {
-	cl, ok := c.(*Client)
-	if !ok {
-		return 0, false
+	var responseCount int
+	expected := len(c.core.cluster.Matching(c.nodeForRequest(req), c.appForRequest(req), c.core.clusterMaxAge))
+	reply := uuid.NewV1().String()
+	replyChan := make(chan *proxy.Response)
+	replySub, err := c.core.nc.Subscribe(reply, func(o *proxy.Response) {
+		responseCount++
+
+		replyChan <- o
+
+		if responseCount >= expected {
+			close(replyChan)
+		}
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to subscribe to data responses")
 	}
-	return cl.TimeoutCount(), true
+	defer replySub.Unsubscribe()
+
+	// Make an all-call for the entity data
+	err = c.core.nc.PublishRequest(c.subject(class, req), reply, req)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to make request for data")
+	}
+
+	// Wait for replies
+	for {
+		select {
+		case <-time.After(c.requestTimeout):
+			return responses, nil
+		case resp, ok := <-replyChan:
+			if !ok {
+				return responses, nil
+			}
+			responses = append(responses, resp)
+		}
+	}
 }
 
-func (c *Client) makeRequest(subject string, req interface{}, resp interface{}) error {
-	return c.nc.Request(subject, req, resp, c.requestTimeout)
+func (c *Client) makeBroadcastRequestReturnFirstGoodResponse(class string, req *proxy.Request) (*proxy.Response, error) {
+	var responseCount int
+	expected := len(c.core.cluster.Matching(c.nodeForRequest(req), c.appForRequest(req), c.core.clusterMaxAge))
+	reply := uuid.NewV1().String()
+	replyChan := make(chan *proxy.Response)
+	replySub, err := c.core.nc.Subscribe(reply, func(o *proxy.Response) {
+		responseCount++
+
+		if o.Err() == nil {
+			replyChan <- o
+		}
+
+		if responseCount >= expected {
+			close(replyChan)
+		}
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to subscribe to data responses")
+	}
+	defer replySub.Unsubscribe()
+
+	// Make an all-call for the entity data
+	err = c.core.nc.PublishRequest(c.subject(class, req), reply, req)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to make request for data")
+	}
+
+	// Wait for replies
+	select {
+	case <-time.After(c.requestTimeout):
+		return nil, errors.New("timeout")
+	case resp := <-replyChan:
+		if resp == nil {
+			return nil, proxy.ErrNotFound
+		}
+		return resp, nil
+	}
 }
 
-func (c *Client) subject(class string) (ret string) {
-	ret = proxy.Subject(c.prefix, class, c.appName, c.asterisk)
-	return
+func (c *Client) appForRequest(req *proxy.Request) string {
+	var app string
+	if c.metadata != nil {
+		app = c.metadata.Application
+	}
+	if req.Metadata != nil && req.Metadata.Application != "" {
+		app = req.Metadata.Application
+	}
+	return app
+}
+
+func (c *Client) nodeForRequest(req *proxy.Request) string {
+	var node string
+	if c.metadata != nil {
+		node = c.metadata.Node
+	}
+	if req.Metadata != nil && req.Metadata.Node != "" {
+		node = req.Metadata.Node
+	}
+	return node
+}
+
+func (c *Client) completeCoordinates(req *proxy.Request) bool {
+	// coordinates are complete if we have both app and node
+	return c.appForRequest(req) != "" &&
+		c.nodeForRequest(req) != ""
+}
+
+func (c *Client) subject(class string, req *proxy.Request) string {
+	return proxy.Subject(c.core.prefix, class, c.appForRequest(req), c.nodeForRequest(req))
 }
 
 func (c *Client) eventsSubject() (subj string) {
-	if c.appName != "" {
-		subj = fmt.Sprintf("%sevent.%s", c.prefix, c.appName)
+	// Attempt to build events subject from metadata
+	if c.metadata != nil {
+		if c.metadata.Application != "" {
+			subj = fmt.Sprintf("%sevent.%s", c.core.prefix, c.metadata.Application)
 
-		if c.asterisk != "" {
-			subj += "." + c.asterisk
-		} else {
-			subj += ".>"
+			if c.metadata.Node != "" {
+				subj += "." + c.metadata.Node
+			} else {
+				subj += ".>"
+			}
+		}
+
+		// a dialog always overrides
+		if c.metadata.Dialog != "" {
+			subj = fmt.Sprintf("%sdialogevent.%s", c.core.prefix, c.metadata.Dialog)
 		}
 	}
-	if c.dialog != "" {
-		subj = fmt.Sprintf("%sdialogevent.%s", c.prefix, c.dialog)
+
+	// If we still have no subject, listen to everything
+	if subj == "" {
+		subj = fmt.Sprintf("%sevent.>", c.core.prefix)
 	}
 	return
 }

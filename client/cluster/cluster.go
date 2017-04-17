@@ -90,6 +90,32 @@ func (c *Cluster) App(app string, maxAge time.Duration) (list []Member) {
 	return
 }
 
+// Matching returns a list of all cluster members for whom the given proxy Metadata matches
+func (c *Cluster) Matching(id, app string, maxAge time.Duration) (list []Member) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	for k, v := range c.members {
+		if time.Since(v) > maxAge {
+			continue
+		}
+
+		i, a := dehash(k)
+		if id != "" && id != i {
+			continue
+		}
+		if app != "" && app != a {
+			continue
+		}
+		list = append(list, Member{
+			ID:         i,
+			App:        a,
+			LastActive: v,
+		})
+	}
+	return
+}
+
 // Update adds (or updates) a proxy to/in the cluster
 func (c *Cluster) Update(id, app string) {
 	c.mu.Lock()

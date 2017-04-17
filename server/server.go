@@ -134,7 +134,7 @@ func (s *Server) listen(ctx context.Context) error {
 	//
 
 	// ping handler
-	pingSub, err := s.nats.Subscribe(fmt.Sprintf("%sping", s.NATSPrefix), s.pingHandler)
+	pingSub, err := s.nats.Subscribe(proxy.PingSubject(s.NATSPrefix), s.pingHandler)
 	if err != nil {
 		return errors.Wrap(err, "failed to subscribe to pings")
 	}
@@ -249,7 +249,7 @@ func (s *Server) runAnnouncer(ctx context.Context) {
 // announce publishes the presence of this server to the cluster
 func (s *Server) announce() {
 	s.nats.Publish(proxy.AnnouncementSubject(s.NATSPrefix), &proxy.Announcement{
-		Asterisk:    s.AsteriskID,
+		Node:        s.AsteriskID,
 		Application: s.Application,
 	})
 }
@@ -619,7 +619,7 @@ func (s *Server) sendNotFound(reply string) {
 func (s *Server) Metadata(dialog string) *proxy.Metadata {
 	return &proxy.Metadata{
 		Application: s.Application,
-		Asterisk:    s.AsteriskID,
+		Node:        s.AsteriskID,
 		Dialog:      dialog,
 	}
 }

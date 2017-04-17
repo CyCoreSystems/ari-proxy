@@ -13,8 +13,8 @@ var AnnouncementInterval = time.Minute
 
 // Announcement describes the structure of an ARI proxy's announcement of availability on the network.  These are sent periodically and upon request (by a Ping).
 type Announcement struct {
-	// Asterisk indicates the Asterisk ID to which the proxy is connected
-	Asterisk string `json:"asterisk"`
+	// Node indicates the Asterisk ID to which the proxy is connected
+	Node string `json:"node"`
 
 	// Application indicates the ARI application as which the proxy is connected
 	Application string `json:"application"`
@@ -25,13 +25,18 @@ func AnnouncementSubject(prefix string) string {
 	return fmt.Sprintf("%sannounce", prefix)
 }
 
+// PingSubject returns the NATS subject for a cluster-wide proxy ping for presence
+func PingSubject(prefix string) string {
+	return fmt.Sprintf("%sping", prefix)
+}
+
 // Metadata describes the metadata and associations of a message
 type Metadata struct {
 	// Application describes the ARI application
 	Application string `json:"application,omitempty"`
 
-	// Asterisk describes the ID of the associated Asterisk instance
-	Asterisk string `json:"asterisk,omitempty"`
+	// Node describes the ID of the associated Asterisk instance
+	Node string `json:"node,omitempty"`
 
 	// Dialog describes the dialog, if present
 	Dialog string `json:"dialog,omitempty"`

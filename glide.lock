@@ -1,8 +1,8 @@
 hash: 00fcac7abd0de3b775d4a7268cdf6996b735b364463b6c1b0570715682f8e89e
-updated: 2017-04-14T20:26:24.156412903-04:00
+updated: 2017-04-18T02:07:42.755502907-04:00
 imports:
 - name: github.com/CyCoreSystems/ari
-  version: 2ebbcf2bc64054dc20516d43d164aa564ba7b4f4
+  version: cea8d50c0b094dd6ec2cb6bc13e7a482343eb121
   subpackages:
   - client/native
   - stdbus
@@ -59,13 +59,13 @@ imports:
 - name: github.com/spf13/cast
   version: acbeb36b902d72a7a4c18e8f3241075e7ab763e4
 - name: github.com/spf13/cobra
-  version: 5deb57bbca49eb370538fc295ba4b2988f9f5e09
+  version: b6cb3958937245a12d4d7728be080a6c758f4136
 - name: github.com/spf13/jwalterweatherman
   version: fa7ca7e836cf3a8bb4ebf799f472c12d7e903d66
 - name: github.com/spf13/pflag
-  version: e453343e6260b4a3a89f1f0e10a2fbb07f8d9750
+  version: 2300d0f8576fe575f71aaa5b9bbe4e1b0dc2eb51
 - name: github.com/spf13/viper
-  version: 5d46e70da8c0b6f812e0b170b7a985753b5c63cb
+  version: 0967fc9aceab2ce9da34061253ac10fb99bba5b2
 - name: github.com/stretchr/objx
   version: cbeaeb16a013161a98496fad62933b1d21786672
 - name: github.com/stretchr/testify

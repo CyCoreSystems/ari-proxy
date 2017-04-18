@@ -9,9 +9,9 @@ import (
 	log15 "gopkg.in/inconshreveable/log15.v2"
 
 	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari-proxy/client/bus"
 	"github.com/CyCoreSystems/ari-proxy/client/cluster"
 	"github.com/CyCoreSystems/ari-proxy/proxy"
-	"github.com/CyCoreSystems/ari/stdbus"
 	"github.com/nats-io/nats"
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
@@ -193,7 +193,6 @@ func New(ctx context.Context, opts ...OptionFunc) (*Client, error) {
 			requestTimeout:    DefaultRequestTimeout,
 			uri:               "nats://localhost:4222",
 		},
-		bus: stdbus.New(),
 		metadata: &proxy.Metadata{
 			Application: os.Getenv("ARI_APPLICATION"),
 		},
@@ -211,6 +210,13 @@ func New(ctx context.Context, opts ...OptionFunc) (*Client, error) {
 		opt(c)
 	}
 
+	// Create the bus
+	c.bus = &bus.Bus{
+		nc:     c.core.nc,
+		log:    c.core.log,
+		prefix: c.core.prefix,
+	}
+
 	// Start the core, if it is not already started
 	c.core.Start()
 
@@ -224,6 +230,22 @@ func New(ctx context.Context, opts ...OptionFunc) (*Client, error) {
 	}()
 
 	return c, nil
+}
+
+// New returns a new client from the existing one.  The new client will have a
+// separate event bus and lifecycle, allowing the closure of all subscriptions
+// and handles derived from the client by simply closing the client.  The
+// underlying NATS connection and cluster awareness (the common Core) will be
+// preserved across derived Client lifecycles.
+func (c *Client) New() *Client {
+	return &Client{
+		core: c.core,
+		bus: &bus.Bus{
+			nc:     c.core.nc,
+			log:    c.core.log,
+			prefix: c.core.prefix,
+		},
+	}
 }
 
 // OptionFunc is a function which configures options on a Client
@@ -252,29 +274,6 @@ func FromClient(cl ari.Client) OptionFunc {
 func WithApplication(name string) OptionFunc {
 	return func(c *Client) {
 		c.metadata.Application = name
-	}
-}
-
-// WithMetadata configures the ARI client to use the provided metadata
-func WithMetadata(m *proxy.Metadata) OptionFunc {
-	return func(c *Client) {
-		if m != nil {
-			c.metadata = m
-		}
-	}
-}
-
-// WithNode configures the ID of an Asterisk Node to which this Client should send requests.
-func WithNode(id string) OptionFunc {
-	return func(c *Client) {
-		c.metadata.Node = id
-	}
-}
-
-// WithDialog configures the Dialog ID to use for this Client
-func WithDialog(id string) OptionFunc {
-	return func(c *Client) {
-		c.metadata.Dialog = id
 	}
 }
 
@@ -646,40 +645,4 @@ func (c *Client) eventsSubject() (subj string) {
 		subj = fmt.Sprintf("%sevent.>", c.core.prefix)
 	}
 	return
-}
-
-func (c *Client) bindEvents(ctx context.Context) {
-	subj := c.eventsSubject()
-	if subj == "" {
-		c.log.Error("cannot bind events without application or dialog")
-		return
-	}
-
-	eChan := make(chan *ari.RawEvent, c.inputBufferLength)
-	defer close(eChan)
-
-	sub, err := c.nc.BindRecvChan(subj, eChan)
-	if err != nil {
-		c.log.Error("failed to bind NATS event receiver")
-		return
-	}
-	defer sub.Unsubscribe()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case raw, ok := <-eChan:
-			if !ok {
-				c.log.Info("event channel closed")
-				return
-			}
-			e, err := raw.ToEvent()
-			if err != nil {
-				c.log.Error("failed to convert raw event to ari.Event", "error", err)
-				continue
-			}
-			c.bus.Send(e)
-		}
-	}
 }

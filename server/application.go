@@ -9,7 +9,7 @@ import (
 )
 
 func (s *Server) applicationData(ctx context.Context, reply string, req *proxy.Request) {
-	app, err := s.ari.Application().Data(req.ApplicationData.Name)
+	data, err := s.ari.Application().Data(req.Key)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -17,42 +17,32 @@ func (s *Server) applicationData(ctx context.Context, reply string, req *proxy.R
 
 	s.nats.Publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
-			Metadata:    s.Metadata(req.Metadata.Dialog),
-			Application: app,
+			Application: data,
 		},
 	})
 }
 
 func (s *Server) applicationList(ctx context.Context, reply string, req *proxy.Request) {
-	list, err := s.ari.Application().List()
+	list, err := s.ari.Application().List(nil)
 	if err != nil {
 		s.sendError(reply, err)
 		return
 	}
 
-	resp := proxy.EntityList{List: []*proxy.Entity{}}
-	for _, i := range list {
-		resp.List = append(resp.List, &proxy.Entity{
-			Metadata: s.Metadata(req.Metadata.Dialog),
-			ID:       i.ID(),
-		})
-	}
-
 	s.nats.Publish(reply, &proxy.Response{
-		EntityList: &resp,
+		Keys: list,
 	})
 }
 
 func (s *Server) applicationGet(ctx context.Context, reply string, req *proxy.Request) {
-	app, err := s.ari.Application().Data(req.ApplicationGet.Name)
+	data, err := s.ari.Application().Data(req.Key)
 	if err != nil {
 		s.sendError(reply, err)
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Entity{
-		Metadata: s.Metadata(req.Metadata.Dialog),
-		ID:       app.Name,
+	s.nats.Publish(reply, &proxy.Response{
+		Key: data.Key,
 	})
 }
 

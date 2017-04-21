@@ -299,307 +299,189 @@ func (s *Server) newRequestHandler(ctx context.Context) func(subject string, rep
 	}
 }
 
-// nolint: gocyclo
 func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.Request) {
-	f := func(ctx context.Context, reply string, req *proxy.Request) {
-		s.sendError(reply, errors.New("Not implemented"))
-	}
+	var f func(context.Context, string, *proxy.Request)
 
-	if req.Metadata == nil {
-		req.Metadata = &proxy.Metadata{}
-	}
-
-	if req.ApplicationList != nil {
-		f = s.applicationList
-	}
-	if req.ApplicationData != nil {
+	switch req.Kind {
+	case "ApplicationData":
 		f = s.applicationData
-	}
-	if req.ApplicationSubscribe != nil {
+	case "ApplicationList":
+		f = s.applicationList
+	case "ApplicationSubscribe":
 		f = s.applicationSubscribe
-	}
-	if req.ApplicationUnsubscribe != nil {
+	case "ApplicationUnsubscribe":
 		f = s.applicationUnsubscribe
-	}
-
-	if req.AsteriskInfo != nil {
+	case "AsteriskInfo":
 		f = s.asteriskInfo
-	}
-	if req.AsteriskReloadModule != nil {
+	case "AsteriskReloadModule":
 		f = s.asteriskReloadModule
-	}
-	if req.AsteriskVariables != nil {
-		if req.AsteriskVariables.Get != nil {
-			f = s.asteriskVariableGet
-		}
-
-		if req.AsteriskVariables.Set != nil {
-			f = s.asteriskVariableSet
-		}
-	}
-
-	if req.BridgeAddChannel != nil {
+	case "AsteriskVariableGet":
+		f = s.asteriskVariableGet
+	case "AsteriskVariableSet":
+		f = s.asteriskVariableSet
+	case "BridgeAddChannel":
 		f = s.bridgeAddChannel
-	}
-	if req.BridgeCreate != nil {
+	case "BridgeCreate":
 		f = s.bridgeCreate
-	}
-	if req.BridgeData != nil {
+	case "BridgeData":
 		f = s.bridgeData
-	}
-	if req.BridgeList != nil {
-		f = s.bridgeList
-	}
-	if req.BridgePlay != nil {
-		f = s.bridgePlay
-	}
-	if req.BridgeDelete != nil {
+	case "BridgeDelete":
 		f = s.bridgeDelete
-	}
-	if req.BridgeRecord != nil {
+	case "BridgeList":
+		f = s.bridgeList
+	case "BridgePlay":
+		f = s.bridgePlay
+	case "BridgeRecord":
 		f = s.bridgeRecord
-	}
-	if req.BridgeRemoveChannel != nil {
+	case "BridgeRemoveChannel":
 		f = s.bridgeRemoveChannel
-	}
-	if req.BridgeSubscribe != nil {
+	case "BridgeSubscribe":
 		f = s.bridgeSubscribe
-	}
-
-	if req.ChannelAnswer != nil {
+	case "BridgeUnsubscribe":
+		f = s.bridgeUnsubscribe
+	case "ChannelAnswer":
 		f = s.channelAnswer
-	}
-	if req.ChannelBusy != nil {
+	case "ChannelBusy":
 		f = s.channelBusy
-	}
-	if req.ChannelCongestion != nil {
+	case "ChannelCongestion":
 		f = s.channelCongestion
-	}
-	if req.ChannelCreate != nil {
+	case "ChannelCreate":
 		f = s.channelCreate
-	}
-	if req.ChannelData != nil {
-		f = s.channelData
-	}
-	if req.ChannelContinue != nil {
+	case "ChannelContinue":
 		f = s.channelContinue
-	}
-	if req.ChannelDial != nil {
+	case "ChannelData":
+		f = s.channelData
+	case "ChannelDial":
 		f = s.channelDial
-	}
-	if req.ChannelHangup != nil {
+	case "ChannelHangup":
 		f = s.channelHangup
-	}
-	if req.ChannelHold != nil {
+	case "ChannelHold":
 		f = s.channelHold
-	}
-	if req.ChannelList != nil {
+	case "ChannelList":
 		f = s.channelList
-	}
-	if req.ChannelMOH != nil {
+	case "ChannelMOH":
 		f = s.channelMOH
-	}
-	if req.ChannelMute != nil {
+	case "ChannelMute":
 		f = s.channelMute
-	}
-	if req.ChannelOriginate != nil {
+	case "ChannelOriginate":
 		f = s.channelOriginate
-	}
-	if req.ChannelPlay != nil {
+	case "ChannelPlay":
 		f = s.channelPlay
-	}
-	if req.ChannelRecord != nil {
+	case "ChannelRecord":
 		f = s.channelRecord
-	}
-	if req.ChannelRing != nil {
+	case "ChannelRing":
 		f = s.channelRing
-	}
-	if req.ChannelSendDTMF != nil {
+	case "ChannelSendDTMF":
 		f = s.channelSendDTMF
-	}
-	if req.ChannelSilence != nil {
+	case "ChannelSilence":
 		f = s.channelSilence
-	}
-	if req.ChannelSnoop != nil {
+	case "ChannelSnoop":
 		f = s.channelSnoop
-	}
-	if req.ChannelStopHold != nil {
+	case "ChannelStopHold":
 		f = s.channelStopHold
-	}
-	if req.ChannelStopMOH != nil {
+	case "ChannelStopMOH":
 		f = s.channelStopMOH
-	}
-	if req.ChannelStopRing != nil {
+	case "ChannelStopRing":
 		f = s.channelStopRing
-	}
-	if req.ChannelStopSilence != nil {
+	case "ChannelStopSilence":
 		f = s.channelStopSilence
-	}
-	if req.ChannelSubscribe != nil {
+	case "ChannelSubscribe":
 		f = s.channelSubscribe
-	}
-	if req.ChannelUnmute != nil {
+	case "ChannelUnmute":
 		f = s.channelUnmute
-	}
-	if req.ChannelVariables != nil {
-		if req.ChannelVariables.Get != nil {
-			f = s.channelVariableGet
-		}
-
-		if req.ChannelVariables.Set != nil {
-			f = s.channelVariableSet
-		}
-	}
-
-	if req.DeviceStateData != nil {
+	case "ChannelVariableGet":
+		f = s.channelVariableGet
+	case "ChannelVariableSet":
+		f = s.channelVariableSet
+	case "DeviceStateData":
 		f = s.deviceStateData
-	}
-	if req.DeviceStateDelete != nil {
+	case "DeviceStateDelete":
 		f = s.deviceStateDelete
-	}
-	if req.DeviceStateList != nil {
+	case "DeviceStateList":
 		f = s.deviceStateList
-	}
-	if req.DeviceStateUpdate != nil {
+	case "DeviceStateUpdate":
 		f = s.deviceStateUpdate
-	}
-
-	if req.EndpointData != nil {
+	case "EndpointData":
 		f = s.endpointData
-	}
-	if req.EndpointList != nil {
+	case "EndpointList":
 		f = s.endpointList
-	}
-	if req.EndpointListByTech != nil {
+	case "EndpointListByTech":
 		f = s.endpointListByTech
-	}
-
-	if req.MailboxData != nil {
+	case "MailboxData":
 		f = s.mailboxData
-	}
-	if req.MailboxDelete != nil {
+	case "MailboxDelete":
 		f = s.mailboxDelete
-	}
-	if req.MailboxList != nil {
+	case "MailboxList":
 		f = s.mailboxList
-	}
-	if req.MailboxUpdate != nil {
+	case "MailboxUpdate":
 		f = s.mailboxUpdate
-	}
-
-	if req.PlaybackControl != nil {
+	case "PlaybackControl":
 		f = s.playbackControl
-	}
-	if req.PlaybackData != nil {
+	case "PlaybackData":
 		f = s.playbackData
-	}
-	if req.PlaybackStop != nil {
-		f = s.playbackStop
-	}
-	if req.PlaybackSubscribe != nil {
+	case "PlaybackStop":
+		f = s.playbackControl
+	case "PlaybackStop":
+		f = s.playbackControl
+	case "PlaybackSubscribe":
 		f = s.playbackSubscribe
-	}
-
-	if req.RecordingStoredCopy != nil {
+	case "RecordingStoredCopy":
 		f = s.recordingStoredCopy
-	}
-	if req.RecordingStoredData != nil {
+	case "RecordingStoredData":
 		f = s.recordingStoredData
-	}
-	if req.RecordingStoredDelete != nil {
+	case "RecordingStoredDelete":
 		f = s.recordingStoredDelete
-	}
-	if req.RecordingStoredList != nil {
+	case "RecordingStoredList":
 		f = s.recordingStoredList
-	}
-
-	if req.RecordingLiveData != nil {
+	case "RecordingLiveData":
 		f = s.recordingLiveData
-	}
-	if req.RecordingLiveDelete != nil {
+	case "RecordingLiveDelete":
 		f = s.recordingLiveDelete
-	}
-	if req.RecordingLiveMute != nil {
+	case "RecordingLiveMute":
 		f = s.recordingLiveMute
-	}
-	if req.RecordingLivePause != nil {
+	case "RecordingLivePause":
 		f = s.recordingLivePause
-	}
-	if req.RecordingLiveResume != nil {
+	case "RecordingLiveResume":
 		f = s.recordingLiveResume
-	}
-	if req.RecordingLiveScrap != nil {
+	case "RecordingLiveScrap":
 		f = s.recordingLiveScrap
-	}
-	if req.RecordingLiveStop != nil {
+	case "RecordingLiveStop":
 		f = s.recordingLiveStop
-	}
-	if req.RecordingLiveUnmute != nil {
+	case "RecordingLiveUnmute":
 		f = s.recordingLiveUnmute
-	}
-
-	if req.SoundData != nil {
+	case "SoundData":
 		f = s.soundData
-	}
-	if req.SoundList != nil {
+	case "SoundList":
 		f = s.soundList
-	}
-
-	if req.AsteriskConfig != nil {
-		if req.AsteriskConfig.Data != nil {
-			f = s.asteriskConfigData
-		}
-
-		if req.AsteriskConfig.Delete != nil {
-			f = s.asteriskConfigDelete
-		}
-
-		if req.AsteriskConfig.Update != nil {
-			f = s.asteriskConfigUpdate
-		}
-	}
-
-	if req.AsteriskLogging != nil {
-		if req.AsteriskLogging.List != nil {
-			f = s.asteriskLoggingList
-		}
-
-		if req.AsteriskLogging.Create != nil {
-			f = s.asteriskLoggingCreate
-		}
-
-		if req.AsteriskLogging.Data != nil {
-			f = s.asteriskLoggingData
-		}
-
-		if req.AsteriskLogging.Rotate != nil {
-			f = s.asteriskLoggingRotate
-		}
-
-		if req.AsteriskLogging.Delete != nil {
-			f = s.asteriskLoggingDelete
-		}
-	}
-
-	if req.AsteriskModules != nil {
-		if req.AsteriskModules.List != nil {
-			f = s.asteriskModuleList
-		}
-
-		if req.AsteriskModules.Data != nil {
-			f = s.asteriskModuleData
-		}
-
-		if req.AsteriskModules.Load != nil {
-			f = s.asteriskModuleLoad
-		}
-
-		if req.AsteriskModules.Unload != nil {
-			f = s.asteriskModuleUnload
-		}
-
-		if req.AsteriskModules.Reload != nil {
-			f = s.asteriskModuleReload
+	case "AsteriskConfigData":
+		f = s.asteriskConfigData
+	case "AsteriskConfigDelete":
+		f = s.asteriskConfigDelete
+	case "AsteriskConfigUpdate":
+		f = s.asteriskConfigUpdate
+	case "AsteriskLoggingCreate":
+		f = s.asteriskLoggingCreate
+	case "AsteriskLoggingData":
+		f = s.asteriskLoggingData
+	case "AsteriskLoggingDelete":
+		f = s.asteriskLoggingDelete
+	case "AsteriskLoggingList":
+		f = s.asteriskLoggingList
+	case "AsteriskLoggingRotate":
+		f = s.asteriskLoggingRotate
+	case "AsteriskModuleData":
+		f = s.asteriskModuleData
+	case "AsteriskModuleLoad":
+		f = s.asteriskModuleLoad
+	case "AsteriskModuleList":
+		f = s.asteriskModuleList
+	case "AsteriskModuleReload":
+		f = s.asteriskModuleReload
+	case "AsteriskModuleUnload":
+		f = s.asteriskModuleUnload
+	default:
+		f = func(ctx context.Context, reply string, req *proxy.Request) {
+			s.sendError(reply, errors.New("Not implemented"))
 		}
 	}
 

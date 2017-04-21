@@ -71,6 +71,7 @@ func (b *Bus) Subscribe(key *ari.Key, n ...string) *Subscription {
 		b.log.Error("failed to subscribe to NATS", "error", err)
 		return nil
 	}
+	return s
 }
 
 // Events returns the channel on which events from this subscription will be sent

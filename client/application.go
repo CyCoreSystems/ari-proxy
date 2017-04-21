@@ -50,7 +50,7 @@ func (a *application) data(m *proxy.Metadata, name string) (*ari.ApplicationData
 	return ret.Application, ret.Metadata, nil
 }
 
-func (a *application) Get(id string) (h ari.ApplicationHandle) {
+func (a *application) Get(id string) (h *applicationHandle) {
 	_, md, err := a.data(nil, id) // obtain metadata by making a data request
 	if err != nil {
 		a.c.log.Warn("failed to make data request for application", "error", err)
@@ -58,7 +58,7 @@ func (a *application) Get(id string) (h ari.ApplicationHandle) {
 	return a.GetMD(md, id)
 }
 
-func (a *application) GetMD(m *proxy.Metadata, id string) (h ari.ApplicationHandle) {
+func (a *application) GetMD(m *proxy.Metadata, id string) (h *applicationHandle) {
 	// make a data request to get the metadata
 	return &applicationHandle{id: id, metadata: m, application: a}
 }

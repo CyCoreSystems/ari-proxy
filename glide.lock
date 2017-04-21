@@ -1,8 +1,8 @@
 hash: 00fcac7abd0de3b775d4a7268cdf6996b735b364463b6c1b0570715682f8e89e
-updated: 2017-04-18T02:07:42.755502907-04:00
+updated: 2017-04-20T17:30:15.836423822-04:00
 imports:
 - name: github.com/CyCoreSystems/ari
-  version: cea8d50c0b094dd6ec2cb6bc13e7a482343eb121
+  version: f1444aad74a2f5445b41fd6ccfe98d31e8bbfd35
   subpackages:
   - client/native
   - stdbus
@@ -59,7 +59,7 @@ imports:
 - name: github.com/spf13/cast
   version: acbeb36b902d72a7a4c18e8f3241075e7ab763e4
 - name: github.com/spf13/cobra
-  version: b6cb3958937245a12d4d7728be080a6c758f4136
+  version: 10f6b9d7e1631a54ad07c5c0fb71c28a1abfd3c2
 - name: github.com/spf13/jwalterweatherman
   version: fa7ca7e836cf3a8bb4ebf799f472c12d7e903d66
 - name: github.com/spf13/pflag
@@ -83,7 +83,7 @@ imports:
   subpackages:
   - unix
 - name: golang.org/x/text
-  version: f4b4367115ec2de254587813edaa901bc1c723a8
+  version: 19e3104b43db45fca0303f489a9536087b184802
   subpackages:
   - transform
   - unicode/norm

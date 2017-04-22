@@ -7,16 +7,15 @@ import (
 )
 
 func (s *Server) bridgeAddChannel(ctx context.Context, reply string, req *proxy.Request) {
-	id := req.BridgeAddChannel.ID
 	channel := req.BridgeAddChannel.Channel
 
 	// bind dialog
-	if req.Metadata.Dialog != "" {
-		s.Dialog.Bind(req.Metadata.Dialog, "bridge", id)
-		s.Dialog.Bind(req.Metadata.Dialog, "channel", channel)
+	if req.Key.Dialog != "" {
+		s.Dialog.Bind(req.Key.Dialog, "bridge", req.Key.ID)
+		s.Dialog.Bind(req.Key.Dialog, "channel", channel)
 	}
 
-	err := s.ari.Bridge().AddChannel(id, channel)
+	err := s.ari.Bridge().AddChannel(req.Key, channel)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -27,29 +26,24 @@ func (s *Server) bridgeAddChannel(ctx context.Context, reply string, req *proxy.
 
 func (s *Server) bridgeCreate(ctx context.Context, reply string, req *proxy.Request) {
 
-	create := req.BridgeCreate
-
 	// bind dialog
-	if req.Metadata.Dialog != "" {
-		s.Dialog.Bind(req.Metadata.Dialog, "bridge", create.ID)
+	if req.Key.Dialog != "" {
+		s.Dialog.Bind(req.Key.Dialog, "bridge", req.Key.ID)
 	}
 
-	bh, err := s.ari.Bridge().Create(req.BridgeCreate.ID, req.BridgeCreate.Type, req.BridgeCreate.Name)
+	bh, err := s.ari.Bridge().Create(req.Key, req.BridgeCreate.Type, req.BridgeCreate.Name)
 	if err != nil {
 		s.sendError(reply, err)
 		return
 	}
 
 	s.nats.Publish(reply, &proxy.Response{
-		Entity: &proxy.Entity{
-			Metadata: s.Metadata(req.Metadata.Dialog),
-			ID:       bh.ID(),
-		},
+		Key: bh.Key(),
 	})
 }
 
 func (s *Server) bridgeData(ctx context.Context, reply string, req *proxy.Request) {
-	bd, err := s.ari.Bridge().Data(req.BridgeData.ID)
+	bd, err := s.ari.Bridge().Data(req.Key)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -57,19 +51,18 @@ func (s *Server) bridgeData(ctx context.Context, reply string, req *proxy.Reques
 
 	s.nats.Publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
-			Metadata: s.Metadata(req.Metadata.Dialog),
-			Bridge:   bd,
+			Bridge: bd,
 		},
 	})
 }
 
 func (s *Server) bridgeDelete(ctx context.Context, reply string, req *proxy.Request) {
 	// bind dialog
-	if req.Metadata.Dialog != "" {
-		s.Dialog.Bind(req.Metadata.Dialog, "bridge", req.BridgeDelete.ID)
+	if req.Key.Dialog != "" {
+		s.Dialog.Bind(req.Key.Dialog, "bridge", req.Key.ID)
 	}
 
-	err := s.ari.Bridge().Delete(req.BridgeDelete.ID)
+	err := s.ari.Bridge().Delete(req.Key)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -79,34 +72,26 @@ func (s *Server) bridgeDelete(ctx context.Context, reply string, req *proxy.Requ
 }
 
 func (s *Server) bridgeList(ctx context.Context, reply string, req *proxy.Request) {
-	bx, err := s.ari.Bridge().List()
+	list, err := s.ari.Bridge().List(nil)
 	if err != nil {
 		s.sendError(reply, err)
 		return
 	}
 
-	resp := proxy.EntityList{List: []*proxy.Entity{}}
-	for _, i := range bx {
-		resp.List = append(resp.List, &proxy.Entity{
-			Metadata: s.Metadata(req.Metadata.Dialog),
-			ID:       i.ID(),
-		})
-	}
-
 	s.nats.Publish(reply, &proxy.Response{
-		EntityList: &resp,
+		Keys: list,
 	})
 }
 
 func (s *Server) bridgePlay(ctx context.Context, reply string, req *proxy.Request) {
 
 	// bind dialog
-	if req.Metadata.Dialog != "" {
-		s.Dialog.Bind(req.Metadata.Dialog, "bridge", req.BridgePlay.ID)
-		s.Dialog.Bind(req.Metadata.Dialog, "playback", req.BridgePlay.PlaybackID)
+	if req.Key.Dialog != "" {
+		s.Dialog.Bind(req.Key.Dialog, "bridge", req.Key.ID)
+		s.Dialog.Bind(req.Key.Dialog, "playback", req.BridgePlay.PlaybackID)
 	}
 
-	obj, err := s.ari.Bridge().Play(req.BridgePlay.ID, req.BridgePlay.PlaybackID, req.BridgePlay.MediaURI)
+	ph, err := s.ari.Bridge().Play(req.Key, req.BridgePlay.PlaybackID, req.BridgePlay.MediaURI)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -114,47 +99,37 @@ func (s *Server) bridgePlay(ctx context.Context, reply string, req *proxy.Reques
 
 	//NOTE: this originally returned a nil
 	s.nats.Publish(reply, &proxy.Response{
-		Entity: &proxy.Entity{
-			Metadata: s.Metadata(req.Metadata.Dialog),
-			ID:       obj.ID(),
-		},
+		Key: ph.Key(),
 	})
 }
 
 func (s *Server) bridgeRecord(ctx context.Context, reply string, req *proxy.Request) {
 
 	// bind dialog
-	if req.Metadata.Dialog != "" {
-		s.Dialog.Bind(req.Metadata.Dialog, "bridge", req.BridgeRecord.ID)
-		s.Dialog.Bind(req.Metadata.Dialog, "recording", req.BridgeRecord.Name)
+	if req.Key.Dialog != "" {
+		s.Dialog.Bind(req.Key.Dialog, "bridge", req.Key.ID)
+		s.Dialog.Bind(req.Key.Dialog, "recording", req.BridgeRecord.Name)
 	}
 
-	obj, err := s.ari.Bridge().Record(req.BridgeRecord.ID, req.BridgeRecord.Name, req.BridgeRecord.Options)
+	h, err := s.ari.Bridge().Record(req.Key, req.BridgeRecord.Name, req.BridgeRecord.Options)
 	if err != nil {
 		s.sendError(reply, err)
 		return
 	}
 
-	//NOTE: this originally returned a nil
 	s.nats.Publish(reply, &proxy.Response{
-		Entity: &proxy.Entity{
-			Metadata: s.Metadata(req.Metadata.Dialog),
-			ID:       obj.ID(),
-		},
+		Key: h.Key(),
 	})
 }
 
 func (s *Server) bridgeRemoveChannel(ctx context.Context, reply string, req *proxy.Request) {
-	id := req.BridgeRemoveChannel.ID
-	channel := req.BridgeRemoveChannel.Channel
-
 	// bind dialog
-	if req.Metadata.Dialog != "" {
-		s.Dialog.Bind(req.Metadata.Dialog, "bridge", id)
-		s.Dialog.Bind(req.Metadata.Dialog, "channel", channel) //TODO: do we unbind here? probably not
+	if req.Key.Dialog != "" {
+		s.Dialog.Bind(req.Key.Dialog, "bridge", req.Key.ID)
+		s.Dialog.Bind(req.Key.Dialog, "channel", req.BridgeRemoveChannel.Channel)
 	}
 
-	err := s.ari.Bridge().RemoveChannel(id, channel)
+	err := s.ari.Bridge().RemoveChannel(req.Key, req.BridgeRemoveChannel.Channel)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -165,16 +140,9 @@ func (s *Server) bridgeRemoveChannel(ctx context.Context, reply string, req *pro
 
 func (s *Server) bridgeSubscribe(ctx context.Context, reply string, req *proxy.Request) {
 
-	// check for existence
-	_, err := s.ari.Bridge().Data(req.BridgeSubscribe.ID)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-
 	// bind dialog
-	if req.Metadata.Dialog != "" {
-		s.Dialog.Bind(req.Metadata.Dialog, "bridge", req.BridgeSubscribe.ID)
+	if req.Key.Dialog != "" {
+		s.Dialog.Bind(req.Key.Dialog, "bridge", req.Key.ID)
 	}
 
 	s.sendError(reply, nil)

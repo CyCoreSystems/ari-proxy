@@ -66,18 +66,18 @@ func parseEventSource(src string) (string, string, error) {
 }
 
 func (s *Server) applicationSubscribe(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Application().Subscribe(req.ApplicationSubscribe.Name, req.ApplicationSubscribe.EventSource)
+	err := s.ari.Application().Subscribe(req.Key, req.ApplicationSubscribe.EventSource)
 	if err != nil {
 		s.sendError(reply, err)
 		return
 	}
 
-	if req.Metadata.Dialog != "" {
+	if req.Key.Dialog != "" {
 		eType, eID, err := parseEventSource(req.ApplicationSubscribe.EventSource)
 		if err != nil {
 			s.Log.Warn("failed to parse event source", "error", err, "eventsource", req.ApplicationSubscribe.EventSource)
 		} else {
-			s.Dialog.Bind(req.Metadata.Dialog, eType, eID)
+			s.Dialog.Bind(req.Key.Dialog, eType, eID)
 		}
 	}
 
@@ -85,6 +85,6 @@ func (s *Server) applicationSubscribe(ctx context.Context, reply string, req *pr
 }
 
 func (s *Server) applicationUnsubscribe(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Application().Unsubscribe(req.ApplicationUnsubscribe.Name, req.ApplicationUnsubscribe.EventSource)
+	err := s.ari.Application().Unsubscribe(req.Key, req.ApplicationUnsubscribe.EventSource)
 	s.sendError(reply, err)
 }

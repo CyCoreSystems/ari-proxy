@@ -1,8 +1,8 @@
 hash: 00fcac7abd0de3b775d4a7268cdf6996b735b364463b6c1b0570715682f8e89e
-updated: 2017-04-20T17:30:15.836423822-04:00
+updated: 2017-04-22T00:21:23.697698793-04:00
 imports:
 - name: github.com/CyCoreSystems/ari
-  version: f1444aad74a2f5445b41fd6ccfe98d31e8bbfd35
+  version: 424fd4893d0efd5fecb5b3fe369f90bf400c8b82
   subpackages:
   - client/native
   - stdbus
@@ -13,7 +13,7 @@ imports:
 - name: github.com/fsnotify/fsnotify
   version: 4da3e2cfbabc9f751898f250b49f2439785783a1
 - name: github.com/hashicorp/hcl
-  version: 630949a3c5fa3c613328e1b8256052cbc2327c9b
+  version: 7fa7fff964d035e8a162cce3a164b3ad02ad651b
   subpackages:
   - hcl/ast
   - hcl/parser
@@ -32,7 +32,7 @@ imports:
 - name: github.com/mattn/go-isatty
   version: fc9e8d8ef48496124e79ae0df75490096eccf6fe
 - name: github.com/mitchellh/mapstructure
-  version: 53818660ed4955e899c0bcafa97299a388bd7c8e
+  version: cc8532a8e9a55ea36402aa21efdf403a60d34096
 - name: github.com/nats-io/nats
   version: 61923ed1eaf8398000991fbbee2ef11ab5a5be0d
   subpackages:
@@ -74,16 +74,16 @@ imports:
   - assert
   - mock
 - name: golang.org/x/net
-  version: 5602c733f70afc6dcec6766be0d5034d4c4f14de
+  version: 0b588ed7a0cd59c271d128ec8c429c1c1607e8ab
   subpackages:
   - context
   - websocket
 - name: golang.org/x/sys
-  version: f3918c30c5c2cb527c0b071a27c35120a6c0719a
+  version: ea9bcade75cb975a0b9738936568ab388b845617
   subpackages:
   - unix
 - name: golang.org/x/text
-  version: 19e3104b43db45fca0303f489a9536087b184802
+  version: 6a48995cef2d1856bbef2b064f570126429f78ef
   subpackages:
   - transform
   - unicode/norm

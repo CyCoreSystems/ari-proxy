@@ -8,68 +8,55 @@ import (
 )
 
 func (s *Server) channelAnswer(ctx context.Context, reply string, req *proxy.Request) {
-	ID := req.ChannelAnswer.ID
-	err := s.ari.Channel().Answer(ID)
-	if err != nil {
-		s.sendError(reply, err)
-		return
+	if req.Key.Dialog != "" {
+		s.Dialog.Bind(req.Key.Dialog, "channel", req.Key.ID)
 	}
 
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.Channel().Answer(req.Key))
 }
 
 func (s *Server) channelBusy(ctx context.Context, reply string, req *proxy.Request) {
-	ID := req.ChannelBusy.ID
-	err := s.ari.Channel().Busy(ID)
-	if err != nil {
-		s.sendError(reply, err)
-		return
+	if req.Key.Dialog != "" {
+		s.Dialog.Bind(req.Key.Dialog, "channel", req.Key.ID)
 	}
 
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.Channel().Busy(req.Key))
 }
 
 func (s *Server) channelCongestion(ctx context.Context, reply string, req *proxy.Request) {
-	ID := req.ChannelCongestion.ID
-	err := s.ari.Channel().Congestion(ID)
-	if err != nil {
-		s.sendError(reply, err)
-		return
+	if req.Key.Dialog != "" {
+		s.Dialog.Bind(req.Key.Dialog, "channel", req.Key.ID)
 	}
 
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.Channel().Congestion(req.Key))
 }
 
 func (s *Server) channelCreate(ctx context.Context, reply string, req *proxy.Request) {
 	create := req.ChannelCreate.ChannelCreateRequest
 
-	// bind dialog
-	if req.Metadata.Dialog != "" {
-		s.Dialog.Bind(req.Metadata.Dialog, "channel", create.ChannelID)
-		s.Dialog.Bind(req.Metadata.Dialog, "channel", create.OtherChannelID)
+	if create.ChannelID == "" {
+		create.ChannelID = uuid.NewV1().String()
 	}
 
-	handle, err := s.ari.Channel().Create(create)
+	// bind dialog
+	if req.Key.Dialog != "" {
+		s.Dialog.Bind(req.Key.Dialog, "channel", create.ChannelID)
+		s.Dialog.Bind(req.Key.Dialog, "channel", create.OtherChannelID)
+	}
+
+	h, err := s.ari.Channel().Create(create)
 	if err != nil {
 		s.sendError(reply, err)
 		return
 	}
 
-	// bind dialog
-	if req.Metadata.Dialog != "" {
-		s.Dialog.Bind(req.Metadata.Dialog, "channel", handle.ID())
-	}
-
 	s.nats.Publish(reply, &proxy.Response{
-		Entity: &proxy.Entity{
-			Metadata: s.Metadata(req.Metadata.Dialog),
-			ID:       handle.ID(),
-		},
+		Key: h.Key(),
 	})
 }
 
 func (s *Server) channelData(ctx context.Context, reply string, req *proxy.Request) {
-	d, err := s.ari.Channel().Data(req.ChannelData.ID)
+	d, err := s.ari.Channel().Data(req.Key)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -77,88 +64,68 @@ func (s *Server) channelData(ctx context.Context, reply string, req *proxy.Reque
 
 	s.nats.Publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
-			Metadata: s.Metadata(req.Metadata.Dialog),
-			Channel:  d,
+			Channel: d,
 		},
 	})
 }
 
 func (s *Server) channelContinue(ctx context.Context, reply string, req *proxy.Request) {
-	s.sendError(reply, s.ari.Channel().Continue(req.ChannelContinue.ID, req.ChannelContinue.Context, req.ChannelContinue.Extension, req.ChannelContinue.Priority))
+	s.sendError(reply, s.ari.Channel().Continue(req.Key, req.ChannelContinue.Context, req.ChannelContinue.Extension, req.ChannelContinue.Priority))
 }
 
 func (s *Server) channelDial(ctx context.Context, reply string, req *proxy.Request) {
-	s.sendError(reply, s.ari.Channel().Dial(req.ChannelDial.ID, req.ChannelDial.Caller, req.ChannelDial.Timeout))
+	s.sendError(reply, s.ari.Channel().Dial(req.Key, req.ChannelDial.Caller, req.ChannelDial.Timeout))
 }
 
 func (s *Server) channelHangup(ctx context.Context, reply string, req *proxy.Request) {
-	s.sendError(reply, s.ari.Channel().Hangup(req.ChannelHangup.ID, req.ChannelHangup.Reason))
+	s.sendError(reply, s.ari.Channel().Hangup(req.Key, req.ChannelHangup.Reason))
 }
 
 func (s *Server) channelHold(ctx context.Context, reply string, req *proxy.Request) {
-	s.sendError(reply, s.ari.Channel().Hold(req.ChannelHold.ID))
+	s.sendError(reply, s.ari.Channel().Hold(req.Key))
 }
 
 func (s *Server) channelList(ctx context.Context, reply string, req *proxy.Request) {
-	cx, err := s.ari.Channel().List()
+	list, err := s.ari.Channel().List(nil)
 	if err != nil {
 		s.sendError(reply, err)
 		return
 	}
 
-	var el proxy.EntityList
-	for _, channel := range cx {
-		el.List = append(el.List, &proxy.Entity{
-			Metadata: s.Metadata(req.Metadata.Dialog),
-			ID:       channel.ID(),
-		})
-	}
-
 	s.nats.Publish(reply, &proxy.Response{
-		EntityList: &el,
+		Keys: list,
 	})
 }
 
 func (s *Server) channelMOH(ctx context.Context, reply string, req *proxy.Request) {
-	id := req.ChannelMOH.ID
-	music := req.ChannelMOH.Music
-	err := s.ari.Channel().MOH(id, music)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.Channel().MOH(req.Key, req.ChannelMOH.Music))
 }
 
 func (s *Server) channelMute(ctx context.Context, reply string, req *proxy.Request) {
-	s.sendError(reply, s.ari.Channel().Mute(req.ChannelMute.ID, req.ChannelMute.Direction))
+	s.sendError(reply, s.ari.Channel().Mute(req.Key, req.ChannelMute.Direction))
 }
 
 func (s *Server) channelOriginate(ctx context.Context, reply string, req *proxy.Request) {
 	orig := req.ChannelOriginate.OriginateRequest
 
-	if req.Metadata.Dialog != "" {
-		s.Dialog.Bind(req.Metadata.Dialog, "channel", orig.ChannelID)
-		s.Dialog.Bind(req.Metadata.Dialog, "channel", orig.OtherChannelID)
-		s.Dialog.Bind(req.Metadata.Dialog, "channel", orig.Originator)
+	if orig.ChannelID == "" {
+		orig.ChannelID = uuid.NewV1().String()
 	}
 
-	handle, err := s.ari.Channel().Originate(orig)
+	if req.Key.Dialog != "" {
+		s.Dialog.Bind(req.Key.Dialog, "channel", orig.ChannelID)
+		s.Dialog.Bind(req.Key.Dialog, "channel", orig.OtherChannelID)
+		s.Dialog.Bind(req.Key.Dialog, "channel", orig.Originator)
+	}
+
+	h, err := s.ari.Channel().Originate(orig)
 	if err != nil {
 		s.sendError(reply, err)
 		return
 	}
 
-	if req.Metadata.Dialog != "" {
-		s.Dialog.Bind(req.Metadata.Dialog, "channel", handle.ID())
-	}
-
 	s.nats.Publish(reply, &proxy.Response{
-		Entity: &proxy.Entity{
-			Metadata: s.Metadata(req.Metadata.Dialog),
-			ID:       handle.ID(),
-		},
+		Key: h.Key(),
 	})
 }
 
@@ -167,23 +134,19 @@ func (s *Server) channelPlay(ctx context.Context, reply string, req *proxy.Reque
 		req.ChannelPlay.PlaybackID = uuid.NewV1().String()
 	}
 
-	if req.Metadata.Dialog != "" {
-		s.Dialog.Bind(req.Metadata.Dialog, "channel", req.ChannelPlay.ID)
-		s.Dialog.Bind(req.Metadata.Dialog, "playback", req.ChannelPlay.PlaybackID)
+	if req.Key.Dialog != "" {
+		s.Dialog.Bind(req.Key.Dialog, "channel", req.Key.ID)
+		s.Dialog.Bind(req.Key.Dialog, "playback", req.ChannelPlay.PlaybackID)
 	}
 
-	ph, err := s.ari.Channel().Play(req.ChannelPlay.ID, req.ChannelPlay.PlaybackID, req.ChannelPlay.MediaURI)
+	ph, err := s.ari.Channel().Play(req.Key, req.ChannelPlay.PlaybackID, req.ChannelPlay.MediaURI)
 	if err != nil {
 		s.sendError(reply, err)
 		return
 	}
 
-	//NOTE: used to send nil
 	s.nats.Publish(reply, &proxy.Response{
-		Entity: &proxy.Entity{
-			Metadata: s.Metadata(req.Metadata.Dialog),
-			ID:       ph.ID(),
-		},
+		Key: ph.Key(),
 	})
 }
 
@@ -192,159 +155,99 @@ func (s *Server) channelRecord(ctx context.Context, reply string, req *proxy.Req
 		req.ChannelRecord.Name = uuid.NewV1().String()
 	}
 
-	if req.Metadata.Dialog != "" {
-		s.Dialog.Bind(req.Metadata.Dialog, "channel", req.ChannelRecord.ID)
-		s.Dialog.Bind(req.Metadata.Dialog, "recording", req.ChannelRecord.Name)
+	if req.Key.Dialog != "" {
+		s.Dialog.Bind(req.Key.Dialog, "channel", req.Key.ID)
+		s.Dialog.Bind(req.Key.Dialog, "recording", req.ChannelRecord.Name)
 	}
 
-	lr, err := s.ari.Channel().Record(req.ChannelRecord.ID, req.ChannelRecord.Name, req.ChannelRecord.Options)
+	h, err := s.ari.Channel().Record(req.Key, req.ChannelRecord.Name, req.ChannelRecord.Options)
 	if err != nil {
 		s.sendError(reply, err)
 		return
 	}
 
 	s.nats.Publish(reply, &proxy.Response{
-		Entity: &proxy.Entity{
-			Metadata: s.Metadata(req.Metadata.Dialog),
-			ID:       lr.ID(),
-		},
+		Key: h.Key(),
 	})
 }
 
 func (s *Server) channelRing(ctx context.Context, reply string, req *proxy.Request) {
-	id := req.ChannelRing.ID
-	err := s.ari.Channel().Ring(id)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.Channel().Ring(req.Key))
 }
 
 func (s *Server) channelSendDTMF(ctx context.Context, reply string, req *proxy.Request) {
-	id := req.ChannelSendDTMF.ID
-	dtmf := req.ChannelSendDTMF.DTMF
-	opts := req.ChannelSendDTMF.Options
-	err := s.ari.Channel().SendDTMF(id, dtmf, opts)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.Channel().SendDTMF(req.Key, req.ChannelSendDTMF.DTMF, req.ChannelSendDTMF.Options))
 }
 
 func (s *Server) channelSilence(ctx context.Context, reply string, req *proxy.Request) {
-	id := req.ChannelSilence.ID
-	err := s.ari.Channel().Silence(id)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.Channel().Silence(req.Key))
 }
 
 func (s *Server) channelSnoop(ctx context.Context, reply string, req *proxy.Request) {
-	ch, err := s.ari.Channel().Snoop(req.ChannelSnoop.ID, req.ChannelSnoop.SnoopID, req.ChannelSnoop.Options)
+	if req.ChannelSnoop.SnoopID == "" {
+		req.ChannelSnoop.SnoopID = uuid.NewV1().String()
+	}
+
+	if req.Key.Dialog != "" {
+		s.Dialog.Bind(req.Key.Dialog, "channel", req.ChannelSnoop.SnoopID)
+	}
+
+	h, err := s.ari.Channel().Snoop(req.Key, req.ChannelSnoop.SnoopID, req.ChannelSnoop.Options)
 	if err != nil {
 		s.sendError(reply, err)
 		return
 	}
 
-	if req.Metadata.Dialog != "" {
-		s.Dialog.Bind(req.Metadata.Dialog, "channel", ch.ID())
-	}
-
 	s.nats.Publish(reply, &proxy.Response{
-		Entity: &proxy.Entity{
-			Metadata: s.Metadata(req.Metadata.Dialog),
-			ID:       ch.ID(),
-		},
+		Key: h.Key(),
 	})
 }
 
 func (s *Server) channelStopHold(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Channel().StopHold(req.ChannelStopHold.ID)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.Channel().StopHold(req.Key))
 }
 
 func (s *Server) channelStopMOH(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Channel().StopMOH(req.ChannelStopMOH.ID)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.Channel().StopMOH(req.Key))
 }
 
 func (s *Server) channelStopRing(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Channel().StopRing(req.ChannelStopRing.ID)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.Channel().StopRing(req.Key))
 }
 
 func (s *Server) channelStopSilence(ctx context.Context, reply string, req *proxy.Request) {
-	id := req.ChannelStopSilence.ID
-	err := s.ari.Channel().StopSilence(id)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.Channel().StopSilence(req.Key))
 }
 
 func (s *Server) channelSubscribe(ctx context.Context, reply string, req *proxy.Request) {
 
-	// check for existence
-	_, err := s.ari.Channel().Data(req.ChannelSubscribe.ID)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-
 	// bind dialog
-	if req.Metadata.Dialog != "" {
-		s.Dialog.Bind(req.Metadata.Dialog, "channel", req.ChannelSubscribe.ID)
+	if req.Key.Dialog != "" {
+		s.Dialog.Bind(req.Key.Dialog, "channel", req.Key.ID)
 	}
 
 	s.sendError(reply, nil)
 }
 
 func (s *Server) channelUnmute(ctx context.Context, reply string, req *proxy.Request) {
-	s.sendError(reply, s.ari.Channel().Unmute(req.ChannelUnmute.ID, req.ChannelUnmute.Direction))
+	s.sendError(reply, s.ari.Channel().Unmute(req.Key, req.ChannelUnmute.Direction))
 }
 
 func (s *Server) channelVariableGet(ctx context.Context, reply string, req *proxy.Request) {
-	val, err := s.ari.Channel().Variables(req.ChannelVariables.ID).Get(req.ChannelVariables.Name)
+	val, err := s.ari.Channel().Variables(req.Key).Get(req.ChannelVariables.Name)
 	if err != nil {
 		s.sendError(reply, err)
 		return
 	}
 
+	// TODO: return needs metadata/key data somehow
 	s.nats.Publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
-			Metadata: s.Metadata(req.Metadata.Dialog),
 			Variable: val,
 		},
 	})
 }
 
 func (s *Server) channelVariableSet(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Channel().Variables(req.ChannelVariables.ID).Set(req.ChannelVariables.Name, req.ChannelVariables.Set.Value)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.Channel().Variables(req.Key).Set(req.ChannelVariables.Name, req.ChannelVariables.Set.Value))
 }

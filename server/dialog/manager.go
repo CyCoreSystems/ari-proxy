@@ -46,6 +46,10 @@ func (m *memManager) List(eType, id string) []string {
 }
 
 func (m *memManager) Bind(dialog, eType, id string) {
+	if dialog == "" || eType == "" || id == "" {
+		return
+	}
+
 	m.mu.Lock()
 	defer m.mu.Unlock()
 

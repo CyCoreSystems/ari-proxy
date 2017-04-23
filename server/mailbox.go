@@ -7,8 +7,7 @@ import (
 )
 
 func (s *Server) mailboxData(ctx context.Context, reply string, req *proxy.Request) {
-	name := req.MailboxData.Name
-	md, err := s.ari.Mailbox().Data(name)
+	data, err := s.ari.Mailbox().Data(req.Key)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -16,49 +15,27 @@ func (s *Server) mailboxData(ctx context.Context, reply string, req *proxy.Reque
 
 	s.nats.Publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
-			Metadata: s.Metadata(req.Metadata.Dialog),
-			Mailbox:  md,
+			Mailbox: data,
 		},
 	})
 }
 
 func (s *Server) mailboxDelete(ctx context.Context, reply string, req *proxy.Request) {
-	name := req.MailboxDelete.Name
-	err := s.ari.Mailbox().Delete(name)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.Mailbox().Delete(req.Key))
 }
 
 func (s *Server) mailboxList(ctx context.Context, reply string, req *proxy.Request) {
-	mx, err := s.ari.Mailbox().List()
+	list, err := s.ari.Mailbox().List(nil)
 	if err != nil {
 		s.sendError(reply, err)
 		return
 	}
 
-	var el proxy.EntityList
-	for _, m := range mx {
-		el.List = append(el.List, &proxy.Entity{
-			Metadata: s.Metadata(req.Metadata.Dialog),
-			ID:       m.ID(),
-		})
-	}
-
 	s.nats.Publish(reply, &proxy.Response{
-		EntityList: &el,
+		Keys: list,
 	})
 }
 
 func (s *Server) mailboxUpdate(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Mailbox().Update(req.MailboxUpdate.Name, req.MailboxUpdate.Old, req.MailboxUpdate.New)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.Mailbox().Update(req.Key, req.MailboxUpdate.Old, req.MailboxUpdate.New))
 }

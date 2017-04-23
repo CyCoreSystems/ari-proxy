@@ -8,11 +8,7 @@ import (
 
 func (s *Server) asteriskConfigData(ctx context.Context, reply string, req *proxy.Request) {
 
-	cd, err := s.ari.Asterisk().Config().Data(
-		req.AsteriskConfig.ConfigClass,
-		req.AsteriskConfig.ObjectType,
-		req.AsteriskConfig.ID,
-	)
+	data, err := s.ari.Asterisk().Config().Data(req.Key)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -20,39 +16,15 @@ func (s *Server) asteriskConfigData(ctx context.Context, reply string, req *prox
 
 	s.nats.Publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
-			Metadata: s.Metadata(req.Metadata.Dialog),
-			Config:   cd,
+			Config: data,
 		},
 	})
 }
 
 func (s *Server) asteriskConfigDelete(ctx context.Context, reply string, req *proxy.Request) {
-
-	err := s.ari.Asterisk().Config().Delete(
-		req.AsteriskConfig.ConfigClass,
-		req.AsteriskConfig.ObjectType,
-		req.AsteriskConfig.ID,
-	)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.Asterisk().Config().Delete(req.Key))
 }
 
 func (s *Server) asteriskConfigUpdate(ctx context.Context, reply string, req *proxy.Request) {
-
-	err := s.ari.Asterisk().Config().Update(
-		req.AsteriskConfig.ConfigClass,
-		req.AsteriskConfig.ObjectType,
-		req.AsteriskConfig.ID,
-		req.AsteriskConfig.Update.Tuples,
-	)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.Asterisk().Config().Update(req.Key, req.AsteriskConfig.Update.Tuples))
 }

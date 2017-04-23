@@ -147,3 +147,8 @@ func (s *Server) bridgeSubscribe(ctx context.Context, reply string, req *proxy.R
 
 	s.sendError(reply, nil)
 }
+
+func (s *Server) bridgeUnsubscribe(ctx context.Context, reply string, req *proxy.Request) {
+	// no-op for now; may want to eventually optimize away the dialog subscription
+	s.sendError(reply, nil)
+}

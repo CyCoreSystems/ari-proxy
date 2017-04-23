@@ -7,17 +7,11 @@ import (
 )
 
 func (s *Server) playbackControl(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Playback().Control(req.PlaybackControl.ID, req.PlaybackControl.Command)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.Playback().Control(req.Key, req.PlaybackControl.Command))
 }
 
 func (s *Server) playbackData(ctx context.Context, reply string, req *proxy.Request) {
-	d, err := s.ari.Playback().Data(req.PlaybackData.ID)
+	data, err := s.ari.Playback().Data(req.Key)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -25,34 +19,20 @@ func (s *Server) playbackData(ctx context.Context, reply string, req *proxy.Requ
 
 	s.nats.Publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
-			Metadata: s.Metadata(req.Metadata.Dialog),
-			Playback: d,
+			Playback: data,
 		},
 	})
 }
 
 func (s *Server) playbackStop(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Playback().Stop(req.PlaybackStop.ID)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.Playback().Stop(req.Key))
 }
 
 func (s *Server) playbackSubscribe(ctx context.Context, reply string, req *proxy.Request) {
 
-	// check for existence
-	_, err := s.ari.Playback().Data(req.PlaybackSubscribe.ID)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-
 	// bind dialog
-	if req.Metadata.Dialog != "" {
-		s.Dialog.Bind(req.Metadata.Dialog, "playback", req.PlaybackSubscribe.ID)
+	if req.Key.Dialog != "" {
+		s.Dialog.Bind(req.Key.Dialog, "playback", req.Key.ID)
 	}
 
 	s.sendError(reply, nil)

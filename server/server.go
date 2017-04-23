@@ -420,9 +420,7 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 	case "PlaybackData":
 		f = s.playbackData
 	case "PlaybackStop":
-		f = s.playbackControl
-	case "PlaybackStop":
-		f = s.playbackControl
+		f = s.playbackStop
 	case "PlaybackSubscribe":
 		f = s.playbackSubscribe
 	case "RecordingStoredCopy":
@@ -494,16 +492,6 @@ func (s *Server) sendError(reply string, err error) {
 
 func (s *Server) sendNotFound(reply string) {
 	s.nats.Publish(reply, proxy.NewErrorResponse(proxy.ErrNotFound))
-}
-
-// Metadata returns the metadata for this server.  The dialog parameter is
-// optional; set it to the empty string if one is not applicable or known.
-func (s *Server) Metadata(dialog string) *proxy.Metadata {
-	return &proxy.Metadata{
-		Application: s.Application,
-		Node:        s.AsteriskID,
-		Dialog:      dialog,
-	}
 }
 
 /*

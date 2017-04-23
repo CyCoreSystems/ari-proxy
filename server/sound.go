@@ -7,7 +7,7 @@ import (
 )
 
 func (s *Server) soundData(ctx context.Context, reply string, req *proxy.Request) {
-	sd, err := s.ari.Sound().Data(req.SoundData.Name)
+	data, err := s.ari.Sound().Data(req.Key)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -15,8 +15,7 @@ func (s *Server) soundData(ctx context.Context, reply string, req *proxy.Request
 
 	s.nats.Publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
-			Metadata: s.Metadata(req.Metadata.Dialog),
-			Sound:    sd,
+			Sound: data,
 		},
 	})
 }
@@ -29,20 +28,13 @@ func (s *Server) soundList(ctx context.Context, reply string, req *proxy.Request
 		filters = nil // just send nil to upstream if empty. makes tests easier
 	}
 
-	sx, err := s.ari.Sound().List(filters)
+	list, err := s.ari.Sound().List(filters, req.Key)
 	if err != nil {
 		s.sendError(reply, err)
 		return
 	}
-	var el proxy.EntityList
-	for _, snd := range sx {
-		el.List = append(el.List, &proxy.Entity{
-			Metadata: s.Metadata(req.Metadata.Dialog),
-			ID:       snd.ID(),
-		})
-	}
 
 	s.nats.Publish(reply, &proxy.Response{
-		EntityList: &el,
+		Keys: list,
 	})
 }

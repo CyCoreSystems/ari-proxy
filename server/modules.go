@@ -7,34 +7,19 @@ import (
 )
 
 func (s *Server) asteriskModuleLoad(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Asterisk().Modules().Load(req.AsteriskModules.Load.Name)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.Asterisk().Modules().Load(req.Key))
 }
 
 func (s *Server) asteriskModuleUnload(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Asterisk().Modules().Unload(req.AsteriskModules.Unload.Name)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.Asterisk().Modules().Unload(req.Key))
 }
 
 func (s *Server) asteriskModuleReload(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Asterisk().Modules().Reload(req.AsteriskModules.Reload.Name)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.Asterisk().Modules().Reload(req.Key))
 }
 
 func (s *Server) asteriskModuleData(ctx context.Context, reply string, req *proxy.Request) {
-	data, err := s.ari.Asterisk().Modules().Data(req.AsteriskModules.Data.Name)
+	data, err := s.ari.Asterisk().Modules().Data(req.Key)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -42,28 +27,19 @@ func (s *Server) asteriskModuleData(ctx context.Context, reply string, req *prox
 
 	s.nats.Publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
-			Metadata: s.Metadata(req.Metadata.Dialog),
-			Module:   data,
+			Module: data,
 		},
 	})
 }
 
 func (s *Server) asteriskModuleList(ctx context.Context, reply string, req *proxy.Request) {
-	mx, err := s.ari.Asterisk().Modules().List()
+	list, err := s.ari.Asterisk().Modules().List(nil)
 	if err != nil {
 		s.sendError(reply, err)
 		return
 	}
 
-	var el proxy.EntityList
-	for _, m := range mx {
-		el.List = append(el.List, &proxy.Entity{
-			Metadata: s.Metadata(req.Metadata.Dialog),
-			ID:       m.ID(),
-		})
-	}
-
 	s.nats.Publish(reply, &proxy.Response{
-		EntityList: &el,
+		Keys: list,
 	})
 }

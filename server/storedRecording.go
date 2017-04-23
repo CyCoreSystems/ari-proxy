@@ -7,25 +7,19 @@ import (
 )
 
 func (s *Server) recordingStoredCopy(ctx context.Context, reply string, req *proxy.Request) {
-	id := req.RecordingStoredCopy.ID
-	dest := req.RecordingStoredCopy.Destination
-
-	srd, err := s.ari.StoredRecording().Copy(id, dest)
+	h, err := s.ari.StoredRecording().Copy(req.Key, req.RecordingStoredCopy.Destination)
 	if err != nil {
 		s.sendError(reply, err)
 		return
 	}
 
 	s.nats.Publish(reply, &proxy.Response{
-		Entity: &proxy.Entity{
-			Metadata: s.Metadata(req.Metadata.Dialog),
-			ID:       srd.ID(),
-		},
+		Key: h.Key(),
 	})
 }
 
 func (s *Server) recordingStoredData(ctx context.Context, reply string, req *proxy.Request) {
-	data, err := s.ari.StoredRecording().Data(req.RecordingStoredData.ID)
+	data, err := s.ari.StoredRecording().Data(req.Key)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -33,38 +27,23 @@ func (s *Server) recordingStoredData(ctx context.Context, reply string, req *pro
 
 	s.nats.Publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
-			Metadata:        s.Metadata(req.Metadata.Dialog),
 			StoredRecording: data,
 		},
 	})
 }
 
 func (s *Server) recordingStoredDelete(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.StoredRecording().Delete(req.RecordingStoredDelete.ID)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.StoredRecording().Delete(req.Key))
 }
 
 func (s *Server) recordingStoredList(ctx context.Context, reply string, req *proxy.Request) {
-	handles, err := s.ari.StoredRecording().List()
+	list, err := s.ari.StoredRecording().List(nil)
 	if err != nil {
 		s.sendError(reply, err)
 		return
 	}
 
-	var el proxy.EntityList
-	for _, sr := range handles {
-		el.List = append(el.List, &proxy.Entity{
-			Metadata: s.Metadata(req.Metadata.Dialog),
-			ID:       sr.ID(),
-		})
-	}
-
 	s.nats.Publish(reply, &proxy.Response{
-		EntityList: &el,
+		Keys: list,
 	})
 }

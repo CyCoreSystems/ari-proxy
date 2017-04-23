@@ -7,7 +7,7 @@ import (
 )
 
 func (s *Server) recordingLiveData(ctx context.Context, reply string, req *proxy.Request) {
-	lrd, err := s.ari.LiveRecording().Data(req.RecordingLiveData.ID)
+	data, err := s.ari.LiveRecording().Data(req.Key)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -15,36 +15,35 @@ func (s *Server) recordingLiveData(ctx context.Context, reply string, req *proxy
 
 	s.nats.Publish(reply, proxy.Response{
 		Data: &proxy.EntityData{
-			Metadata:      s.Metadata(req.Metadata.Dialog),
-			LiveRecording: lrd,
+			LiveRecording: data,
 		},
 	})
 }
 
 func (s *Server) recordingLiveDelete(ctx context.Context, reply string, req *proxy.Request) {
-	s.sendError(reply, s.ari.LiveRecording().Delete(req.RecordingLiveDelete.ID))
+	s.sendError(reply, s.ari.LiveRecording().Delete(req.Key))
 }
 
 func (s *Server) recordingLiveMute(ctx context.Context, reply string, req *proxy.Request) {
-	s.sendError(reply, s.ari.LiveRecording().Mute(req.RecordingLiveMute.ID))
+	s.sendError(reply, s.ari.LiveRecording().Mute(req.Key))
 }
 
 func (s *Server) recordingLivePause(ctx context.Context, reply string, req *proxy.Request) {
-	s.sendError(reply, s.ari.LiveRecording().Pause(req.RecordingLivePause.ID))
+	s.sendError(reply, s.ari.LiveRecording().Pause(req.Key))
 }
 
 func (s *Server) recordingLiveResume(ctx context.Context, reply string, req *proxy.Request) {
-	s.sendError(reply, s.ari.LiveRecording().Resume(req.RecordingLiveResume.ID))
+	s.sendError(reply, s.ari.LiveRecording().Resume(req.Key))
 }
 
 func (s *Server) recordingLiveScrap(ctx context.Context, reply string, req *proxy.Request) {
-	s.sendError(reply, s.ari.LiveRecording().Scrap(req.RecordingLiveScrap.ID))
+	s.sendError(reply, s.ari.LiveRecording().Scrap(req.Key))
 }
 
 func (s *Server) recordingLiveStop(ctx context.Context, reply string, req *proxy.Request) {
-	s.sendError(reply, s.ari.LiveRecording().Stop(req.RecordingLiveStop.ID))
+	s.sendError(reply, s.ari.LiveRecording().Stop(req.Key))
 }
 
 func (s *Server) recordingLiveUnmute(ctx context.Context, reply string, req *proxy.Request) {
-	s.sendError(reply, s.ari.LiveRecording().Unmute(req.RecordingLiveUnmute.ID))
+	s.sendError(reply, s.ari.LiveRecording().Unmute(req.Key))
 }

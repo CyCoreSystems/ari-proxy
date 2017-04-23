@@ -7,58 +7,35 @@ import (
 )
 
 func (s *Server) deviceStateData(ctx context.Context, reply string, req *proxy.Request) {
-	id := req.DeviceStateData.ID
-	dd, err := s.ari.DeviceState().Data(id)
+	data, err := s.ari.DeviceState().Data(req.Key)
 	if err != nil {
 		s.sendError(reply, err)
 		return
 	}
+
 	s.nats.Publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
-			Metadata:    s.Metadata(req.Metadata.Dialog),
-			DeviceState: dd,
+			DeviceState: data,
 		},
 	})
 }
 
 func (s *Server) deviceStateDelete(ctx context.Context, reply string, req *proxy.Request) {
-	id := req.DeviceStateDelete.ID
-	err := s.ari.DeviceState().Delete(id)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.DeviceState().Delete(req.Key))
 }
 
 func (s *Server) deviceStateList(ctx context.Context, reply string, req *proxy.Request) {
-	dx, err := s.ari.DeviceState().List()
+	list, err := s.ari.DeviceState().List(nil)
 	if err != nil {
 		s.sendError(reply, err)
 		return
 	}
-	var el proxy.EntityList
-	for _, d := range dx {
-		el.List = append(el.List, &proxy.Entity{
-			Metadata: s.Metadata(req.Metadata.Dialog),
-			ID:       d.ID(),
-		})
-	}
 
 	s.nats.Publish(reply, &proxy.Response{
-		EntityList: &el,
+		Keys: list,
 	})
 }
 
 func (s *Server) deviceStateUpdate(ctx context.Context, reply string, req *proxy.Request) {
-	id := req.DeviceStateUpdate.ID
-	state := req.DeviceStateUpdate.State
-	err := s.ari.DeviceState().Update(id, state)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-
-	s.sendError(reply, nil)
+	s.sendError(reply, s.ari.DeviceState().Update(req.Key, req.DeviceStateUpdate.State))
 }

@@ -444,12 +444,13 @@ func (c *Client) listRequest(req *proxy.Request) ([]*ari.Key, error) {
 	}
 
 	for _, r := range responses {
+		err = r.Err()
 		if r.Err() != nil || r.Keys == nil {
 			continue
 		}
 		list = append(list, r.Keys...)
 	}
-	return list, nil
+	return list, err
 }
 
 func (c *Client) makeRequest(class string, req *proxy.Request) (*proxy.Response, error) {
@@ -528,9 +529,6 @@ func (c *Client) makeBroadcastRequestReturnFirstGoodResponse(class string, req *
 
 	var responseCount int
 	expected := len(c.core.cluster.Matching(req.Key.Node, req.Key.App, c.core.clusterMaxAge))
-	if expected < 1 {
-		expected = 1
-	}
 	reply := uuid.NewV1().String()
 	replyChan := make(chan *proxy.Response)
 	replySub, err := c.core.nc.Subscribe(reply, func(o *proxy.Response) {

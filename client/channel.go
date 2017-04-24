@@ -88,7 +88,7 @@ func (c *channel) Data(key *ari.Key) (*ari.ChannelData, error) {
 
 func (c *channel) Continue(key *ari.Key, context string, extension string, priority int) error {
 	return c.c.commandRequest(&proxy.Request{
-		Kind: "ChannelContinu",
+		Kind: "ChannelContinue",
 		Key:  key,
 		ChannelContinue: &proxy.ChannelContinue{
 			Context:   context,
@@ -267,7 +267,7 @@ func (c *channel) Dial(key *ari.Key, caller string, timeout time.Duration) error
 }
 
 func (c *channel) Play(key *ari.Key, playbackID string, mediaURI string) (*ari.PlaybackHandle, error) {
-	err := c.c.commandRequest(&proxy.Request{
+	pb, err := c.c.createRequest(&proxy.Request{
 		Kind: "ChannelPlay",
 		Key:  key,
 		ChannelPlay: &proxy.ChannelPlay{
@@ -278,7 +278,7 @@ func (c *channel) Play(key *ari.Key, playbackID string, mediaURI string) (*ari.P
 	if err != nil {
 		return nil, err
 	}
-	return ari.NewPlaybackHandle(key, c.c.Playback(), nil), nil
+	return ari.NewPlaybackHandle(pb, c.c.Playback(), nil), nil
 }
 
 func (c *channel) StagePlay(key *ari.Key, playbackID string, mediaURI string) (*ari.PlaybackHandle, error) {
@@ -300,7 +300,7 @@ func (c *channel) StagePlay(key *ari.Key, playbackID string, mediaURI string) (*
 }
 
 func (c *channel) Record(key *ari.Key, name string, opts *ari.RecordingOptions) (*ari.LiveRecordingHandle, error) {
-	err := c.c.commandRequest(&proxy.Request{
+	rb, err := c.c.createRequest(&proxy.Request{
 		Kind: "ChannelRecord",
 		Key:  key,
 		ChannelRecord: &proxy.ChannelRecord{
@@ -311,7 +311,7 @@ func (c *channel) Record(key *ari.Key, name string, opts *ari.RecordingOptions) 
 	if err != nil {
 		return nil, err
 	}
-	return ari.NewLiveRecordingHandle(key, c.c.LiveRecording(), nil), nil
+	return ari.NewLiveRecordingHandle(rb, c.c.LiveRecording(), nil), nil
 }
 
 func (c *channel) StageRecord(key *ari.Key, name string, opts *ari.RecordingOptions) (*ari.LiveRecordingHandle, error) {

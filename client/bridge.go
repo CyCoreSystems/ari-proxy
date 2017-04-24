@@ -101,7 +101,7 @@ func (b *bridge) Delete(key *ari.Key) error {
 }
 
 func (b *bridge) Play(key *ari.Key, id string, uri string) (*ari.PlaybackHandle, error) {
-	err := b.c.commandRequest(&proxy.Request{
+	pb, err := b.c.createRequest(&proxy.Request{
 		Kind: "BridgePlay",
 		Key:  key,
 		BridgePlay: &proxy.BridgePlay{
@@ -112,7 +112,7 @@ func (b *bridge) Play(key *ari.Key, id string, uri string) (*ari.PlaybackHandle,
 	if err != nil {
 		return nil, err
 	}
-	return ari.NewPlaybackHandle(key, b.c.Playback(), nil), nil
+	return ari.NewPlaybackHandle(pb, b.c.Playback(), nil), nil
 }
 
 func (b *bridge) StagePlay(key *ari.Key, id string, uri string) (*ari.PlaybackHandle, error) {
@@ -142,7 +142,7 @@ func (b *bridge) Record(key *ari.Key, name string, opts *ari.RecordingOptions) (
 		name = uuid.NewV1().String()
 	}
 
-	err := b.c.commandRequest(&proxy.Request{
+	rh, err := b.c.createRequest(&proxy.Request{
 		Kind: "BridgeRecord",
 		Key:  key,
 		BridgeRecord: &proxy.BridgeRecord{
@@ -153,7 +153,7 @@ func (b *bridge) Record(key *ari.Key, name string, opts *ari.RecordingOptions) (
 	if err != nil {
 		return nil, err
 	}
-	return ari.NewLiveRecordingHandle(key, b.c.LiveRecording(), nil), nil
+	return ari.NewLiveRecordingHandle(rh, b.c.LiveRecording(), nil), nil
 }
 
 func (b *bridge) StageRecord(key *ari.Key, name string, opts *ari.RecordingOptions) (*ari.LiveRecordingHandle, error) {

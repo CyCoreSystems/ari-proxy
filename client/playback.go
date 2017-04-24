@@ -9,89 +9,57 @@ type playback struct {
 	c *Client
 }
 
-func (p *playback) Get(id string) ari.PlaybackHandle {
-	return &playbackHandle{
-		id:       id,
-		playback: p,
-	}
-}
-
-func (p *playback) Data(id string) (d *ari.PlaybackData, err error) {
-	data, err := p.c.dataRequest(&proxy.Request{
-		PlaybackData: &proxy.PlaybackData{
-			ID: id,
-		},
+func (p *playback) Get(key *ari.Key) *ari.PlaybackHandle {
+	k, err := p.c.getRequest(&proxy.Request{
+		Kind: "PlaybackGet",
+		Key:  key,
 	})
 	if err != nil {
-		return
+		p.c.log.Warn("failed to get playback for handle", "error", err)
+		return ari.NewPlaybackHandle(key, p, nil)
 	}
-	d = data.Playback
-	return
+	return ari.NewPlaybackHandle(k, p, nil)
 }
 
-func (p *playback) Control(id string, op string) (err error) {
-	err = p.c.commandRequest(&proxy.Request{
+func (p *playback) Data(key *ari.Key) (*ari.PlaybackData, error) {
+	data, err := p.c.dataRequest(&proxy.Request{
+		Kind: "PlaybackData",
+		Key:  key,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return data.Playback, nil
+}
+
+func (p *playback) Control(key *ari.Key, op string) error {
+	return p.c.commandRequest(&proxy.Request{
+		Kind: "PlaybackControl",
+		Key:  key,
 		PlaybackControl: &proxy.PlaybackControl{
-			ID:      id,
 			Command: op,
 		},
 	})
-	return
 }
 
-func (p *playback) Stop(id string) (err error) {
-	err = p.c.commandRequest(&proxy.Request{
-		PlaybackStop: &proxy.PlaybackStop{
-			ID: id,
-		},
+func (p *playback) Stop(key *ari.Key) error {
+	return p.c.commandRequest(&proxy.Request{
+		Kind: "PlaybackStop",
+		Key:  key,
 	})
-	return
 }
 
-func (p *playback) Subscribe(id string, nx ...string) ari.Subscription {
-	//ns := newSubscription(p.Get(id))
-	//ns.Start(p.subscriber, nx...)
-	//return ns
-	return nil
-}
-
-type playbackHandle struct {
-	playback *playback
-	id       string
-}
-
-func (ph *playbackHandle) ID() string {
-	return ph.id
-}
-
-func (ph *playbackHandle) Control(op string) (err error) {
-	err = ph.playback.Control(ph.id, op)
-	return
-}
-
-func (ph *playbackHandle) Stop() (err error) {
-	err = ph.playback.Stop(ph.id)
-	return
-}
-
-func (ph *playbackHandle) Subscribe(nx ...string) ari.Subscription {
-	return ph.playback.Subscribe(ph.id, nx...)
-}
-
-func (ph *playbackHandle) Data() (d *ari.PlaybackData, err error) {
-	d, err = ph.playback.Data(ph.id)
-	return
-}
-
-func (ph *playbackHandle) Match(e ari.Event) (ok bool) {
-	v, ok := e.(ari.PlaybackEvent)
-	if !ok {
-		return false
-	}
-	for _, i := range v.GetPlaybackIDs() {
-		if i == ph.id {
-			return true
+func (p *playback) Subscribe(key *ari.Key, n ...string) ari.Subscription {
+	err := p.c.commandRequest(&proxy.Request{
+		Kind: "PlaybackSubscribe",
+		Key:  key,
+	})
+	if err != nil {
+		p.c.log.Warn("failed to call bridge subscribe", "error", err)
+		if key.Dialog != "" {
+			p.c.log.Error("dialog present; failing", "error", err)
+			return nil
 		}
 	}
-	return false
+	return p.c.Bus().Subscribe(key, n...)
 }

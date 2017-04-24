@@ -9,52 +9,49 @@ type deviceState struct {
 	c *Client
 }
 
-func (ds *deviceState) Get(name string) ari.DeviceStateHandle {
-	//return ari.NewDeviceStateHandle(name, ds)
-	return nil
-}
-
-func (ds *deviceState) List() (dx []ari.DeviceStateHandle, err error) {
-	el, err := ds.c.listRequest(&proxy.Request{
-		DeviceStateList: &proxy.DeviceStateList{},
+func (ds *deviceState) Get(key *ari.Key) *ari.DeviceStateHandle {
+	k, err := ds.c.getRequest(&proxy.Request{
+		Kind: "DeviceStateGet",
+		Key:  key,
 	})
 	if err != nil {
-		return
+		ds.c.log.Warn("failed to get device state for handle")
+		return ari.NewDeviceStateHandle(key, ds)
 	}
-	for _, i := range el.List {
-		dx = append(dx, ds.Get(i.ID))
-	}
-	return
+	return ari.NewDeviceStateHandle(k, ds)
 }
 
-func (ds *deviceState) Data(name string) (d *ari.DeviceStateData, err error) {
-	nd, err := ds.c.dataRequest(&proxy.Request{
-		DeviceStateData: &proxy.DeviceStateData{
-			ID: name,
-		},
+func (ds *deviceState) List(filter *ari.Key) ([]*ari.Key, error) {
+	return ds.c.listRequest(&proxy.Request{
+		Kind: "DeviceStateList",
+		Key:  filter,
+	})
+}
+
+func (ds *deviceState) Data(key *ari.Key) (*ari.DeviceStateData, error) {
+	data, err := ds.c.dataRequest(&proxy.Request{
+		Kind: "DeviceStateData",
+		Key:  key,
 	})
 	if err != nil {
-		return
+		return nil, err
 	}
-	d = nd.DeviceState
-	return
+	return data.DeviceState, nil
 }
 
-func (ds *deviceState) Update(name string, state string) (err error) {
-	err = ds.c.commandRequest(&proxy.Request{
+func (ds *deviceState) Update(key *ari.Key, state string) error {
+	return ds.c.commandRequest(&proxy.Request{
+		Kind: "DeviceStateUpdate",
+		Key:  key,
 		DeviceStateUpdate: &proxy.DeviceStateUpdate{
-			ID:    name,
 			State: state,
 		},
 	})
-	return
 }
 
-func (ds *deviceState) Delete(name string) (err error) {
-	err = ds.c.commandRequest(&proxy.Request{
-		DeviceStateDelete: &proxy.DeviceStateDelete{
-			ID: name,
-		},
+func (ds *deviceState) Delete(key *ari.Key) error {
+	return ds.c.commandRequest(&proxy.Request{
+		Kind: "DeviceStateDelete",
+		Key:  key,
 	})
-	return
 }

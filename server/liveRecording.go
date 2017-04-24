@@ -48,6 +48,14 @@ func (s *Server) recordingLiveScrap(ctx context.Context, reply string, req *prox
 	s.sendError(reply, s.ari.LiveRecording().Scrap(req.Key))
 }
 
+func (s *Server) recordingLiveSubscribe(ctx context.Context, reply string, req *proxy.Request) {
+	if req.Key.Dialog != nil {
+		s.Dialog.Bind(req.Key.Dialog, "recording", req.Key.ID)
+	}
+
+	s.sendError(reply, nil)
+}
+
 func (s *Server) recordingLiveStop(ctx context.Context, reply string, req *proxy.Request) {
 	s.sendError(reply, s.ari.LiveRecording().Stop(req.Key))
 }

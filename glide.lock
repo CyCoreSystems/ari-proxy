@@ -1,8 +1,8 @@
 hash: 00fcac7abd0de3b775d4a7268cdf6996b735b364463b6c1b0570715682f8e89e
-updated: 2017-04-24T01:53:06.364057048-04:00
+updated: 2017-04-24T03:04:01.785033573-04:00
 imports:
 - name: github.com/CyCoreSystems/ari
-  version: a0b9e7ae45199544f8e1bee2e1b0cb48a70db29d
+  version: d75eef60ddd8ff0acc98b1e3e38304f6d88ade74
   subpackages:
   - client/native
   - stdbus

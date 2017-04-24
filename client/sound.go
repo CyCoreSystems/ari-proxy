@@ -9,55 +9,23 @@ type sound struct {
 	c *Client
 }
 
-func (s *sound) List(filters map[string]string) (ret []ari.SoundHandle, err error) {
-
-	if filters == nil {
-		filters = make(map[string]string)
-	}
-
-	el, err := s.c.listRequest(&proxy.Request{
+func (s *sound) List(filters map[string]string, keyFilter *ari.Key) ([]*ari.Key, error) {
+	return s.c.listRequest(&proxy.Request{
+		Kind: "SoundList",
+		Key:  keyFilter,
 		SoundList: &proxy.SoundList{
 			Filters: filters,
 		},
 	})
-	if err != nil {
-		return
-	}
-	for _, i := range el.List {
-		ret = append(ret, s.Get(i.ID))
-	}
-	return
 }
 
-func (s *sound) Get(name string) ari.SoundHandle {
-	return &soundHandle{
-		id: name,
-		s:  s,
-	}
-}
-
-func (s *sound) Data(name string) (sd *ari.SoundData, err error) {
+func (s *sound) Data(key *ari.Key) (*ari.SoundData, error) {
 	data, err := s.c.dataRequest(&proxy.Request{
-		SoundData: &proxy.SoundData{
-			Name: name,
-		},
+		Kind: "SoundData",
+		Key:  key,
 	})
 	if err != nil {
-		return
+		return nil, err
 	}
-	sd = data.Sound
-	return
-}
-
-type soundHandle struct {
-	id string
-	s  *sound
-}
-
-func (s *soundHandle) Data() (*ari.SoundData, error) {
-	return s.s.Data(s.id)
-}
-
-func (s *soundHandle) ID() string {
-	return s.id
+	return data.Sound, nil
 }

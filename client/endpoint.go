@@ -1,9 +1,6 @@
 package client
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/proxy"
 )
@@ -12,81 +9,42 @@ type endpoint struct {
 	c *Client
 }
 
-func (e *endpoint) Data(tech string, resource string) (ed *ari.EndpointData, err error) {
-	d, err := e.c.dataRequest(&proxy.Request{
-		EndpointData: &proxy.EndpointData{
-			Resource: resource,
-			Tech:     tech,
-		},
+func (e *endpoint) Data(key *ari.Key) (*ari.EndpointData, error) {
+	data, err := e.c.dataRequest(&proxy.Request{
+		Kind: "EndpointData",
+		Key:  key,
 	})
 	if err != nil {
-		return
+		return nil, err
 	}
-	ed = d.Endpoint
-	return
+	return data.Endpoint, nil
 }
 
-func (e *endpoint) Get(tech string, resource string) ari.EndpointHandle {
-	return &endpointHandle{
-		tech:     tech,
-		resource: resource,
-		e:        e,
-	}
-}
-
-func (e *endpoint) List() (ret []ari.EndpointHandle, err error) {
-	el, err := e.c.listRequest(&proxy.Request{
-		EndpointList: &proxy.EndpointList{},
+func (e *endpoint) Get(key *ari.Key) *ari.EndpointHandle {
+	k, err := e.c.getRequest(&proxy.Request{
+		Kind: "EndpointGet",
+		Key:  key,
 	})
 	if err != nil {
-		return
+		e.c.log.Warn("failed to get endpoint for handle", "error", err)
+		return ari.NewEndpointHandle(key, e)
 	}
-	for _, i := range el.List {
-		items := strings.Split(i.ID, "/")
-		ret = append(ret, e.Get(items[0], items[1]))
-	}
-	return
+	return ari.NewEndpointHandle(k, e)
 }
 
-func (e *endpoint) ListByTech(tech string) (ret []ari.EndpointHandle, err error) {
-	el, err := e.c.listRequest(&proxy.Request{
+func (e *endpoint) List(filter *ari.Key) ([]*ari.Key, error) {
+	return e.c.listRequest(&proxy.Request{
+		Kind: "EndpointList",
+		Key:  filter,
+	})
+}
+
+func (e *endpoint) ListByTech(tech string, filter *ari.Key) ([]*ari.Key, error) {
+	return e.c.listRequest(&proxy.Request{
+		Kind: "EndpointListByTech",
+		Key:  filter,
 		EndpointListByTech: &proxy.EndpointListByTech{
 			Tech: tech,
 		},
 	})
-	if err != nil {
-		return
-	}
-	for _, i := range el.List {
-		items := strings.Split(i.ID, "/")
-		ret = append(ret, e.Get(items[0], items[1]))
-	}
-	return
-}
-
-type endpointHandle struct {
-	tech     string
-	resource string
-	e        *endpoint
-}
-
-func (e *endpointHandle) Data() (*ari.EndpointData, error) {
-	return e.e.Data(e.tech, e.resource)
-}
-
-func (e *endpointHandle) ID() string {
-	return fmt.Sprintf("%s/%s", e.tech, e.resource)
-}
-
-func (e *endpointHandle) Match(ev ari.Event) (ok bool) {
-	v, ok := ev.(ari.EndpointEvent)
-	if !ok {
-		return false
-	}
-	for _, i := range v.GetEndpointIDs() {
-		if i == e.ID() {
-			return true
-		}
-	}
-	return false
 }

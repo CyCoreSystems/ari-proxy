@@ -25,14 +25,10 @@ func (a *asterisk) Modules() ari.Modules {
 	return &modules{a.c}
 }
 
-func (a *asterisk) ReloadModule(name string) (err error) {
-	err = a.Modules().Reload(name)
-	return
-}
-
-func (a *asterisk) Info(only string) (*ari.AsteriskInfo, error) {
+func (a *asterisk) Info(key *ari.Key) (*ari.AsteriskInfo, error) {
 	resp, err := a.c.dataRequest(&proxy.Request{
-		AsteriskInfo: &proxy.AsteriskInfo{},
+		Kind: "AsteriskInfo",
+		Key:  key,
 	})
 	if err != nil {
 		return nil, err
@@ -40,16 +36,14 @@ func (a *asterisk) Info(only string) (*ari.AsteriskInfo, error) {
 	return resp.Asterisk, nil
 }
 
-func (a *asterisk) Variables() ari.Variables {
+func (a *asterisk) Variables() ari.AsteriskVariables {
 	return &asteriskVariables{a.c}
 }
 
-func (a *asteriskVariables) Get(key string) (ret string, err error) {
+func (a *asteriskVariables) Get(key *ari.Key) (ret string, err error) {
 	data, err := a.c.dataRequest(&proxy.Request{
-		AsteriskVariables: &proxy.AsteriskVariables{
-			Name: key,
-			Get:  &proxy.VariablesGet{},
-		},
+		Kind: "AsteriskVariableGet",
+		Key:  key,
 	})
 	if err != nil {
 		return "", err
@@ -57,13 +51,12 @@ func (a *asteriskVariables) Get(key string) (ret string, err error) {
 	return data.Variable, err
 }
 
-func (a *asteriskVariables) Set(key string, val string) (err error) {
+func (a *asteriskVariables) Set(key *ari.Key, val string) (err error) {
 	return a.c.commandRequest(&proxy.Request{
-		AsteriskVariables: &proxy.AsteriskVariables{
-			Name: key,
-			Set: &proxy.VariablesSet{
-				Value: val,
-			},
+		Kind: "AsteriskVariableSet",
+		Key:  key,
+		AsteriskVariableSet: &proxy.AsteriskVariableSet{
+			Value: val,
 		},
 	})
 }

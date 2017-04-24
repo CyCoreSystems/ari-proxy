@@ -88,7 +88,7 @@ func handler(ctx context.Context, nc *nats.EncodedConn, appStart session.AppStar
 	d.ChannelID = appStart.ChannelID
 
 	// Construct the new ARI client
-	cl, err := New(ctx, WithApplication(appStart.Application), WithDialog(d.ID), WithNATS(nc))
+	cl, err := New(ctx, WithApplication(appStart.Application), WithNATS(nc))
 	if err != nil {
 		Logger.Error("error creating client", "error", err)
 		return

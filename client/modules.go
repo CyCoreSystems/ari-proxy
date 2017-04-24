@@ -9,97 +9,53 @@ type modules struct {
 	c *Client
 }
 
-func (m *modules) Get(name string) ari.ModuleHandle {
-	return &moduleHandle{
-		m:  m,
-		id: name,
-	}
-}
-
-func (m *modules) List() (ret []ari.ModuleHandle, err error) {
-	el, err := m.c.listRequest(&proxy.Request{
-		AsteriskModules: &proxy.AsteriskModules{
-			List: &proxy.AsteriskModulesList{},
-		},
-	})
-	if err != nil {
-		return
-	}
-	for _, i := range el.List {
-		ret = append(ret, m.Get(i.ID))
-	}
-	return
-}
-
-func (m *modules) Reload(name string) (err error) {
-	err = m.c.commandRequest(&proxy.Request{
-		AsteriskModules: &proxy.AsteriskModules{
-			Reload: &proxy.AsteriskModulesReload{
-				Name: name,
-			},
-		},
-	})
-	return
-}
-
-func (m *modules) Unload(name string) (err error) {
-	err = m.c.commandRequest(&proxy.Request{
-		AsteriskModules: &proxy.AsteriskModules{
-			Unload: &proxy.AsteriskModulesUnload{
-				Name: name,
-			},
-		},
-	})
-	return
-}
-
-func (m *modules) Load(name string) (err error) {
-	err = m.c.commandRequest(&proxy.Request{
-		AsteriskModules: &proxy.AsteriskModules{
-			Load: &proxy.AsteriskModulesLoad{
-				Name: name,
-			},
-		},
-	})
-	return
-}
-
-func (m *modules) Data(name string) (md *ari.ModuleData, err error) {
+func (m *modules) Data(key *ari.Key) (*ari.ModuleData, error) {
 	data, err := m.c.dataRequest(&proxy.Request{
-		AsteriskModules: &proxy.AsteriskModules{
-			Data: &proxy.AsteriskModulesData{
-				Name: name,
-			},
-		},
+		Kind: "AsteriskModuleData",
+		Key:  key,
 	})
 	if err != nil {
-		return
+		return nil, err
 	}
-	md = data.Module
-	return
+	return data.Module, nil
 }
 
-type moduleHandle struct {
-	id string
-	m  *modules
+func (m *modules) Get(key *ari.Key) *ari.ModuleHandle {
+	k, err := m.c.getRequest(&proxy.Request{
+		Kind: "AsteriskModuleGet",
+		Key:  key,
+	})
+	if err != nil {
+		m.c.log.Warn("failed to get module for handle", "error", err)
+		return ari.NewModuleHandle(key, m)
+	}
+	return ari.NewModuleHandle(k, m)
 }
 
-func (m *moduleHandle) Data() (*ari.ModuleData, error) {
-	return m.m.Data(m.id)
+func (m *modules) List(filter *ari.Key) ([]*ari.Key, error) {
+	return m.c.listRequest(&proxy.Request{
+		Kind: "AsteriskModuleList",
+		Key:  filter,
+	})
 }
 
-func (m *moduleHandle) ID() string {
-	return m.id
+func (m *modules) Load(key *ari.Key) error {
+	return m.c.commandRequest(&proxy.Request{
+		Kind: "AsteriskModuleLoad",
+		Key:  key,
+	})
 }
 
-func (m *moduleHandle) Load() error {
-	return m.m.Load(m.id)
+func (m *modules) Reload(key *ari.Key) error {
+	return m.c.commandRequest(&proxy.Request{
+		Kind: "AsteriskModuleReload",
+		Key:  key,
+	})
 }
 
-func (m *moduleHandle) Reload() error {
-	return m.m.Reload(m.id)
-}
-
-func (m *moduleHandle) Unload() error {
-	return m.m.Unload(m.id)
+func (m *modules) Unload(key *ari.Key) error {
+	return m.c.commandRequest(&proxy.Request{
+		Kind: "AsteriskModuleUnload",
+		Key:  key,
+	})
 }

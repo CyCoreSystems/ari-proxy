@@ -19,6 +19,15 @@ type Bus struct {
 	nc *nats.EncodedConn
 }
 
+// New returns a new Bus
+func New(prefix string, nc *nats.EncodedConn, log log15.Logger) *Bus {
+	return &Bus{
+		prefix: prefix,
+		log:    log,
+		nc:     nc,
+	}
+}
+
 func (b *Bus) subjectFromKey(key *ari.Key) string {
 	if key.Dialog != "" {
 		return fmt.Sprintf("%sdialogevent.%s", b.prefix, key.Dialog)
@@ -56,7 +65,7 @@ func (b *Bus) Send(e ari.Event) {
 }
 
 // Subscribe implements ari.Bus
-func (b *Bus) Subscribe(key *ari.Key, n ...string) *Subscription {
+func (b *Bus) Subscribe(key *ari.Key, n ...string) ari.Subscription {
 	var err error
 
 	s := &Subscription{

@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"time"
 
@@ -171,7 +170,7 @@ type Client struct {
 
 	bus ari.Bus
 
-	metadata *proxy.Metadata
+	appName string
 
 	cancel context.CancelFunc
 
@@ -184,6 +183,7 @@ func New(ctx context.Context, opts ...OptionFunc) (*Client, error) {
 	ctx, cancel := context.WithCancel(ctx)
 
 	c := &Client{
+		appName: os.Getenv("ARI_APPLICATION"),
 		core: &core{
 			cluster:           cluster.New(),
 			clusterMaxAge:     DefaultClusterMaxAge,
@@ -192,9 +192,6 @@ func New(ctx context.Context, opts ...OptionFunc) (*Client, error) {
 			prefix:            "ari.",
 			requestTimeout:    DefaultRequestTimeout,
 			uri:               "nats://localhost:4222",
-		},
-		metadata: &proxy.Metadata{
-			Application: os.Getenv("ARI_APPLICATION"),
 		},
 		cancel: cancel,
 	}
@@ -211,17 +208,10 @@ func New(ctx context.Context, opts ...OptionFunc) (*Client, error) {
 	}
 
 	// Create the bus
-	c.bus = &bus.Bus{
-		nc:     c.core.nc,
-		log:    c.core.log,
-		prefix: c.core.prefix,
-	}
+	c.bus = bus.New(c.core.prefix, c.core.nc, c.core.log)
 
 	// Start the core, if it is not already started
 	c.core.Start()
-
-	// Bind events from NATS to our bus
-	go c.bindEvents(ctx)
 
 	// Call Close whenever the context is closed
 	go func() {
@@ -240,11 +230,7 @@ func New(ctx context.Context, opts ...OptionFunc) (*Client, error) {
 func (c *Client) New() *Client {
 	return &Client{
 		core: c.core,
-		bus: &bus.Bus{
-			nc:     c.core.nc,
-			log:    c.core.log,
-			prefix: c.core.prefix,
-		},
+		bus:  bus.New(c.core.prefix, c.core.nc, c.core.log),
 	}
 }
 
@@ -273,7 +259,7 @@ func FromClient(cl ari.Client) OptionFunc {
 // WithApplication configures the ARI Client to use the provided ARI Application
 func WithApplication(name string) OptionFunc {
 	return func(c *Client) {
-		c.metadata.Application = name
+		c.appName = name
 	}
 }
 
@@ -314,10 +300,7 @@ func WithTimeoutRetries(count int) OptionFunc {
 
 // ApplicationName returns the ARI application's name
 func (c *Client) ApplicationName() string {
-	if c.metadata == nil {
-		return ""
-	}
-	return c.metadata.Application
+	return c.appName
 }
 
 // Close shuts down the client
@@ -402,23 +385,14 @@ func (c *Client) TextMessage() ari.TextMessage {
 }
 
 func (c *Client) commandRequest(req *proxy.Request) error {
-	var resp *proxy.Response
-	var err error
-
-	// if we have complete coordinates, we can make a direct request
-	if c.completeCoordinates(req) {
-		resp, err = c.makeRequest("command", req)
-	} else {
-		resp, err = c.makeBroadcastRequestReturnFirstGoodResponse("command", req)
-	}
-
+	resp, err := c.makeRequest("command", req)
 	if err != nil {
 		return err
 	}
 	return resp.Err()
 }
 
-func (c *Client) createRequest(req *proxy.Request) (*proxy.Entity, error) {
+func (c *Client) createRequest(req *proxy.Request) (*ari.Key, error) {
 	resp, err := c.makeRequest("create", req)
 	if err != nil {
 		return nil, err
@@ -426,18 +400,13 @@ func (c *Client) createRequest(req *proxy.Request) (*proxy.Entity, error) {
 	if resp.Err() != nil {
 		return nil, resp.Err()
 	}
-	if resp.Entity == nil {
+	if resp.Key == nil {
 		return nil, ErrNil
 	}
-	return resp.Entity, nil
+	return resp.Key, nil
 }
 
-func (c *Client) getRequest(req *proxy.Request) (*proxy.Entity, error) {
-	// If we do not have complete coordinates, we cannot make a reasonable get request
-	if !c.completeCoordinates(req) {
-		return nil, errors.New("Incomplete coordinates")
-	}
-
+func (c *Client) getRequest(req *proxy.Request) (*ari.Key, error) {
 	resp, err := c.makeRequest("get", req)
 	if err != nil {
 		return nil, err
@@ -445,22 +414,14 @@ func (c *Client) getRequest(req *proxy.Request) (*proxy.Entity, error) {
 	if resp.Err() != nil {
 		return nil, resp.Err()
 	}
-	if resp.Entity == nil {
+	if resp.Key == nil {
 		return nil, ErrNil
 	}
-	return resp.Entity, nil
+	return resp.Key, nil
 }
 
 func (c *Client) dataRequest(req *proxy.Request) (*proxy.EntityData, error) {
-	var resp *proxy.Response
-	var err error
-
-	// if we have complete coordinates, we can make a direct request
-	if c.completeCoordinates(req) {
-		resp, err = c.makeRequest("data", req)
-	} else {
-		resp, err = c.makeBroadcastRequestReturnFirstGoodResponse("data", req)
-	}
+	resp, err := c.makeRequest("data", req)
 
 	if err != nil {
 		return nil, err
@@ -474,30 +435,32 @@ func (c *Client) dataRequest(req *proxy.Request) (*proxy.EntityData, error) {
 	return resp.Data, nil
 }
 
-func (c *Client) listRequest(req *proxy.Request) (*proxy.EntityList, error) {
-	var list proxy.EntityList
+func (c *Client) listRequest(req *proxy.Request) ([]*ari.Key, error) {
+	var list []*ari.Key
 
-	responses, err := c.makeBroadcastRequest("get", req)
+	responses, err := c.makeRequests("get", req)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, r := range responses {
-		if r.Err() != nil || r.EntityList == nil {
+		if r.Err() != nil || r.Keys == nil {
 			continue
 		}
-		list.List = append(list.List, r.EntityList.List...)
+		list = append(list, r.Keys...)
 	}
-	return &list, nil
+	return list, nil
 }
 
 func (c *Client) makeRequest(class string, req *proxy.Request) (*proxy.Response, error) {
 	var resp proxy.Response
 	var err error
-	var retries int
 
-	for retries <= c.core.timeoutRetries {
-		retries++
+	if !c.completeCoordinates(req) {
+		return c.makeBroadcastRequestReturnFirstGoodResponse(class, req)
+	}
+
+	for i := 0; i <= c.core.timeoutRetries; i++ {
 		err = c.nc.Request(c.subject(class, req), req, &resp, c.requestTimeout)
 		if err == nats.ErrTimeout {
 			continue
@@ -508,12 +471,16 @@ func (c *Client) makeRequest(class string, req *proxy.Request) (*proxy.Response,
 	return nil, err
 }
 
-func (c *Client) makeBroadcastRequest(class string, req *proxy.Request) ([]*proxy.Response, error) {
-	var responses []*proxy.Response
-	var err error
+func (c *Client) makeRequests(class string, req *proxy.Request) (responses []*proxy.Response, err error) {
+	if req == nil {
+		return nil, errors.New("empty request")
+	}
+	if req.Key == nil {
+		req.Key = ari.NewKey("", "")
+	}
 
 	var responseCount int
-	expected := len(c.core.cluster.Matching(c.nodeForRequest(req), c.appForRequest(req), c.core.clusterMaxAge))
+	expected := len(c.core.cluster.Matching(req.Key.Node, req.Key.App, c.core.clusterMaxAge))
 	reply := uuid.NewV1().String()
 	replyChan := make(chan *proxy.Response)
 	replySub, err := c.core.nc.Subscribe(reply, func(o *proxy.Response) {
@@ -551,8 +518,15 @@ func (c *Client) makeBroadcastRequest(class string, req *proxy.Request) ([]*prox
 }
 
 func (c *Client) makeBroadcastRequestReturnFirstGoodResponse(class string, req *proxy.Request) (*proxy.Response, error) {
+	if req == nil {
+		return nil, errors.New("empty request")
+	}
+	if req.Key == nil {
+		req.Key = ari.NewKey("", "")
+	}
+
 	var responseCount int
-	expected := len(c.core.cluster.Matching(c.nodeForRequest(req), c.appForRequest(req), c.core.clusterMaxAge))
+	expected := len(c.core.cluster.Matching(req.Key.Node, req.Key.App, c.core.clusterMaxAge))
 	reply := uuid.NewV1().String()
 	replyChan := make(chan *proxy.Response)
 	replySub, err := c.core.nc.Subscribe(reply, func(o *proxy.Response) {
@@ -578,71 +552,37 @@ func (c *Client) makeBroadcastRequestReturnFirstGoodResponse(class string, req *
 	}
 
 	// Wait for replies
-	select {
-	case <-time.After(c.requestTimeout):
-		return nil, errors.New("timeout")
-	case resp := <-replyChan:
-		if resp == nil {
-			return nil, proxy.ErrNotFound
+	for {
+		select {
+		case <-time.After(c.requestTimeout):
+			// Return the last error if we got one; otherwise, return a timeout error
+			if err == nil {
+				err = errors.New("timeout")
+			}
+			return nil, err
+		case resp := <-replyChan:
+			if resp != nil {
+				err = resp.Err() // store the error for later return
+				if err == nil {  // No error means to return the current value
+					return resp, nil
+				}
+			}
 		}
-		return resp, nil
 	}
-}
-
-func (c *Client) appForRequest(req *proxy.Request) string {
-	var app string
-	if c.metadata != nil {
-		app = c.metadata.Application
-	}
-	if req.Metadata != nil && req.Metadata.Application != "" {
-		app = req.Metadata.Application
-	}
-	return app
-}
-
-func (c *Client) nodeForRequest(req *proxy.Request) string {
-	var node string
-	if c.metadata != nil {
-		node = c.metadata.Node
-	}
-	if req.Metadata != nil && req.Metadata.Node != "" {
-		node = req.Metadata.Node
-	}
-	return node
 }
 
 func (c *Client) completeCoordinates(req *proxy.Request) bool {
+	if req == nil || req.Key == nil {
+		return false
+	}
+
 	// coordinates are complete if we have both app and node
-	return c.appForRequest(req) != "" &&
-		c.nodeForRequest(req) != ""
+	return req.Key.App != "" && req.Key.Node != ""
 }
 
 func (c *Client) subject(class string, req *proxy.Request) string {
-	return proxy.Subject(c.core.prefix, class, c.appForRequest(req), c.nodeForRequest(req))
-}
-
-func (c *Client) eventsSubject() (subj string) {
-	// Attempt to build events subject from metadata
-	if c.metadata != nil {
-		if c.metadata.Application != "" {
-			subj = fmt.Sprintf("%sevent.%s", c.core.prefix, c.metadata.Application)
-
-			if c.metadata.Node != "" {
-				subj += "." + c.metadata.Node
-			} else {
-				subj += ".>"
-			}
-		}
-
-		// a dialog always overrides
-		if c.metadata.Dialog != "" {
-			subj = fmt.Sprintf("%sdialogevent.%s", c.core.prefix, c.metadata.Dialog)
-		}
+	if req == nil || req.Key == nil {
+		return proxy.Subject(c.core.prefix, class, c.appName, "")
 	}
-
-	// If we still have no subject, listen to everything
-	if subj == "" {
-		subj = fmt.Sprintf("%sevent.>", c.core.prefix)
-	}
-	return
+	return proxy.Subject(c.core.prefix, class, req.Key.App, req.Key.Node)
 }

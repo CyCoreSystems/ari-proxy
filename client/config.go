@@ -1,8 +1,6 @@
 package client
 
 import (
-	"fmt"
-
 	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/proxy"
 )
@@ -11,76 +9,34 @@ type config struct {
 	c *Client
 }
 
-func (c *config) Get(configClass string, objectType string, id string) ari.ConfigHandle {
-	return &configHandle{
-		configClass: configClass,
-		objectType:  objectType,
-		id:          id,
-		c:           c,
-	}
+func (c *config) Get(key *ari.Key) *ari.ConfigHandle {
+	return ari.NewConfigHandle(key, c)
 }
 
-func (c *config) Data(configClass string, objectType string, id string) (cd *ari.ConfigData, err error) {
+func (c *config) Data(key *ari.Key) (*ari.ConfigData, error) {
 	data, err := c.c.dataRequest(&proxy.Request{
-		AsteriskConfig: &proxy.AsteriskConfig{
-			ConfigClass: configClass,
-			ObjectType:  objectType,
-			ID:          id,
-			Data:        &proxy.AsteriskConfigData{},
-		},
+		Kind: "AsteriskConfigData",
+		Key:  key,
 	})
 	if err != nil {
-		return
+		return nil, err
 	}
-	cd = data.Config
-	return
+	return data.Config, nil
 }
 
-func (c *config) Update(configClass string, objectType string, id string, tuples []ari.ConfigTuple) (err error) {
-	err = c.c.commandRequest(&proxy.Request{
+func (c *config) Update(key *ari.Key, tuples []ari.ConfigTuple) error {
+	return c.c.commandRequest(&proxy.Request{
+		Kind: "AsteriskConfigUpdate",
+		Key:  key,
 		AsteriskConfig: &proxy.AsteriskConfig{
-			ConfigClass: configClass,
-			ObjectType:  objectType,
-			ID:          id,
-			Update: &proxy.AsteriskConfigUpdate{
-				Tuples: tuples,
-			},
+			Tuples: tuples,
 		},
 	})
-	return
 }
 
-func (c *config) Delete(configClass string, objectType string, id string) (err error) {
-	err = c.c.commandRequest(&proxy.Request{
-		AsteriskConfig: &proxy.AsteriskConfig{
-			ConfigClass: configClass,
-			ObjectType:  objectType,
-			ID:          id,
-			Delete:      &proxy.AsteriskConfigDelete{},
-		},
+func (c *config) Delete(key *ari.Key) error {
+	return c.c.commandRequest(&proxy.Request{
+		Kind: "AsteriskConfigDelete",
+		Key:  key,
 	})
-	return
-}
-
-type configHandle struct {
-	configClass string
-	objectType  string
-	id          string
-	c           *config
-}
-
-func (c *configHandle) Data() (*ari.ConfigData, error) {
-	return c.c.Data(c.configClass, c.objectType, c.id)
-}
-
-func (c *configHandle) Delete() error {
-	return c.c.Delete(c.configClass, c.objectType, c.id)
-}
-
-func (c *configHandle) ID() string {
-	return fmt.Sprintf("%s/%s/%s", c.configClass, c.objectType, c.id)
-}
-
-func (c *configHandle) Update(c1 []ari.ConfigTuple) error {
-	return c.c.Update(c.configClass, c.objectType, c.id, c1)
 }

@@ -501,6 +501,8 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		f = s.recordingLiveResume
 	case "RecordingLiveScrap":
 		f = s.recordingLiveScrap
+	case "RecordingLiveSubscribe":
+		f = s.recordingLiveSubscribe
 	case "RecordingLiveStop":
 		f = s.recordingLiveStop
 	case "RecordingLiveUnmute":

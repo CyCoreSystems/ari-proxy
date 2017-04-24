@@ -9,74 +9,56 @@ type storedRecording struct {
 	c *Client
 }
 
-func (sr *storedRecording) List() (ret []ari.StoredRecordingHandle, err error) {
-	el, err := sr.c.listRequest(&proxy.Request{
-		RecordingStoredList: &proxy.RecordingStoredList{},
+func (s *storedRecording) List(filter *ari.Key) ([]*ari.Key, error) {
+	return s.c.listRequest(&proxy.Request{
+		Kind: "RecordingStoredList",
+		Key:  filter,
+	})
+}
+
+func (s *storedRecording) Get(key *ari.Key) *ari.StoredRecordingHandle {
+	k, err := s.c.getRequest(&proxy.Request{
+		Kind: "RecordingStoredGet",
+		Key:  key,
 	})
 	if err != nil {
-		return
+		s.c.log.Warn("failed to get stored recording for handle", "error", err)
+		return ari.NewStoredRecordingHandle(key, s, nil)
 	}
-	for _, i := range el.List {
-		ret = append(ret, sr.Get(i.ID))
-	}
-	return
+	return ari.NewStoredRecordingHandle(k, s, nil)
 }
 
-func (sr *storedRecording) Get(name string) ari.StoredRecordingHandle {
-	return &storedRecordingHandle{
-		id: name,
-		s:  sr,
-	}
-}
-
-func (sr *storedRecording) Data(name string) (srd *ari.StoredRecordingData, err error) {
-	data, err := sr.c.dataRequest(&proxy.Request{
-		RecordingStoredData: &proxy.RecordingStoredData{
-			ID: name,
-		},
+func (s *storedRecording) Data(key *ari.Key) (*ari.StoredRecordingData, error) {
+	data, err := s.c.dataRequest(&proxy.Request{
+		Kind: "RecordingStoredData",
+		Key:  key,
 	})
 	if err != nil {
-		return
+		return nil, err
 	}
-	srd = data.StoredRecording
-	return
+	return data.StoredRecording, nil
 }
 
-func (sr *storedRecording) Copy(name string, dest string) (h ari.StoredRecordingHandle, err error) {
-	err = sr.c.commandRequest(&proxy.Request{
+func (s *storedRecording) Copy(key *ari.Key, dest string) (*ari.StoredRecordingHandle, error) {
+	err := s.c.commandRequest(&proxy.Request{
+		Kind: "RecordingStoredCopy",
+		Key:  key,
 		RecordingStoredCopy: &proxy.RecordingStoredCopy{
-			ID: name,
+			Destination: dest,
 		},
 	})
-	return
+	if err != nil {
+		return nil, err
+	}
+
+	k := key
+	k.ID = dest
+	return ari.NewStoredRecordingHandle(k, s, nil), nil
 }
 
-func (sr *storedRecording) Delete(name string) (err error) {
-	err = sr.c.commandRequest(&proxy.Request{
-		RecordingStoredDelete: &proxy.RecordingStoredDelete{
-			ID: name,
-		},
+func (s *storedRecording) Delete(key *ari.Key) error {
+	return s.c.commandRequest(&proxy.Request{
+		Kind: "RecordingStoredDelete",
+		Key:  key,
 	})
-	return
-}
-
-type storedRecordingHandle struct {
-	id string
-	s  *storedRecording
-}
-
-func (s *storedRecordingHandle) Copy(dest string) (ari.StoredRecordingHandle, error) {
-	return s.s.Copy(s.id, dest)
-}
-
-func (s *storedRecordingHandle) Data() (*ari.StoredRecordingData, error) {
-	return s.s.Data(s.id)
-}
-
-func (s *storedRecordingHandle) Delete() error {
-	return s.s.Delete(s.id)
-}
-
-func (s *storedRecordingHandle) ID() string {
-	return s.id
 }

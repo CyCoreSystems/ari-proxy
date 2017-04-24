@@ -10,46 +10,62 @@ type bridge struct {
 	c *Client
 }
 
-func (b *bridge) Create(id string, t string, name string) (h ari.BridgeHandle, err error) {
-	resp, err := b.c.getRequest(&proxy.Request{
+func (b *bridge) Create(key *ari.Key, btype, name string) (*ari.BridgeHandle, error) {
+	k, err := b.c.createRequest(&proxy.Request{
+		Kind: "BridgeCreate",
+		Key:  key,
 		BridgeCreate: &proxy.BridgeCreate{
-			ID:   id,
+			Type: btype,
 			Name: name,
-			Type: t,
 		},
-	})
-	if err != nil {
-		return
-	}
-	return b.Get(resp.ID), nil
-}
-
-func (b *bridge) Get(id string) ari.BridgeHandle {
-	return &bridgeHandle{id: id, bridge: b}
-}
-
-func (b *bridge) List() (ret []ari.BridgeHandle, err error) {
-	resp, err := b.c.listRequest(&proxy.Request{
-		BridgeList: &proxy.BridgeList{},
 	})
 	if err != nil {
 		return nil, err
 	}
-	for _, i := range resp.List {
-		ret = append(ret, b.Get(i.ID))
-	}
-	return
+	return ari.NewBridgeHandle(k, b, nil), nil
 }
 
-func (b *bridge) Playback() ari.Playback {
-	return b.c.Playback()
-}
-
-func (b *bridge) Data(id string) (*ari.BridgeData, error) {
-	resp, err := b.c.dataRequest(&proxy.Request{
-		BridgeData: &proxy.BridgeData{
-			ID: id,
+func (b *bridge) StageCreate(key *ari.Key, btype, name string) (*ari.BridgeHandle, error) {
+	k, err := b.c.createRequest(&proxy.Request{
+		Kind: "BridgeStageCreate",
+		Key:  key,
+		BridgeCreate: &proxy.BridgeCreate{
+			Type: btype,
+			Name: name,
 		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return ari.NewBridgeHandle(k, b, func(h *ari.BridgeHandle) error {
+		_, err := b.Create(k, btype, name)
+		return err
+	}), nil
+}
+
+func (b *bridge) Get(key *ari.Key) *ari.BridgeHandle {
+	k, err := b.c.getRequest(&proxy.Request{
+		Kind: "BridgeGet",
+		Key:  key,
+	})
+	if err != nil {
+		b.c.log.Warn("failed to get bridge for handle", "error", err)
+		return ari.NewBridgeHandle(key, b, nil)
+	}
+	return ari.NewBridgeHandle(k, b, nil)
+}
+
+func (b *bridge) List(filter *ari.Key) ([]*ari.Key, error) {
+	return b.c.listRequest(&proxy.Request{
+		Kind: "BridgeList",
+		Key:  filter,
+	})
+}
+
+func (b *bridge) Data(key *ari.Key) (*ari.BridgeData, error) {
+	resp, err := b.c.dataRequest(&proxy.Request{
+		Kind: "BridgeData",
+		Key:  key,
 	})
 	if err != nil {
 		return nil, err
@@ -57,47 +73,68 @@ func (b *bridge) Data(id string) (*ari.BridgeData, error) {
 	return resp.Bridge, nil
 }
 
-func (b *bridge) AddChannel(bridgeID string, channelID string) error {
+func (b *bridge) AddChannel(key *ari.Key, channelID string) error {
 	return b.c.commandRequest(&proxy.Request{
+		Kind: "BridgeAddChannel",
+		Key:  key,
 		BridgeAddChannel: &proxy.BridgeAddChannel{
-			ID:      bridgeID,
 			Channel: channelID,
 		},
 	})
 }
 
-func (b *bridge) RemoveChannel(bridgeID string, channelID string) error {
+func (b *bridge) RemoveChannel(key *ari.Key, channelID string) error {
 	return b.c.commandRequest(&proxy.Request{
+		Kind: "BridgeRemoveChannel",
+		Key:  key,
 		BridgeRemoveChannel: &proxy.BridgeRemoveChannel{
-			ID:      bridgeID,
 			Channel: channelID,
 		},
 	})
 }
 
-func (b *bridge) Delete(id string) error {
+func (b *bridge) Delete(key *ari.Key) error {
 	return b.c.commandRequest(&proxy.Request{
-		BridgeDelete: &proxy.BridgeDelete{
-			ID: id,
-		},
+		Kind: "BridgeDelete",
+		Key:  key,
 	})
 }
 
-func (b *bridge) Play(id string, playbackID string, mediaURI string) (ari.PlaybackHandle, error) {
+func (b *bridge) Play(key *ari.Key, id string, uri string) (*ari.PlaybackHandle, error) {
 	err := b.c.commandRequest(&proxy.Request{
+		Kind: "BridgePlay",
+		Key:  key,
 		BridgePlay: &proxy.BridgePlay{
-			ID:         id,
-			MediaURI:   mediaURI,
-			PlaybackID: playbackID,
+			MediaURI:   uri,
+			PlaybackID: id,
 		},
 	})
 	if err != nil {
 		return nil, err
 	}
-	return b.c.Playback().Get(playbackID), nil
+	return ari.NewPlaybackHandle(key, b.c.Playback(), nil), nil
 }
 
-func (b *bridge) Record(id string, name string, opts *ari.RecordingOptions) (ari.LiveRecordingHandle, error) {
+func (b *bridge) StagePlay(key *ari.Key, id string, uri string) (*ari.PlaybackHandle, error) {
+	k, err := b.c.getRequest(&proxy.Request{
+		Kind: "BridgeStagePlay",
+		Key:  key,
+		BridgePlay: &proxy.BridgePlay{
+			MediaURI:   uri,
+			PlaybackID: id,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return ari.NewPlaybackHandle(k, b.c.Playback(), func(h *ari.PlaybackHandle) error {
+		_, err := b.Play(k, id, uri)
+		return err
+	}), nil
+}
+
+func (b *bridge) Record(key *ari.Key, name string, opts *ari.RecordingOptions) (*ari.LiveRecordingHandle, error) {
 	if opts == nil {
 		opts = &ari.RecordingOptions{}
 	}
@@ -106,95 +143,57 @@ func (b *bridge) Record(id string, name string, opts *ari.RecordingOptions) (ari
 	}
 
 	err := b.c.commandRequest(&proxy.Request{
+		Kind: "BridgeRecord",
+		Key:  key,
 		BridgeRecord: &proxy.BridgeRecord{
-			ID:      id,
-			Options: opts,
 			Name:    name,
+			Options: opts,
 		},
 	})
 	if err != nil {
 		return nil, err
 	}
-	return b.c.LiveRecording().Get(name), nil
+	return ari.NewLiveRecordingHandle(key, b.c.LiveRecording(), nil), nil
 }
 
-func (b *bridge) Subscribe(id string, nx ...string) ari.Subscription {
-	// TODO
-	/*
-		inSub := b.c.Bus().Subscribe(n...)
-		outSub := newSubscription()
-
-		go func() {
-			defer inSub.Cancel()
-
-			br := b.Get(id)
-
-			for {
-				select {
-				case <-outSub.closedChan:
-					return
-				case e, ok := <-inSub.Events():
-					if !ok {
-						return
-					}
-					if br.Match(e) {
-						outSub.events <- e
-					}
-				}
-			}
-		}()
-
-		return outSub
-	*/
-	return nil
-}
-
-type bridgeHandle struct {
-	id     string
-	bridge ari.Bridge
-}
-
-func (bh *bridgeHandle) ID() string {
-	return bh.id
-}
-
-func (bh *bridgeHandle) Subscribe(nx ...string) ari.Subscription {
-	return bh.bridge.Subscribe(bh.id, nx...)
-}
-
-func (bh *bridgeHandle) AddChannel(channelID string) error {
-	return bh.bridge.AddChannel(bh.id, channelID)
-}
-
-func (bh *bridgeHandle) RemoveChannel(channelID string) error {
-	return bh.bridge.AddChannel(bh.id, channelID)
-}
-
-func (bh *bridgeHandle) Delete() error {
-	return bh.bridge.Delete(bh.id)
-}
-
-func (bh *bridgeHandle) Data() (*ari.BridgeData, error) {
-	return bh.bridge.Data(bh.id)
-}
-
-func (bh *bridgeHandle) Play(playbackID string, mediaURI string) (ari.PlaybackHandle, error) {
-	return bh.bridge.Play(bh.id, playbackID, mediaURI)
-}
-
-func (bh *bridgeHandle) Record(name string, opts *ari.RecordingOptions) (ari.LiveRecordingHandle, error) {
-	return bh.bridge.Record(bh.id, name, opts)
-}
-
-func (bh *bridgeHandle) Match(e ari.Event) (ok bool) {
-	v, ok := e.(ari.BridgeEvent)
-	if !ok {
-		return false
+func (b *bridge) StageRecord(key *ari.Key, name string, opts *ari.RecordingOptions) (*ari.LiveRecordingHandle, error) {
+	if opts == nil {
+		opts = &ari.RecordingOptions{}
 	}
-	for _, i := range v.GetBridgeIDs() {
-		if i == bh.id {
-			return true
+	if name == "" {
+		name = uuid.NewV1().String()
+	}
+
+	k, err := b.c.getRequest(&proxy.Request{
+		Kind: "BridgeStageRecord",
+		Key:  key,
+		BridgeRecord: &proxy.BridgeRecord{
+			Name:    name,
+			Options: opts,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return ari.NewLiveRecordingHandle(k, b.c.LiveRecording(), func(h *ari.LiveRecordingHandle) error {
+		_, err := b.Record(k, name, opts)
+		return err
+	}), nil
+}
+
+func (b *bridge) Subscribe(key *ari.Key, n ...string) ari.Subscription {
+	err := b.c.commandRequest(&proxy.Request{
+		Kind: "BridgeSubscribe",
+		Key:  key,
+	})
+	if err != nil {
+		b.c.log.Warn("failed to call bridge subscribe")
+		if key.Dialog != "" {
+			b.c.log.Error("dialog present; failing")
+			return nil
 		}
 	}
-	return false
+
+	return b.c.Bus().Subscribe(key, n...)
 }

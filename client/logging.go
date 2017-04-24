@@ -9,105 +9,60 @@ type logging struct {
 	c *Client
 }
 
-func (l *logging) Create(name string, level string) (err error) {
-	err = l.c.commandRequest(&proxy.Request{
-		AsteriskLogging: &proxy.AsteriskLogging{
-			Create: &proxy.AsteriskLoggingCreate{
-				Config: level,
-				ID:     name,
-			},
-		},
-	})
-	if err != nil {
-		return
-	}
-	return
-}
-
-func (l *logging) Data(name string) (*ari.LogData, error) {
-	resp, err := l.c.dataRequest(&proxy.Request{
-		AsteriskLogging: &proxy.AsteriskLogging{
-			Data: &proxy.AsteriskLoggingData{
-				ID: name,
-			},
+func (l *logging) Create(key *ari.Key, levels string) (*ari.LogHandle, error) {
+	k, err := l.c.createRequest(&proxy.Request{
+		Kind: "AsteriskLoggingCreate",
+		Key:  key,
+		AsteriskLoggingChannel: &proxy.AsteriskLoggingChannel{
+			Levels: levels,
 		},
 	})
 	if err != nil {
 		return nil, err
 	}
-	return resp.Log, nil
+	return ari.NewLogHandle(k, l), nil
 }
 
-func (l *logging) Get(id string) ari.LogHandle {
-	return &loggingHandle{
-		name: id,
-		c:    l,
-	}
-
-}
-
-func (l *logging) List() (ld []ari.LogHandle, err error) {
-	resp, err := l.c.listRequest(&proxy.Request{
-		AsteriskLogging: &proxy.AsteriskLogging{
-			List: &proxy.AsteriskLoggingList{},
-		},
+func (l *logging) Data(key *ari.Key) (*ari.LogData, error) {
+	data, err := l.c.dataRequest(&proxy.Request{
+		Kind: "AsteriskLoggingData",
+		Key:  key,
 	})
 	if err != nil {
-		return
+		return nil, err
 	}
+	return data.Log, nil
+}
 
-	for _, i := range resp.List {
-		ld = append(ld, &loggingHandle{
-			metadata: i.Metadata,
-			name:     i.ID,
-			c:        l,
-		})
-
+func (l *logging) Get(key *ari.Key) *ari.LogHandle {
+	k, err := l.c.getRequest(&proxy.Request{
+		Kind: "AsteriskLoggingGet",
+		Key:  key,
+	})
+	if err != nil {
+		l.c.log.Warn("failed to get logging key for handle", "error", err)
+		return ari.NewLogHandle(key, l)
 	}
-
-	return
+	return ari.NewLogHandle(k, l)
 }
 
-func (l *logging) Rotate(name string) (err error) {
-	err = l.c.commandRequest(&proxy.Request{
-		AsteriskLogging: &proxy.AsteriskLogging{
-			Rotate: &proxy.AsteriskLoggingRotate{
-				ID: name,
-			},
-		},
+func (l *logging) List(filter *ari.Key) ([]*ari.Key, error) {
+	return l.c.listRequest(&proxy.Request{
+		Kind: "AsteriskLoggingList",
+		Key:  filter,
 	})
-	return
 }
 
-func (l *logging) Delete(name string) (err error) {
-	err = l.c.commandRequest(&proxy.Request{
-		AsteriskLogging: &proxy.AsteriskLogging{
-			Delete: &proxy.AsteriskLoggingDelete{
-				ID: name,
-			},
-		},
+func (l *logging) Rotate(key *ari.Key) error {
+	return l.c.commandRequest(&proxy.Request{
+		Kind: "AsteriskLoggingRotate",
+		Key:  key,
 	})
-	return
 }
 
-type loggingHandle struct {
-	name     string
-	c        *logging
-	metadata *proxy.Metadata
-}
-
-func (l *loggingHandle) ID() string {
-	return l.name
-}
-
-func (l *loggingHandle) Data() (*ari.LogData, error) {
-	return l.c.Data(l.name)
-}
-
-func (l *loggingHandle) Rotate() error {
-	return l.c.Rotate(l.name)
-}
-
-func (l *loggingHandle) Delete() error {
-	return l.c.Delete(l.name)
+func (l *logging) Delete(key *ari.Key) error {
+	return l.c.commandRequest(&proxy.Request{
+		Kind: "AsteriskLoggingDelete",
+		Key:  key,
+	})
 }

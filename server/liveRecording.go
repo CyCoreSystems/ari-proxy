@@ -49,7 +49,7 @@ func (s *Server) recordingLiveScrap(ctx context.Context, reply string, req *prox
 }
 
 func (s *Server) recordingLiveSubscribe(ctx context.Context, reply string, req *proxy.Request) {
-	if req.Key.Dialog != nil {
+	if req.Key.Dialog != "" {
 		s.Dialog.Bind(req.Key.Dialog, "recording", req.Key.ID)
 	}
 

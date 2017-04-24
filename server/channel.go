@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 
+	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/proxy"
 	uuid "github.com/satori/go.uuid"
 )
@@ -44,7 +45,7 @@ func (s *Server) channelCreate(ctx context.Context, reply string, req *proxy.Req
 		s.Dialog.Bind(req.Key.Dialog, "channel", create.OtherChannelID)
 	}
 
-	h, err := s.ari.Channel().Create(create)
+	h, err := s.ari.Channel().Create(req.Key, create)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -66,6 +67,18 @@ func (s *Server) channelData(ctx context.Context, reply string, req *proxy.Reque
 		Data: &proxy.EntityData{
 			Channel: d,
 		},
+	})
+}
+
+func (s *Server) channelGet(ctx context.Context, reply string, req *proxy.Request) {
+	data, err := s.ari.Channel().Data(req.Key)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	s.nats.Publish(reply, &proxy.Response{
+		Key: data.Key,
 	})
 }
 
@@ -118,7 +131,7 @@ func (s *Server) channelOriginate(ctx context.Context, reply string, req *proxy.
 		s.Dialog.Bind(req.Key.Dialog, "channel", orig.Originator)
 	}
 
-	h, err := s.ari.Channel().Originate(orig)
+	h, err := s.ari.Channel().Originate(req.Key, orig)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -129,7 +142,25 @@ func (s *Server) channelOriginate(ctx context.Context, reply string, req *proxy.
 	})
 }
 
+func (s *Server) channelStageOriginate(ctx context.Context, reply string, req *proxy.Request) {
+	h := s.ari.Channel().Get(req.Key)
+
+	if req.Key.Dialog != "" {
+		s.Dialog.Bind(req.Key.Dialog, "channel", req.Key.ID)
+	}
+
+	s.nats.Publish(reply, &proxy.Response{
+		Key: h.Key(),
+	})
+}
+
 func (s *Server) channelPlay(ctx context.Context, reply string, req *proxy.Request) {
+	data, err := s.ari.Channel().Data(req.Key)
+	if err != nil || data == nil {
+		s.sendError(reply, err)
+		return
+	}
+
 	if req.ChannelPlay.PlaybackID == "" {
 		req.ChannelPlay.PlaybackID = uuid.NewV1().String()
 	}
@@ -147,6 +178,27 @@ func (s *Server) channelPlay(ctx context.Context, reply string, req *proxy.Reque
 
 	s.nats.Publish(reply, &proxy.Response{
 		Key: ph.Key(),
+	})
+}
+
+func (s *Server) channelStagePlay(ctx context.Context, reply string, req *proxy.Request) {
+	data, err := s.ari.Channel().Data(req.Key)
+	if err != nil || data == nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	if req.ChannelPlay.PlaybackID == "" {
+		req.ChannelPlay.PlaybackID = uuid.NewV1().String()
+	}
+
+	if req.Key.Dialog != "" {
+		s.Dialog.Bind(req.Key.Dialog, "channel", data.ID)
+		s.Dialog.Bind(req.Key.Dialog, "playback", req.ChannelPlay.PlaybackID)
+	}
+
+	s.nats.Publish(reply, &proxy.Response{
+		Key: s.ari.Playback().Get(ari.NewKey(ari.PlaybackKey, req.ChannelPlay.PlaybackID)).Key(),
 	})
 }
 
@@ -168,6 +220,27 @@ func (s *Server) channelRecord(ctx context.Context, reply string, req *proxy.Req
 
 	s.nats.Publish(reply, &proxy.Response{
 		Key: h.Key(),
+	})
+}
+
+func (s *Server) channelStageRecord(ctx context.Context, reply string, req *proxy.Request) {
+	data, err := s.ari.Channel().Data(req.Key)
+	if err != nil || data == nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	if req.ChannelRecord.Name == "" {
+		req.ChannelRecord.Name = uuid.NewV1().String()
+	}
+
+	if req.Key.Dialog != "" {
+		s.Dialog.Bind(req.Key.Dialog, "channel", data.ID)
+		s.Dialog.Bind(req.Key.Dialog, "recording", req.ChannelRecord.Name)
+	}
+
+	s.nats.Publish(reply, &proxy.Response{
+		Key: s.ari.LiveRecording().Get(ari.NewKey(ari.LiveRecordingKey, req.BridgeRecord.Name)).Key(),
 	})
 }
 
@@ -203,6 +276,27 @@ func (s *Server) channelSnoop(ctx context.Context, reply string, req *proxy.Requ
 	})
 }
 
+func (s *Server) channelStageSnoop(ctx context.Context, reply string, req *proxy.Request) {
+	data, err := s.ari.Channel().Data(req.Key)
+	if err != nil || data == nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	if req.ChannelSnoop.SnoopID == "" {
+		req.ChannelSnoop.SnoopID = uuid.NewV1().String()
+	}
+
+	if req.Key.Dialog != "" {
+		s.Dialog.Bind(req.Key.Dialog, "channel", req.ChannelSnoop.SnoopID)
+	}
+
+	s.nats.Publish(reply, &proxy.Response{
+		Key: s.ari.Channel().Get(ari.NewKey(ari.ChannelKey, req.ChannelSnoop.SnoopID)).Key(),
+	})
+
+}
+
 func (s *Server) channelStopHold(ctx context.Context, reply string, req *proxy.Request) {
 	s.sendError(reply, s.ari.Channel().StopHold(req.Key))
 }
@@ -230,17 +324,16 @@ func (s *Server) channelSubscribe(ctx context.Context, reply string, req *proxy.
 }
 
 func (s *Server) channelUnmute(ctx context.Context, reply string, req *proxy.Request) {
-	s.sendError(reply, s.ari.Channel().Unmute(req.Key, req.ChannelUnmute.Direction))
+	s.sendError(reply, s.ari.Channel().Unmute(req.Key, req.ChannelMute.Direction))
 }
 
 func (s *Server) channelVariableGet(ctx context.Context, reply string, req *proxy.Request) {
-	val, err := s.ari.Channel().Variables(req.Key).Get(req.ChannelVariables.Name)
+	val, err := s.ari.Channel().GetVariable(req.Key, req.ChannelVariable.Name)
 	if err != nil {
 		s.sendError(reply, err)
 		return
 	}
 
-	// TODO: return needs metadata/key data somehow
 	s.nats.Publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
 			Variable: val,
@@ -249,5 +342,5 @@ func (s *Server) channelVariableGet(ctx context.Context, reply string, req *prox
 }
 
 func (s *Server) channelVariableSet(ctx context.Context, reply string, req *proxy.Request) {
-	s.sendError(reply, s.ari.Channel().Variables(req.Key).Set(req.ChannelVariables.Name, req.ChannelVariables.Set.Value))
+	s.sendError(reply, s.ari.Channel().SetVariable(req.Key, req.ChannelVariable.Name, req.ChannelVariable.Value))
 }

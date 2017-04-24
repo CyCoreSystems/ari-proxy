@@ -1,8 +1,8 @@
 hash: 00fcac7abd0de3b775d4a7268cdf6996b735b364463b6c1b0570715682f8e89e
-updated: 2017-04-22T00:21:23.697698793-04:00
+updated: 2017-04-24T01:53:06.364057048-04:00
 imports:
 - name: github.com/CyCoreSystems/ari
-  version: 424fd4893d0efd5fecb5b3fe369f90bf400c8b82
+  version: a0b9e7ae45199544f8e1bee2e1b0cb48a70db29d
   subpackages:
   - client/native
   - stdbus
@@ -59,7 +59,7 @@ imports:
 - name: github.com/spf13/cast
   version: acbeb36b902d72a7a4c18e8f3241075e7ab763e4
 - name: github.com/spf13/cobra
-  version: 10f6b9d7e1631a54ad07c5c0fb71c28a1abfd3c2
+  version: 63121c8814fc0b99184dbc1c8b7ef4fddae437c3
 - name: github.com/spf13/jwalterweatherman
   version: fa7ca7e836cf3a8bb4ebf799f472c12d7e903d66
 - name: github.com/spf13/pflag
@@ -74,7 +74,7 @@ imports:
   - assert
   - mock
 - name: golang.org/x/net
-  version: 0b588ed7a0cd59c271d128ec8c429c1c1607e8ab
+  version: d212a1ef2de2f5d441c327b8f26cf3ea3ea9f265
   subpackages:
   - context
   - websocket
@@ -83,7 +83,7 @@ imports:
   subpackages:
   - unix
 - name: golang.org/x/text
-  version: 6a48995cef2d1856bbef2b064f570126429f78ef
+  version: a9a820217f98f7c8a207ec1e45a874e1fe12c478
   subpackages:
   - transform
   - unicode/norm

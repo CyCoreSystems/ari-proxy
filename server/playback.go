@@ -24,6 +24,18 @@ func (s *Server) playbackData(ctx context.Context, reply string, req *proxy.Requ
 	})
 }
 
+func (s *Server) playbackGet(ctx context.Context, reply string, req *proxy.Request) {
+	data, err := s.ari.Playback().Data(req.Key)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	s.nats.Publish(reply, &proxy.Response{
+		Key: data.Key,
+	})
+}
+
 func (s *Server) playbackStop(ctx context.Context, reply string, req *proxy.Request) {
 	s.sendError(reply, s.ari.Playback().Stop(req.Key))
 }

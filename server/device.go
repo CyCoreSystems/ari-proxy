@@ -20,6 +20,18 @@ func (s *Server) deviceStateData(ctx context.Context, reply string, req *proxy.R
 	})
 }
 
+func (s *Server) deviceStateGet(ctx context.Context, reply string, req *proxy.Request) {
+	data, err := s.ari.DeviceState().Data(req.Key)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	s.nats.Publish(reply, &proxy.Response{
+		Key: data.Key,
+	})
+}
+
 func (s *Server) deviceStateDelete(ctx context.Context, reply string, req *proxy.Request) {
 	s.sendError(reply, s.ari.DeviceState().Delete(req.Key))
 }

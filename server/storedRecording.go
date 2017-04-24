@@ -32,6 +32,18 @@ func (s *Server) recordingStoredData(ctx context.Context, reply string, req *pro
 	})
 }
 
+func (s *Server) recordingStoredGet(ctx context.Context, reply string, req *proxy.Request) {
+	data, err := s.ari.StoredRecording().Data(req.Key)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	s.nats.Publish(reply, &proxy.Response{
+		Key: data.Key,
+	})
+}
+
 func (s *Server) recordingStoredDelete(ctx context.Context, reply string, req *proxy.Request) {
 	s.sendError(reply, s.ari.StoredRecording().Delete(req.Key))
 }

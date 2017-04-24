@@ -85,6 +85,5 @@ func (s *Server) applicationSubscribe(ctx context.Context, reply string, req *pr
 }
 
 func (s *Server) applicationUnsubscribe(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Application().Unsubscribe(req.Key, req.ApplicationUnsubscribe.EventSource)
-	s.sendError(reply, err)
+	s.sendError(reply, s.ari.Application().Unsubscribe(req.Key, req.ApplicationSubscribe.EventSource))
 }

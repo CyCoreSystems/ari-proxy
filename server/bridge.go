@@ -3,7 +3,9 @@ package server
 import (
 	"context"
 
+	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/proxy"
+	uuid "github.com/satori/go.uuid"
 )
 
 func (s *Server) bridgeAddChannel(ctx context.Context, reply string, req *proxy.Request) {
@@ -31,10 +33,22 @@ func (s *Server) bridgeCreate(ctx context.Context, reply string, req *proxy.Requ
 		s.Dialog.Bind(req.Key.Dialog, "bridge", req.Key.ID)
 	}
 
-	bh, err := s.ari.Bridge().Create(req.Key, req.BridgeCreate.Type, req.BridgeCreate.Name)
+	h, err := s.ari.Bridge().Create(req.Key, req.BridgeCreate.Type, req.BridgeCreate.Name)
 	if err != nil {
 		s.sendError(reply, err)
 		return
+	}
+
+	s.nats.Publish(reply, &proxy.Response{
+		Key: h.Key(),
+	})
+}
+
+func (s *Server) bridgeStageCreate(ctx context.Context, reply string, req *proxy.Request) {
+	bh := s.ari.Bridge().Get(req.Key)
+
+	if req.Key.Dialog != "" {
+		s.Dialog.Bind(req.Key.Dialog, "bridge", req.Key.ID)
 	}
 
 	s.nats.Publish(reply, &proxy.Response{
@@ -71,6 +85,22 @@ func (s *Server) bridgeDelete(ctx context.Context, reply string, req *proxy.Requ
 	s.sendError(reply, nil)
 }
 
+func (s *Server) bridgeGet(ctx context.Context, reply string, req *proxy.Request) {
+	data, err := s.ari.Bridge().Data(req.Key)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	if req.Key.Dialog != "" {
+		s.Dialog.Bind(req.Key.Dialog, "bridge", req.Key.ID)
+	}
+
+	s.nats.Publish(reply, &proxy.Response{
+		Key: data.Key,
+	})
+}
+
 func (s *Server) bridgeList(ctx context.Context, reply string, req *proxy.Request) {
 	list, err := s.ari.Bridge().List(nil)
 	if err != nil {
@@ -97,13 +127,43 @@ func (s *Server) bridgePlay(ctx context.Context, reply string, req *proxy.Reques
 		return
 	}
 
-	//NOTE: this originally returned a nil
 	s.nats.Publish(reply, &proxy.Response{
 		Key: ph.Key(),
 	})
 }
 
+func (s *Server) bridgeStagePlay(ctx context.Context, reply string, req *proxy.Request) {
+	data, err := s.ari.Bridge().Data(req.Key)
+	if err != nil || data == nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	if req.ChannelPlay.PlaybackID == "" {
+		req.ChannelPlay.PlaybackID = uuid.NewV1().String()
+	}
+
+	// bind dialog
+	if req.Key.Dialog != "" {
+		s.Dialog.Bind(req.Key.Dialog, "bridge", req.Key.ID)
+		s.Dialog.Bind(req.Key.Dialog, "playback", req.BridgePlay.PlaybackID)
+	}
+
+	s.nats.Publish(reply, &proxy.Response{
+		Key: s.ari.Playback().Get(ari.NewKey(ari.PlaybackKey, req.BridgePlay.PlaybackID)).Key(),
+	})
+}
+
 func (s *Server) bridgeRecord(ctx context.Context, reply string, req *proxy.Request) {
+	data, err := s.ari.Bridge().Data(req.Key)
+	if err != nil || data == nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	if req.BridgeRecord.Name == "" {
+		req.BridgeRecord.Name = uuid.NewV1().String()
+	}
 
 	// bind dialog
 	if req.Key.Dialog != "" {
@@ -119,6 +179,27 @@ func (s *Server) bridgeRecord(ctx context.Context, reply string, req *proxy.Requ
 
 	s.nats.Publish(reply, &proxy.Response{
 		Key: h.Key(),
+	})
+}
+
+func (s *Server) bridgeStageRecord(ctx context.Context, reply string, req *proxy.Request) {
+	data, err := s.ari.Bridge().Data(req.Key)
+	if err != nil || data == nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	if req.BridgeRecord.Name == "" {
+		req.BridgeRecord.Name = uuid.NewV1().String()
+	}
+
+	if req.Key.Dialog != "" {
+		s.Dialog.Bind(req.Key.Dialog, "bridge", data.ID)
+		s.Dialog.Bind(req.Key.Dialog, "recording", req.BridgeRecord.Name)
+	}
+
+	s.nats.Publish(reply, &proxy.Response{
+		Key: s.ari.LiveRecording().Get(ari.NewKey(ari.LiveRecordingKey, req.BridgeRecord.Name)).Key(),
 	})
 }
 

@@ -20,6 +20,18 @@ func (s *Server) endpointData(ctx context.Context, reply string, req *proxy.Requ
 	})
 }
 
+func (s *Server) endpointGet(ctx context.Context, reply string, req *proxy.Request) {
+	data, err := s.ari.Endpoint().Data(req.Key)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	s.nats.Publish(reply, &proxy.Response{
+		Key: data.Key,
+	})
+}
+
 func (s *Server) endpointList(ctx context.Context, reply string, req *proxy.Request) {
 	list, err := s.ari.Endpoint().List(nil)
 	if err != nil {

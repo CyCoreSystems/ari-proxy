@@ -116,7 +116,7 @@ func (s *Server) listen(ctx context.Context) error {
 
 	// First, get the Asterisk ID
 
-	ret, err := s.ari.Asterisk().Info("")
+	ret, err := s.ari.Asterisk().Info(nil)
 	if err != nil {
 		return errors.Wrap(err, "failed to get Asterisk ID")
 	}
@@ -256,7 +256,7 @@ func (s *Server) announce() {
 
 // runEventHandler processes events which are received from ARI
 func (s *Server) runEventHandler(ctx context.Context) {
-	sub := s.ari.Bus().Subscribe(ari.Events.All)
+	sub := s.ari.Bus().Subscribe(ari.NewKey("", ""), ari.Events.All)
 	defer sub.Cancel()
 
 	for {
@@ -305,16 +305,46 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 	switch req.Kind {
 	case "ApplicationData":
 		f = s.applicationData
+	case "ApplicationGet":
+		f = s.applicationGet
 	case "ApplicationList":
 		f = s.applicationList
 	case "ApplicationSubscribe":
 		f = s.applicationSubscribe
 	case "ApplicationUnsubscribe":
 		f = s.applicationUnsubscribe
+	case "AsteriskConfigData":
+		f = s.asteriskConfigData
+	case "AsteriskConfigDelete":
+		f = s.asteriskConfigDelete
+	case "AsteriskConfigUpdate":
+		f = s.asteriskConfigUpdate
+	case "AsteriskLoggingCreate":
+		f = s.asteriskLoggingCreate
+	case "AsteriskLoggingData":
+		f = s.asteriskLoggingData
+	case "AsteriskLoggingDelete":
+		f = s.asteriskLoggingDelete
+	case "AsteriskLoggingGet":
+		f = s.asteriskLoggingGet
+	case "AsteriskLoggingList":
+		f = s.asteriskLoggingList
+	case "AsteriskLoggingRotate":
+		f = s.asteriskLoggingRotate
+	case "AsteriskModuleData":
+		f = s.asteriskModuleData
+	case "AsteriskModuleGet":
+		f = s.asteriskModuleGet
+	case "AsteriskModuleLoad":
+		f = s.asteriskModuleLoad
+	case "AsteriskModuleList":
+		f = s.asteriskModuleList
+	case "AsteriskModuleReload":
+		f = s.asteriskModuleReload
+	case "AsteriskModuleUnload":
+		f = s.asteriskModuleUnload
 	case "AsteriskInfo":
 		f = s.asteriskInfo
-	case "AsteriskReloadModule":
-		f = s.asteriskReloadModule
 	case "AsteriskVariableGet":
 		f = s.asteriskVariableGet
 	case "AsteriskVariableSet":
@@ -323,16 +353,24 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		f = s.bridgeAddChannel
 	case "BridgeCreate":
 		f = s.bridgeCreate
+	case "BridgeStageCreate":
+		f = s.bridgeStageCreate
 	case "BridgeData":
 		f = s.bridgeData
 	case "BridgeDelete":
 		f = s.bridgeDelete
+	case "BridgeGet":
+		f = s.bridgeGet
 	case "BridgeList":
 		f = s.bridgeList
 	case "BridgePlay":
 		f = s.bridgePlay
+	case "BridgeStagePlay":
+		f = s.bridgeStagePlay
 	case "BridgeRecord":
 		f = s.bridgeRecord
+	case "BridgeStageRecord":
+		f = s.bridgeStageRecord
 	case "BridgeRemoveChannel":
 		f = s.bridgeRemoveChannel
 	case "BridgeSubscribe":
@@ -353,6 +391,8 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		f = s.channelData
 	case "ChannelDial":
 		f = s.channelDial
+	case "ChannelGet":
+		f = s.channelGet
 	case "ChannelHangup":
 		f = s.channelHangup
 	case "ChannelHold":
@@ -365,10 +405,16 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		f = s.channelMute
 	case "ChannelOriginate":
 		f = s.channelOriginate
+	case "ChannelStageOriginate":
+		f = s.channelStageOriginate
 	case "ChannelPlay":
 		f = s.channelPlay
+	case "ChannelStagePlay":
+		f = s.channelStagePlay
 	case "ChannelRecord":
 		f = s.channelRecord
+	case "ChannelStageRecord":
+		f = s.channelStageRecord
 	case "ChannelRing":
 		f = s.channelRing
 	case "ChannelSendDTMF":
@@ -377,6 +423,8 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		f = s.channelSilence
 	case "ChannelSnoop":
 		f = s.channelSnoop
+	case "ChannelStageSnoop":
+		f = s.channelStageSnoop
 	case "ChannelStopHold":
 		f = s.channelStopHold
 	case "ChannelStopMOH":
@@ -397,12 +445,16 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		f = s.deviceStateData
 	case "DeviceStateDelete":
 		f = s.deviceStateDelete
+	case "DeviceStateGet":
+		f = s.deviceStateGet
 	case "DeviceStateList":
 		f = s.deviceStateList
 	case "DeviceStateUpdate":
 		f = s.deviceStateUpdate
 	case "EndpointData":
 		f = s.endpointData
+	case "EndpointGet":
+		f = s.endpointGet
 	case "EndpointList":
 		f = s.endpointList
 	case "EndpointListByTech":
@@ -411,6 +463,8 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		f = s.mailboxData
 	case "MailboxDelete":
 		f = s.mailboxDelete
+	case "MailboxGet":
+		f = s.mailboxGet
 	case "MailboxList":
 		f = s.mailboxList
 	case "MailboxUpdate":
@@ -419,6 +473,8 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		f = s.playbackControl
 	case "PlaybackData":
 		f = s.playbackData
+	case "PlaybackGet":
+		f = s.playbackGet
 	case "PlaybackStop":
 		f = s.playbackStop
 	case "PlaybackSubscribe":
@@ -429,12 +485,14 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		f = s.recordingStoredData
 	case "RecordingStoredDelete":
 		f = s.recordingStoredDelete
+	case "RecordingStoredGet":
+		f = s.recordingStoredGet
 	case "RecordingStoredList":
 		f = s.recordingStoredList
 	case "RecordingLiveData":
 		f = s.recordingLiveData
-	case "RecordingLiveDelete":
-		f = s.recordingLiveDelete
+	case "RecordingLiveGet":
+		f = s.recordingLiveGet
 	case "RecordingLiveMute":
 		f = s.recordingLiveMute
 	case "RecordingLivePause":
@@ -451,32 +509,6 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		f = s.soundData
 	case "SoundList":
 		f = s.soundList
-	case "AsteriskConfigData":
-		f = s.asteriskConfigData
-	case "AsteriskConfigDelete":
-		f = s.asteriskConfigDelete
-	case "AsteriskConfigUpdate":
-		f = s.asteriskConfigUpdate
-	case "AsteriskLoggingCreate":
-		f = s.asteriskLoggingCreate
-	case "AsteriskLoggingData":
-		f = s.asteriskLoggingData
-	case "AsteriskLoggingDelete":
-		f = s.asteriskLoggingDelete
-	case "AsteriskLoggingList":
-		f = s.asteriskLoggingList
-	case "AsteriskLoggingRotate":
-		f = s.asteriskLoggingRotate
-	case "AsteriskModuleData":
-		f = s.asteriskModuleData
-	case "AsteriskModuleLoad":
-		f = s.asteriskModuleLoad
-	case "AsteriskModuleList":
-		f = s.asteriskModuleList
-	case "AsteriskModuleReload":
-		f = s.asteriskModuleReload
-	case "AsteriskModuleUnload":
-		f = s.asteriskModuleUnload
 	default:
 		f = func(ctx context.Context, reply string, req *proxy.Request) {
 			s.sendError(reply, errors.New("Not implemented"))

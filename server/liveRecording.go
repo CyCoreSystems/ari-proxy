@@ -20,8 +20,16 @@ func (s *Server) recordingLiveData(ctx context.Context, reply string, req *proxy
 	})
 }
 
-func (s *Server) recordingLiveDelete(ctx context.Context, reply string, req *proxy.Request) {
-	s.sendError(reply, s.ari.LiveRecording().Delete(req.Key))
+func (s *Server) recordingLiveGet(ctx context.Context, reply string, req *proxy.Request) {
+	data, err := s.ari.LiveRecording().Data(req.Key)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	s.nats.Publish(reply, proxy.Response{
+		Key: data.Key,
+	})
 }
 
 func (s *Server) recordingLiveMute(ctx context.Context, reply string, req *proxy.Request) {

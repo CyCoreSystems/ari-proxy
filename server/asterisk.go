@@ -7,7 +7,7 @@ import (
 )
 
 func (s *Server) asteriskInfo(ctx context.Context, reply string, req *proxy.Request) {
-	info, err := s.ari.Asterisk().Info("")
+	data, err := s.ari.Asterisk().Info(req.Key)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -15,23 +15,13 @@ func (s *Server) asteriskInfo(ctx context.Context, reply string, req *proxy.Requ
 
 	s.nats.Publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
-			Asterisk: info,
+			Asterisk: data,
 		},
 	})
 }
 
-func (s *Server) asteriskReloadModule(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Asterisk().ReloadModule(req.Key)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
-
-	s.sendError(reply, nil)
-}
-
 func (s *Server) asteriskVariableGet(ctx context.Context, reply string, req *proxy.Request) {
-	val, err := s.ari.Asterisk().Variables().Get(req.Key.ID)
+	val, err := s.ari.Asterisk().Variables().Get(req.Key)
 	if err != nil {
 		s.sendError(reply, err)
 		return
@@ -45,7 +35,7 @@ func (s *Server) asteriskVariableGet(ctx context.Context, reply string, req *pro
 }
 
 func (s *Server) asteriskVariableSet(ctx context.Context, reply string, req *proxy.Request) {
-	err := s.ari.Asterisk().Variables().Set(req.Key.ID, req.AsteriskVariables.Set.Value)
+	err := s.ari.Asterisk().Variables().Set(req.Key, req.AsteriskVariableSet.Value)
 	if err != nil {
 		s.sendError(reply, err)
 		return

@@ -26,5 +26,5 @@ func (s *Server) asteriskConfigDelete(ctx context.Context, reply string, req *pr
 }
 
 func (s *Server) asteriskConfigUpdate(ctx context.Context, reply string, req *proxy.Request) {
-	s.sendError(reply, s.ari.Asterisk().Config().Update(req.Key, req.AsteriskConfig.Update.Tuples))
+	s.sendError(reply, s.ari.Asterisk().Config().Update(req.Key, req.AsteriskConfig.Tuples))
 }

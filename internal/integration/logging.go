@@ -9,16 +9,11 @@ import (
 
 func TestLoggingList(t *testing.T, s Server) {
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		var expected = []ari.LogData{
-			ari.LogData{
-				Key:    ari.NewKey(ari.LoggingKey, "c1"),
-				Name:   "n1",
-				Status: "s1",
-				Types:  "t1",
-			},
+		var expected = []*ari.Key{
+			ari.NewKey(ari.LoggingKey, "n1"),
 		}
 
-		m.Logging.On("List", nil).Return(expected, nil)
+		m.Logging.On("List", (*ari.Key)(nil)).Return(expected, nil)
 
 		ld, err := cl.Asterisk().Logging().List(nil)
 		if err != nil {
@@ -29,7 +24,7 @@ func TestLoggingList(t *testing.T, s Server) {
 		} else {
 			for idx := range ld {
 				failed := false
-				failed = failed || ld[idx].ID != expected[idx].Name
+				failed = failed || ld[idx].ID != expected[idx].ID
 
 				if failed {
 					t.Errorf("Expected item '%d' to be '%v', got '%v",
@@ -38,13 +33,13 @@ func TestLoggingList(t *testing.T, s Server) {
 			}
 		}
 
-		m.Logging.AssertCalled(t, "List", nil)
+		m.Logging.AssertCalled(t, "List", (*ari.Key)(nil))
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		var expected []ari.LogData
+		var expected []*ari.Key
 
-		m.Logging.On("List").Return(expected, errors.New("error"))
+		m.Logging.On("List", (*ari.Key)(nil)).Return(expected, errors.New("error"))
 
 		ld, err := cl.Asterisk().Logging().List(nil)
 		if err == nil {
@@ -55,7 +50,7 @@ func TestLoggingList(t *testing.T, s Server) {
 		} else {
 			for idx := range ld {
 				failed := false
-				failed = failed || ld[idx].ID != expected[idx].Name
+				failed = failed || ld[idx].ID != expected[idx].ID
 
 				if failed {
 					t.Errorf("Expected item '%d' to be '%v', got '%v",
@@ -64,7 +59,7 @@ func TestLoggingList(t *testing.T, s Server) {
 			}
 		}
 
-		m.Logging.AssertCalled(t, "List", nil)
+		m.Logging.AssertCalled(t, "List", (*ari.Key)(nil))
 	})
 }
 
@@ -72,7 +67,7 @@ func TestLoggingCreate(t *testing.T, s Server) {
 	key := ari.NewKey(ari.LoggingKey, "n1")
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
-		m.Logging.On("Create", "n1", "l1").Return(nil)
+		m.Logging.On("Create", key, "l1").Return(ari.NewLogHandle(key, m.Logging), nil)
 
 		_, err := cl.Asterisk().Logging().Create(key, "l1")
 		if err != nil {
@@ -84,7 +79,7 @@ func TestLoggingCreate(t *testing.T, s Server) {
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
-		m.Logging.On("Create", key, "l1").Return(errors.New("error"))
+		m.Logging.On("Create", key, "l1").Return(nil, errors.New("error"))
 
 		_, err := cl.Asterisk().Logging().Create(key, "l1")
 		if err == nil {

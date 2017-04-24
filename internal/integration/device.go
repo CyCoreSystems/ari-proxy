@@ -72,7 +72,7 @@ func TestDeviceUpdate(t *testing.T, s Server) {
 	key := ari.NewKey(ari.DeviceStateKey, "d1")
 
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		m.DeviceState.On("Update", "d1", "st1").Return(nil)
+		m.DeviceState.On("Update", key, "st1").Return(nil)
 
 		err := cl.DeviceState().Update(key, "st1")
 		if err != nil {
@@ -100,7 +100,7 @@ func TestDeviceList(t *testing.T, s Server) {
 		h1 := ari.NewKey(ari.DeviceStateKey, "h1")
 		h2 := ari.NewKey(ari.DeviceStateKey, "h2")
 
-		m.DeviceState.On("List", nil).Return([]*ari.Key{h1, h2}, nil)
+		m.DeviceState.On("List", (*ari.Key)(nil)).Return([]*ari.Key{h1, h2}, nil)
 
 		list, err := cl.DeviceState().List(nil)
 		if err != nil {
@@ -110,12 +110,12 @@ func TestDeviceList(t *testing.T, s Server) {
 			t.Errorf("Expected list of length 2, got %d", len(list))
 		}
 
-		m.DeviceState.AssertCalled(t, "List", nil)
+		m.DeviceState.AssertCalled(t, "List", (*ari.Key)(nil))
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
-		m.DeviceState.On("List").Return([]*ari.Key{}, errors.New("error"))
+		m.DeviceState.On("List", (*ari.Key)(nil)).Return([]*ari.Key{}, errors.New("error"))
 
 		list, err := cl.DeviceState().List(nil)
 		if err == nil {
@@ -125,6 +125,6 @@ func TestDeviceList(t *testing.T, s Server) {
 			t.Errorf("Expected list of length 0, got %d", len(list))
 		}
 
-		m.DeviceState.AssertCalled(t, "List", nil)
+		m.DeviceState.AssertCalled(t, "List", (*ari.Key)(nil))
 	})
 }

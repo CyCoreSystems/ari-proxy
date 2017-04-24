@@ -55,7 +55,7 @@ func TestSoundList(t *testing.T, s Server) {
 
 		var filter map[string]string
 
-		m.Sound.On("List", filter, nil).Return([]*ari.Key{sh1, sh2}, nil)
+		m.Sound.On("List", filter, &ari.Key{Kind: "", ID: "", Node: "", Dialog: "", App: ""}).Return([]*ari.Key{sh1, sh2}, nil)
 
 		ret, err := cl.Sound().List(nil, nil)
 		if err != nil {
@@ -67,12 +67,12 @@ func TestSoundList(t *testing.T, s Server) {
 
 		m.Shutdown()
 
-		m.Sound.AssertCalled(t, "List", filter, nil)
+		m.Sound.AssertCalled(t, "List", filter, &ari.Key{Kind: "", ID: "", Node: "", Dialog: "", App: ""})
 	})
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		var filter map[string]string
 
-		m.Sound.On("List", filter, nil).Return(nil, errors.New("error"))
+		m.Sound.On("List", filter, &ari.Key{Kind: "", ID: "", Node: "", Dialog: "", App: ""}).Return(nil, errors.New("error"))
 
 		ret, err := cl.Sound().List(nil, nil)
 		if err == nil {
@@ -83,6 +83,6 @@ func TestSoundList(t *testing.T, s Server) {
 		}
 		m.Shutdown()
 
-		m.Sound.AssertCalled(t, "List", filter, nil)
+		m.Sound.AssertCalled(t, "List", filter, &ari.Key{Kind: "", ID: "", Node: "", Dialog: "", App: ""})
 	})
 }

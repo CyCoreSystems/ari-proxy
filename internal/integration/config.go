@@ -53,7 +53,7 @@ func TestConfigData(t *testing.T, s Server) {
 		}
 
 		m.Asterisk.AssertCalled(t, "Config")
-		cfg.AssertCalled(t, "Data", "c1", "o1", "id1")
+		cfg.AssertCalled(t, "Data", key)
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {

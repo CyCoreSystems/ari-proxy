@@ -13,7 +13,7 @@ func TestEndpointList(t *testing.T, s Server) {
 		h1 := ari.NewEndpointKey("h1", "1")
 		h2 := ari.NewEndpointKey("h1", "2")
 
-		m.Endpoint.On("List", nil).Return([]*ari.Key{h1, h2}, nil)
+		m.Endpoint.On("List", (*ari.Key)(nil)).Return([]*ari.Key{h1, h2}, nil)
 
 		list, err := cl.Endpoint().List(nil)
 		if err != nil {
@@ -23,12 +23,12 @@ func TestEndpointList(t *testing.T, s Server) {
 			t.Errorf("Expected list of length 2, got %d", len(list))
 		}
 
-		m.Endpoint.AssertCalled(t, "List", nil)
+		m.Endpoint.AssertCalled(t, "List", (*ari.Key)(nil))
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
-		m.Endpoint.On("List", nil).Return([]*ari.Key{}, errors.New("error"))
+		m.Endpoint.On("List", (*ari.Key)(nil)).Return([]*ari.Key{}, errors.New("error"))
 
 		list, err := cl.Endpoint().List(nil)
 		if err == nil {
@@ -38,7 +38,7 @@ func TestEndpointList(t *testing.T, s Server) {
 			t.Errorf("Expected list of length 0, got %d", len(list))
 		}
 
-		m.Endpoint.AssertCalled(t, "List", nil)
+		m.Endpoint.AssertCalled(t, "List", (*ari.Key)(nil))
 	})
 }
 
@@ -48,7 +48,7 @@ func TestEndpointListByTech(t *testing.T, s Server) {
 		h1 := ari.NewEndpointKey("h1", "1")
 		h2 := ari.NewEndpointKey("h1", "2")
 
-		m.Endpoint.On("ListByTech", "tech").Return([]*ari.Key{h1, h2}, nil)
+		m.Endpoint.On("ListByTech", "tech", &ari.Key{Kind: "", ID: "", Node: "", Dialog: "", App: ""}).Return([]*ari.Key{h1, h2}, nil)
 
 		list, err := cl.Endpoint().ListByTech("tech", nil)
 		if err != nil {
@@ -58,12 +58,12 @@ func TestEndpointListByTech(t *testing.T, s Server) {
 			t.Errorf("Expected list of length 2, got %d", len(list))
 		}
 
-		m.Endpoint.AssertCalled(t, "ListByTech", "tech", nil)
+		m.Endpoint.AssertCalled(t, "ListByTech", "tech", &ari.Key{Kind: "", ID: "", Node: "", Dialog: "", App: ""})
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
-		m.Endpoint.On("ListByTech", "tech", nil).Return([]*ari.Key{}, errors.New("error"))
+		m.Endpoint.On("ListByTech", "tech", &ari.Key{Kind: "", ID: "", Node: "", Dialog: "", App: ""}).Return([]*ari.Key{}, errors.New("error"))
 
 		list, err := cl.Endpoint().ListByTech("tech", nil)
 		if err == nil {
@@ -73,7 +73,7 @@ func TestEndpointListByTech(t *testing.T, s Server) {
 			t.Errorf("Expected list of length 0, got %d", len(list))
 		}
 
-		m.Endpoint.AssertCalled(t, "ListByTech", "tech", nil)
+		m.Endpoint.AssertCalled(t, "ListByTech", "tech", &ari.Key{Kind: "", ID: "", Node: "", Dialog: "", App: ""})
 	})
 }
 

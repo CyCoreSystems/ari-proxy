@@ -47,7 +47,7 @@ func TestBridgeCreate(t *testing.T, s Server) {
 
 		m.Shutdown()
 
-		m.Bridge.AssertCalled(t, "Create", "bridgeID", "bridgeType", "bridgeName")
+		m.Bridge.AssertCalled(t, "Create", key, "bridgeType", "bridgeName")
 	})
 }
 
@@ -73,7 +73,7 @@ func TestBridgeList(t *testing.T, s Server) {
 
 		m.Shutdown()
 
-		m.Bridge.AssertCalled(t, "List", nil)
+		m.Bridge.AssertCalled(t, "List", (*ari.Key)(nil))
 	})
 
 	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
@@ -91,7 +91,7 @@ func TestBridgeList(t *testing.T, s Server) {
 
 		m.Shutdown()
 
-		m.Bridge.AssertCalled(t, "List", nil)
+		m.Bridge.AssertCalled(t, "List", (*ari.Key)(nil))
 	})
 }
 
@@ -181,7 +181,7 @@ func TestBridgeRemoveChannel(t *testing.T, s Server) {
 
 		m.Shutdown()
 
-		m.Bridge.AssertCalled(t, "RemoveChannel", "bridge1", "channel1")
+		m.Bridge.AssertCalled(t, "RemoveChannel", key, "channel1")
 	})
 
 	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
@@ -292,7 +292,7 @@ func TestBridgeRecord(t *testing.T, s Server) {
 			t.Errorf("Unexpected error in remote Record call: %v", err)
 		}
 		if ret == nil || ret.ID() != lrh.ID() {
-			t.Errorf("Expected liverecording handle '%v', got '%v'", lrh, ret)
+			t.Errorf("Expected liverecording handle '%v', got '%v'", lrh.ID(), ret.ID())
 		}
 
 		m.Shutdown()

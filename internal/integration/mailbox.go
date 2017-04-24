@@ -9,7 +9,7 @@ import (
 
 func TestMailboxList(t *testing.T, s Server) {
 	runTest("empty", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		m.Mailbox.On("List").Return([]*ari.Key{}, nil)
+		m.Mailbox.On("List", (*ari.Key)(nil)).Return([]*ari.Key{}, nil)
 
 		ret, err := cl.Mailbox().List(nil)
 		if err != nil {
@@ -21,7 +21,7 @@ func TestMailboxList(t *testing.T, s Server) {
 
 		m.Shutdown()
 
-		m.Mailbox.AssertCalled(t, "List")
+		m.Mailbox.AssertCalled(t, "List", (*ari.Key)(nil))
 	})
 
 	runTest("nonEmpty", t, s, func(t *testing.T, m *mock, cl ari.Client) {
@@ -29,7 +29,7 @@ func TestMailboxList(t *testing.T, s Server) {
 		var h1 = ari.NewKey(ari.MailboxKey, "h1")
 		var h2 = ari.NewKey(ari.MailboxKey, "h2")
 
-		m.Mailbox.On("List").Return([]*ari.Key{h1, h2}, nil)
+		m.Mailbox.On("List", (*ari.Key)(nil)).Return([]*ari.Key{h1, h2}, nil)
 
 		ret, err := cl.Mailbox().List(nil)
 		if err != nil {
@@ -41,11 +41,11 @@ func TestMailboxList(t *testing.T, s Server) {
 
 		m.Shutdown()
 
-		m.Mailbox.AssertCalled(t, "List", nil)
+		m.Mailbox.AssertCalled(t, "List", (*ari.Key)(nil))
 	})
 
 	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		m.Mailbox.On("List", nil).Return(nil, errors.New("unknown error"))
+		m.Mailbox.On("List", (*ari.Key)(nil)).Return(nil, errors.New("unknown error"))
 
 		ret, err := cl.Mailbox().List(nil)
 		if err == nil {
@@ -57,7 +57,7 @@ func TestMailboxList(t *testing.T, s Server) {
 
 		m.Shutdown()
 
-		m.Mailbox.AssertCalled(t, "List", nil)
+		m.Mailbox.AssertCalled(t, "List", (*ari.Key)(nil))
 	})
 }
 

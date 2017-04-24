@@ -224,7 +224,7 @@ func TestChannelList(t *testing.T, s Server) {
 
 		m.Shutdown()
 
-		m.Channel.AssertCalled(t, "List", nil)
+		m.Channel.AssertCalled(t, "List", (*ari.Key)(nil))
 	})
 
 	runTest("nonEmpty", t, s, func(t *testing.T, m *mock, cl ari.Client) {
@@ -244,7 +244,7 @@ func TestChannelList(t *testing.T, s Server) {
 
 		m.Shutdown()
 
-		m.Channel.AssertCalled(t, "List", nil)
+		m.Channel.AssertCalled(t, "List", (*ari.Key)(nil))
 	})
 
 	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
@@ -260,7 +260,7 @@ func TestChannelList(t *testing.T, s Server) {
 
 		m.Shutdown()
 
-		m.Channel.AssertCalled(t, "List", nil)
+		m.Channel.AssertCalled(t, "List", (*ari.Key)(nil))
 	})
 }
 
@@ -444,11 +444,12 @@ func TestChannelCreate(t *testing.T, s Server) {
 
 		req := ari.ChannelCreateRequest{}
 		req.App = "App"
+		req.ChannelID = "1234"
 
 		chkey := ari.NewKey(ari.ChannelKey, "ch2")
 		var expected = ari.NewChannelHandle(chkey, m.Channel, nil)
 
-		m.Channel.On("Create", nil, req).Return(expected, nil)
+		m.Channel.On("Create", &ari.Key{Kind: "", ID: "", Node: "", Dialog: "", App: ""}, req).Return(expected, nil)
 
 		h, err := cl.Channel().Create(nil, req)
 		if err != nil {
@@ -462,15 +463,16 @@ func TestChannelCreate(t *testing.T, s Server) {
 
 		m.Shutdown()
 
-		m.Channel.AssertCalled(t, "Create", nil, ari.ChannelCreateRequest{App: "App"})
+		m.Channel.AssertCalled(t, "Create", &ari.Key{Kind: "", ID: "", Node: "", Dialog: "", App: ""}, ari.ChannelCreateRequest{App: "App", ChannelID: "1234"})
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		req := ari.ChannelCreateRequest{}
 		req.App = "App"
+		req.ChannelID = "1234"
 
-		m.Channel.On("Create", nil, req).Return(nil, errors.New("error"))
+		m.Channel.On("Create", &ari.Key{Kind: "", ID: "", Node: "", Dialog: "", App: ""}, req).Return(nil, errors.New("error"))
 
 		h, err := cl.Channel().Create(nil, req)
 		if err == nil {
@@ -482,7 +484,7 @@ func TestChannelCreate(t *testing.T, s Server) {
 
 		m.Shutdown()
 
-		m.Channel.AssertCalled(t, "Create", nil, ari.ChannelCreateRequest{App: "App"})
+		m.Channel.AssertCalled(t, "Create", &ari.Key{Kind: "", ID: "", Node: "", Dialog: "", App: ""}, ari.ChannelCreateRequest{App: "App", ChannelID: "1234"})
 	})
 }
 
@@ -751,8 +753,9 @@ func TestChannelOriginate(t *testing.T, s Server) {
 
 		var req ari.OriginateRequest
 		req.App = "App"
+		req.ChannelID = "1234"
 
-		m.Channel.On("Originate", req).Return(expected, nil)
+		m.Channel.On("Originate", &ari.Key{Kind: "", ID: "", Node: "", Dialog: "", App: ""}, req).Return(expected, nil)
 
 		h, err := cl.Channel().Originate(nil, req)
 		if err != nil {
@@ -766,15 +769,16 @@ func TestChannelOriginate(t *testing.T, s Server) {
 
 		m.Shutdown()
 
-		m.Channel.AssertCalled(t, "Originate", nil, req)
+		m.Channel.AssertCalled(t, "Originate", &ari.Key{Kind: "", ID: "", Node: "", Dialog: "", App: ""}, req)
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var req ari.OriginateRequest
 		req.App = "App"
+		req.ChannelID = "1234"
 
-		m.Channel.On("Originate", req).Return(nil, errors.New("error"))
+		m.Channel.On("Originate", &ari.Key{Kind: "", ID: "", Node: "", Dialog: "", App: ""}, req).Return(nil, errors.New("error"))
 
 		h, err := cl.Channel().Originate(nil, req)
 		if err == nil {
@@ -786,18 +790,23 @@ func TestChannelOriginate(t *testing.T, s Server) {
 
 		m.Shutdown()
 
-		m.Channel.AssertCalled(t, "Originate", nil, req)
+		m.Channel.AssertCalled(t, "Originate", &ari.Key{Kind: "", ID: "", Node: "", Dialog: "", App: ""}, req)
 	})
 }
 
 func TestChannelPlay(t *testing.T, s Server) {
 	key := ari.NewKey(ari.ChannelKey, "c1")
+	var cd ari.ChannelData
+	cd.ID = "c1"
+	cd.Name = "channe1"
+	cd.State = "Up"
 
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		pbkey := ari.NewKey(ari.PlaybackKey, "pb1")
 		var expected = ari.NewPlaybackHandle(pbkey, m.Playback, nil)
 
+		m.Channel.On("Data", key).Return(&cd, nil)
 		m.Channel.On("Play", key, "playbackID", "sound:hello").Return(expected, nil)
 
 		h, err := cl.Channel().Play(key, "playbackID", "sound:hello")
@@ -820,6 +829,7 @@ func TestChannelPlay(t *testing.T, s Server) {
 		pbkey := ari.NewKey(ari.PlaybackKey, "pb1")
 		var expected = ari.NewPlaybackHandle(pbkey, m.Playback, nil)
 
+		m.Channel.On("Data", key).Return(&cd, nil)
 		m.Channel.On("Play", key, nonEmpty, "sound:hello").Return(expected, nil)
 
 		h, err := cl.Channel().Play(key, "", "sound:hello")
@@ -839,6 +849,7 @@ func TestChannelPlay(t *testing.T, s Server) {
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
+		m.Channel.On("Data", key).Return(&cd, nil)
 		m.Channel.On("Play", key, "playbackID", "sound:hello").Return(nil, errors.New("error"))
 
 		h, err := cl.Channel().Play(key, "playbackID", "sound:hello")
@@ -960,7 +971,7 @@ func TestChannelSnoop(t *testing.T, s Server) {
 		chkey := ari.NewKey(ari.ChannelKey, "ch2")
 		var expected = ari.NewChannelHandle(chkey, m.Channel, nil)
 
-		m.Channel.On("Snoop", key, "", opts).Return(expected, nil)
+		m.Channel.On("Snoop", key, tmock.Anything, opts).Return(expected, nil)
 
 		h, err := cl.Channel().Snoop(key, "", nil)
 		if err != nil {
@@ -974,7 +985,7 @@ func TestChannelSnoop(t *testing.T, s Server) {
 
 		m.Shutdown()
 
-		m.Channel.AssertCalled(t, "Snoop", key, "", opts)
+		m.Channel.AssertCalled(t, "Snoop", key, tmock.Anything, opts)
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
@@ -1052,7 +1063,7 @@ func TestChannelVariableGet(t *testing.T, s Server) {
 
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
-		m.Channel.On("GetVariable", nil, "v1").Return("value", nil)
+		m.Channel.On("GetVariable", &ari.Key{Kind: "", ID: "", Node: "", Dialog: "", App: ""}, "v1").Return("value", nil)
 
 		val, err := cl.Channel().GetVariable(nil, "v1")
 		if err != nil {
@@ -1064,12 +1075,12 @@ func TestChannelVariableGet(t *testing.T, s Server) {
 
 		m.Shutdown()
 
-		m.Channel.AssertCalled(t, "GetVariable", nil, "v1")
+		m.Channel.AssertCalled(t, "GetVariable", &ari.Key{Kind: "", ID: "", Node: "", Dialog: "", App: ""}, "v1")
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
-		m.Channel.On("GetVariable", nil, "v1").Return(nil, errors.New("1"))
+		m.Channel.On("GetVariable", &ari.Key{Kind: "", ID: "", Node: "", Dialog: "", App: ""}, "v1").Return("", errors.New("1"))
 
 		val, err := cl.Channel().GetVariable(nil, "v1")
 		if err == nil {
@@ -1081,7 +1092,7 @@ func TestChannelVariableGet(t *testing.T, s Server) {
 
 		m.Shutdown()
 
-		m.Channel.AssertCalled(t, "GetVariable", nil, "v1")
+		m.Channel.AssertCalled(t, "GetVariable", &ari.Key{Kind: "", ID: "", Node: "", Dialog: "", App: ""}, "v1")
 	})
 
 }
@@ -1090,7 +1101,7 @@ func TestChannelVariableSet(t *testing.T, s Server) {
 
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
-		m.Channel.On("SetVariable", nil, "v1", "value").Return(nil)
+		m.Channel.On("SetVariable", &ari.Key{Kind: "", ID: "", Node: "", Dialog: "", App: ""}, "v1", "value").Return(nil)
 
 		err := cl.Channel().SetVariable(nil, "v1", "value")
 		if err != nil {
@@ -1099,11 +1110,11 @@ func TestChannelVariableSet(t *testing.T, s Server) {
 
 		m.Shutdown()
 
-		m.Channel.AssertCalled(t, "SetVariable", nil, "v1", "value")
+		m.Channel.AssertCalled(t, "SetVariable", &ari.Key{Kind: "", ID: "", Node: "", Dialog: "", App: ""}, "v1", "value")
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		m.Channel.On("SetVariable", nil, "v1", "value").Return(errors.New("error"))
+		m.Channel.On("SetVariable", &ari.Key{Kind: "", ID: "", Node: "", Dialog: "", App: ""}, "v1", "value").Return(errors.New("error"))
 
 		err := cl.Channel().SetVariable(nil, "v1", "value")
 		if err == nil {
@@ -1112,7 +1123,7 @@ func TestChannelVariableSet(t *testing.T, s Server) {
 
 		m.Shutdown()
 
-		m.Channel.AssertCalled(t, "SetVariable", nil, "v1", "value")
+		m.Channel.AssertCalled(t, "SetVariable", &ari.Key{Kind: "", ID: "", Node: "", Dialog: "", App: ""}, "v1", "value")
 	})
 
 }

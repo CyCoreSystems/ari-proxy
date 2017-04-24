@@ -150,7 +150,7 @@ func TestModulesList(t *testing.T, s Server) {
 		m1 := ari.NewKey(ari.ModuleKey, "m1")
 		m2 := ari.NewKey(ari.ModuleKey, "m2")
 
-		m.Modules.On("List", nil).Return([]*ari.Key{m1, m2}, nil)
+		m.Modules.On("List", (*ari.Key)(nil)).Return([]*ari.Key{m1, m2}, nil)
 
 		ret, err := cl.Asterisk().Modules().List(nil)
 		if err != nil {
@@ -163,10 +163,10 @@ func TestModulesList(t *testing.T, s Server) {
 		m.Shutdown()
 
 		m.Asterisk.AssertCalled(t, "Modules")
-		m.Modules.AssertCalled(t, "List")
+		m.Modules.AssertCalled(t, "List", (*ari.Key)(nil))
 	})
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		m.Modules.On("List").Return([]*ari.Key{}, errors.New("error"))
+		m.Modules.On("List", (*ari.Key)(nil)).Return([]*ari.Key{}, errors.New("error"))
 
 		_, err := cl.Asterisk().Modules().List(nil)
 		if err == nil {
@@ -176,6 +176,6 @@ func TestModulesList(t *testing.T, s Server) {
 		m.Shutdown()
 
 		m.Asterisk.AssertCalled(t, "Modules")
-		m.Modules.AssertCalled(t, "List")
+		m.Modules.AssertCalled(t, "List", (*ari.Key)(nil))
 	})
 }

@@ -1,9 +1,10 @@
 hash: 00fcac7abd0de3b775d4a7268cdf6996b735b364463b6c1b0570715682f8e89e
-updated: 2017-04-24T03:04:01.785033573-04:00
+updated: 2017-04-24T07:30:02.924966553-04:00
 imports:
 - name: github.com/CyCoreSystems/ari
-  version: d75eef60ddd8ff0acc98b1e3e38304f6d88ade74
+  version: 9e32bd2841d782cac5d15d1447b60ff4665ce46f
   subpackages:
+  - client/arimocks
   - client/native
   - stdbus
 - name: github.com/davecgh/go-spew

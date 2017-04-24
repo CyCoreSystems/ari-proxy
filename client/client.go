@@ -527,14 +527,16 @@ func (c *Client) makeBroadcastRequestReturnFirstGoodResponse(class string, req *
 
 	var responseCount int
 	expected := len(c.core.cluster.Matching(req.Key.Node, req.Key.App, c.core.clusterMaxAge))
+	if expected < 1 {
+		expected = 1
+	}
 	reply := uuid.NewV1().String()
 	replyChan := make(chan *proxy.Response)
 	replySub, err := c.core.nc.Subscribe(reply, func(o *proxy.Response) {
 		responseCount++
 
-		if o.Err() == nil {
-			replyChan <- o
-		}
+		// always send up reply, so we can track errors.
+		replyChan <- o
 
 		if responseCount >= expected {
 			close(replyChan)
@@ -560,7 +562,10 @@ func (c *Client) makeBroadcastRequestReturnFirstGoodResponse(class string, req *
 				err = errors.New("timeout")
 			}
 			return nil, err
-		case resp := <-replyChan:
+		case resp, more := <-replyChan:
+			if !more {
+				return nil, err
+			}
 			if resp != nil {
 				err = resp.Err() // store the error for later return
 				if err == nil {  // No error means to return the current value

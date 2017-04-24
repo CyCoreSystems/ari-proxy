@@ -34,6 +34,7 @@ func (s *Server) asteriskLoggingCreate(ctx context.Context, reply string, req *p
 	h, err := s.ari.Asterisk().Logging().Create(req.Key, req.AsteriskLoggingChannel.Levels)
 	if err != nil {
 		s.sendError(reply, err)
+		return
 	}
 
 	s.nats.Publish(reply, &proxy.Response{

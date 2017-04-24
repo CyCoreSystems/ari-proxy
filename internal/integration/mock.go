@@ -72,7 +72,7 @@ func standardMock() *mock {
 	m.Client.On("Playback").Return(m.Playback)
 	m.Client.On("Sound").Return(m.Sound)
 
-	m.Asterisk.On("Info", &ari.Key{Kind: "", ID: "", Node: "", Dialog: "", App: "asdf"}).Return(&ari.AsteriskInfo{
+	m.Asterisk.On("Info", (*ari.Key)(nil)).Return(&ari.AsteriskInfo{
 		SystemInfo: ari.SystemInfo{
 			EntityID: "1",
 		},

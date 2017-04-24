@@ -10,9 +10,11 @@ func TestLiveRecordingData(t *testing.T) {
 	integration.TestLiveRecordingData(t, &srv{})
 }
 
+/*
 func TestLiveRecordingDelete(t *testing.T) {
 	integration.TestLiveRecordingDelete(t, &srv{})
 }
+*/
 
 func TestLiveRecordingMute(t *testing.T) {
 	integration.TestLiveRecordingMute(t, &srv{})

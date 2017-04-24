@@ -11,16 +11,16 @@ func TestLoggingList(t *testing.T, s Server) {
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		var expected = []ari.LogData{
 			ari.LogData{
-				Configuration: "c1",
-				Name:          "n1",
-				Status:        "s1",
-				Type:          "t1",
+				Key:    ari.NewKey(ari.LoggingKey, "c1"),
+				Name:   "n1",
+				Status: "s1",
+				Types:  "t1",
 			},
 		}
 
-		m.Logging.On("List").Return(expected, nil)
+		m.Logging.On("List", nil).Return(expected, nil)
 
-		ld, err := cl.Asterisk().Logging().List()
+		ld, err := cl.Asterisk().Logging().List(nil)
 		if err != nil {
 			t.Errorf("Unexpected error in logging list: %s", err)
 		}
@@ -29,7 +29,7 @@ func TestLoggingList(t *testing.T, s Server) {
 		} else {
 			for idx := range ld {
 				failed := false
-				failed = failed || ld[idx].ID() != expected[idx].Name
+				failed = failed || ld[idx].ID != expected[idx].Name
 
 				if failed {
 					t.Errorf("Expected item '%d' to be '%v', got '%v",
@@ -38,7 +38,7 @@ func TestLoggingList(t *testing.T, s Server) {
 			}
 		}
 
-		m.Logging.AssertCalled(t, "List")
+		m.Logging.AssertCalled(t, "List", nil)
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
@@ -46,7 +46,7 @@ func TestLoggingList(t *testing.T, s Server) {
 
 		m.Logging.On("List").Return(expected, errors.New("error"))
 
-		ld, err := cl.Asterisk().Logging().List()
+		ld, err := cl.Asterisk().Logging().List(nil)
 		if err == nil {
 			t.Errorf("Expected error in logging list")
 		}
@@ -55,7 +55,7 @@ func TestLoggingList(t *testing.T, s Server) {
 		} else {
 			for idx := range ld {
 				failed := false
-				failed = failed || ld[idx].ID() != expected[idx].Name
+				failed = failed || ld[idx].ID != expected[idx].Name
 
 				if failed {
 					t.Errorf("Expected item '%d' to be '%v', got '%v",
@@ -64,84 +64,89 @@ func TestLoggingList(t *testing.T, s Server) {
 			}
 		}
 
-		m.Logging.AssertCalled(t, "List")
+		m.Logging.AssertCalled(t, "List", nil)
 	})
 }
 
 func TestLoggingCreate(t *testing.T, s Server) {
+	key := ari.NewKey(ari.LoggingKey, "n1")
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		m.Logging.On("Create", "n1", "l1").Return(nil)
 
-		err := cl.Asterisk().Logging().Create("n1", "l1")
+		_, err := cl.Asterisk().Logging().Create(key, "l1")
 		if err != nil {
 			t.Errorf("Unexpected error in logging create: %s", err)
 		}
 
-		m.Logging.AssertCalled(t, "Create", "n1", "l1")
+		m.Logging.AssertCalled(t, "Create", key, "l1")
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
-		m.Logging.On("Create", "n1", "l1").Return(errors.New("error"))
+		m.Logging.On("Create", key, "l1").Return(errors.New("error"))
 
-		err := cl.Asterisk().Logging().Create("n1", "l1")
+		_, err := cl.Asterisk().Logging().Create(key, "l1")
 		if err == nil {
 			t.Errorf("Expected error in logging create")
 		}
 
-		m.Logging.AssertCalled(t, "Create", "n1", "l1")
+		m.Logging.AssertCalled(t, "Create", key, "l1")
 	})
 }
 
 func TestLoggingDelete(t *testing.T, s Server) {
+	key := ari.NewKey(ari.LoggingKey, "n1")
+
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
-		m.Logging.On("Delete", "n1").Return(nil)
+		m.Logging.On("Delete", key).Return(nil)
 
-		err := cl.Asterisk().Logging().Delete("n1")
+		err := cl.Asterisk().Logging().Delete(key)
 		if err != nil {
 			t.Errorf("Unexpected error in logging Delete: %s", err)
 		}
 
-		m.Logging.AssertCalled(t, "Delete", "n1")
+		m.Logging.AssertCalled(t, "Delete", key)
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
-		m.Logging.On("Delete", "n1").Return(errors.New("error"))
+		m.Logging.On("Delete", key).Return(errors.New("error"))
 
-		err := cl.Asterisk().Logging().Delete("n1")
+		err := cl.Asterisk().Logging().Delete(key)
 		if err == nil {
 			t.Errorf("Expected error in logging Delete")
 		}
 
-		m.Logging.AssertCalled(t, "Delete", "n1")
+		m.Logging.AssertCalled(t, "Delete", key)
 	})
 }
 
 func TestLoggingRotate(t *testing.T, s Server) {
+	key := ari.NewKey(ari.LoggingKey, "n1")
+
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
-		m.Logging.On("Rotate", "n1").Return(nil)
+		m.Logging.On("Rotate", key).Return(nil)
 
-		err := cl.Asterisk().Logging().Rotate("n1")
+		err := cl.Asterisk().Logging().Rotate(key)
 		if err != nil {
 			t.Errorf("Unexpected error in logging Rotate: %s", err)
 		}
 
-		m.Logging.AssertCalled(t, "Rotate", "n1")
+		m.Logging.AssertCalled(t, "Rotate", key)
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
-		m.Logging.On("Rotate", "n1").Return(errors.New("error"))
+		m.Logging.On("Rotate", key).Return(errors.New("error"))
 
-		err := cl.Asterisk().Logging().Rotate("n1")
+		err := cl.Asterisk().Logging().Rotate(key)
 		if err == nil {
 			t.Errorf("Expected error in logging Rotate")
 		}
 
-		m.Logging.AssertCalled(t, "Rotate", "n1")
+		m.Logging.AssertCalled(t, "Rotate", key)
 	})
 }

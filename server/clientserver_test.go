@@ -34,11 +34,11 @@ func (s *srv) Start(ctx context.Context, t *testing.T, mockClient ari.Client, nc
 
 	select {
 	case <-s.s.Ready():
-	case <-time.After(200 * time.Millisecond):
+	case <-time.After(600 * time.Millisecond):
 		return nil, errors.New("Timeout waiting for server ready")
 	}
 
-	cl, err := client.New(ctx, client.WithTimeoutRetries(4), client.WithPrefix(s.s.NATSPrefix), client.WithApplication("asdf"), client.WithDialog("1234"))
+	cl, err := client.New(ctx, client.WithTimeoutRetries(4), client.WithPrefix(s.s.NATSPrefix), client.WithApplication("asdf"))
 	if err != nil {
 		return nil, err
 	}

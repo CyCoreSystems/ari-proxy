@@ -5,20 +5,17 @@ import (
 	"testing"
 
 	"github.com/CyCoreSystems/ari"
-	"github.com/CyCoreSystems/ari-proxy/internal/mocks"
 )
 
 func TestEndpointList(t *testing.T, s Server) {
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
-		h1 := &mocks.EndpointHandle{}
-		h2 := &mocks.EndpointHandle{}
-		h1.On("ID").Return("h1/1")
-		h2.On("ID").Return("h2/1")
+		h1 := ari.NewEndpointKey("h1", "1")
+		h2 := ari.NewEndpointKey("h1", "2")
 
-		m.Endpoint.On("List").Return([]ari.EndpointHandle{h1, h2}, nil)
+		m.Endpoint.On("List", nil).Return([]*ari.Key{h1, h2}, nil)
 
-		list, err := cl.Endpoint().List()
+		list, err := cl.Endpoint().List(nil)
 		if err != nil {
 			t.Errorf("Error in remote Endpoint List call: %s", err)
 		}
@@ -26,16 +23,14 @@ func TestEndpointList(t *testing.T, s Server) {
 			t.Errorf("Expected list of length 2, got %d", len(list))
 		}
 
-		h1.AssertCalled(t, "ID")
-		h2.AssertCalled(t, "ID")
-		m.Endpoint.AssertCalled(t, "List")
+		m.Endpoint.AssertCalled(t, "List", nil)
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
-		m.Endpoint.On("List").Return([]ari.EndpointHandle{}, errors.New("error"))
+		m.Endpoint.On("List", nil).Return([]*ari.Key{}, errors.New("error"))
 
-		list, err := cl.Endpoint().List()
+		list, err := cl.Endpoint().List(nil)
 		if err == nil {
 			t.Errorf("Expected error in remote Endpoint List call")
 		}
@@ -43,21 +38,19 @@ func TestEndpointList(t *testing.T, s Server) {
 			t.Errorf("Expected list of length 0, got %d", len(list))
 		}
 
-		m.Endpoint.AssertCalled(t, "List")
+		m.Endpoint.AssertCalled(t, "List", nil)
 	})
 }
 
 func TestEndpointListByTech(t *testing.T, s Server) {
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
-		h1 := &mocks.EndpointHandle{}
-		h2 := &mocks.EndpointHandle{}
-		h1.On("ID").Return("h1/1")
-		h2.On("ID").Return("h2/1")
+		h1 := ari.NewEndpointKey("h1", "1")
+		h2 := ari.NewEndpointKey("h1", "2")
 
-		m.Endpoint.On("ListByTech", "tech").Return([]ari.EndpointHandle{h1, h2}, nil)
+		m.Endpoint.On("ListByTech", "tech").Return([]*ari.Key{h1, h2}, nil)
 
-		list, err := cl.Endpoint().ListByTech("tech")
+		list, err := cl.Endpoint().ListByTech("tech", nil)
 		if err != nil {
 			t.Errorf("Error in remote Endpoint List call: %s", err)
 		}
@@ -65,16 +58,14 @@ func TestEndpointListByTech(t *testing.T, s Server) {
 			t.Errorf("Expected list of length 2, got %d", len(list))
 		}
 
-		h1.AssertCalled(t, "ID")
-		h2.AssertCalled(t, "ID")
-		m.Endpoint.AssertCalled(t, "ListByTech", "tech")
+		m.Endpoint.AssertCalled(t, "ListByTech", "tech", nil)
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
-		m.Endpoint.On("ListByTech", "tech").Return([]ari.EndpointHandle{}, errors.New("error"))
+		m.Endpoint.On("ListByTech", "tech", nil).Return([]*ari.Key{}, errors.New("error"))
 
-		list, err := cl.Endpoint().ListByTech("tech")
+		list, err := cl.Endpoint().ListByTech("tech", nil)
 		if err == nil {
 			t.Errorf("Expected error in remote Endpoint List call")
 		}
@@ -82,7 +73,7 @@ func TestEndpointListByTech(t *testing.T, s Server) {
 			t.Errorf("Expected list of length 0, got %d", len(list))
 		}
 
-		m.Endpoint.AssertCalled(t, "ListByTech", "tech")
+		m.Endpoint.AssertCalled(t, "ListByTech", "tech", nil)
 	})
 }
 
@@ -94,9 +85,11 @@ func TestEndpointData(t *testing.T, s Server) {
 		expected.Technology = "tech1"
 		expected.Resource = "resource"
 
-		m.Endpoint.On("Data", "tech", "resource").Return(&expected, nil)
+		h1 := ari.NewEndpointKey(expected.Technology, expected.Resource)
 
-		data, err := cl.Endpoint().Data("tech", "resource")
+		m.Endpoint.On("Data", h1).Return(&expected, nil)
+
+		data, err := cl.Endpoint().Data(h1)
 		if err != nil {
 			t.Errorf("Error in remote Endpoint Data call: %s", err)
 		}
@@ -112,14 +105,21 @@ func TestEndpointData(t *testing.T, s Server) {
 			}
 		}
 
-		m.Endpoint.AssertCalled(t, "Data", "tech", "resource")
+		m.Endpoint.AssertCalled(t, "Data", h1)
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
-		m.Endpoint.On("Data", "tech", "resource").Return(nil, errors.New("error"))
+		var expected ari.EndpointData
+		expected.State = "st1"
+		expected.Technology = "tech1"
+		expected.Resource = "resource"
 
-		data, err := cl.Endpoint().Data("tech", "resource")
+		h1 := ari.NewEndpointKey(expected.Technology, expected.Resource)
+
+		m.Endpoint.On("Data", h1).Return(nil, errors.New("error"))
+
+		data, err := cl.Endpoint().Data(h1)
 		if err == nil {
 			t.Errorf("Expected error in remote Endpoint Data call")
 		}
@@ -127,6 +127,6 @@ func TestEndpointData(t *testing.T, s Server) {
 			t.Errorf("Expected data to be nil")
 		}
 
-		m.Endpoint.AssertCalled(t, "Data", "tech", "resource")
+		m.Endpoint.AssertCalled(t, "Data", h1)
 	})
 }

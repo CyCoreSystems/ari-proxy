@@ -5,18 +5,20 @@ import (
 	"testing"
 
 	"github.com/CyCoreSystems/ari"
-	"github.com/CyCoreSystems/ari-proxy/internal/mocks"
+	"github.com/CyCoreSystems/ari/client/arimocks"
 	tmock "github.com/stretchr/testify/mock"
 )
 
 var _ = tmock.Anything
 
 func TestConfigData(t *testing.T, s Server) {
+	var key = ari.NewKey("config", ari.ConfigID("c1", "o1", "id1"))
+
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var expected ari.ConfigData
 		expected.Class = "c1"
-		expected.ID = "id1"
+		expected.Key = key
 		expected.Type = "o1"
 		expected.Fields = []ari.ConfigTuple{
 			ari.ConfigTuple{
@@ -25,11 +27,11 @@ func TestConfigData(t *testing.T, s Server) {
 			},
 		}
 
-		cfg := mocks.Config{}
+		cfg := arimocks.Config{}
 		m.Asterisk.On("Config").Return(&cfg)
-		cfg.On("Data", "c1", "o1", "id1").Return(&expected, nil)
+		cfg.On("Data", key).Return(&expected, nil)
 
-		data, err := cl.Asterisk().Config().Data("c1", "o1", "id1")
+		data, err := cl.Asterisk().Config().Data(key)
 		if err != nil {
 			t.Errorf("Unexpected error in remove config data call: %s", err)
 		}
@@ -38,7 +40,7 @@ func TestConfigData(t *testing.T, s Server) {
 		} else {
 			failed := false
 			failed = failed || data.Class != expected.Class
-			failed = failed || data.ID != expected.ID
+			failed = failed || data.ID() != expected.ID()
 			failed = failed || data.Type != expected.Type
 			failed = failed || len(data.Fields) != len(expected.Fields)
 			for idx := range data.Fields {
@@ -56,11 +58,11 @@ func TestConfigData(t *testing.T, s Server) {
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
-		cfg := mocks.Config{}
+		cfg := arimocks.Config{}
 		m.Asterisk.On("Config").Return(&cfg)
-		cfg.On("Data", "c1", "o1", "id1").Return(nil, errors.New("error"))
+		cfg.On("Data", key).Return(nil, errors.New("error"))
 
-		data, err := cl.Asterisk().Config().Data("c1", "o1", "id1")
+		data, err := cl.Asterisk().Config().Data(key)
 		if err == nil {
 			t.Errorf("Expected error in remove config data call")
 		}
@@ -69,43 +71,47 @@ func TestConfigData(t *testing.T, s Server) {
 		}
 
 		m.Asterisk.AssertCalled(t, "Config")
-		cfg.AssertCalled(t, "Data", "c1", "o1", "id1")
+		cfg.AssertCalled(t, "Data", key)
 	})
 }
 
 func TestConfigDelete(t *testing.T, s Server) {
+	var key = ari.NewKey("config", ari.ConfigID("c1", "o1", "id1"))
+
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
-		cfg := mocks.Config{}
+		cfg := arimocks.Config{}
 		m.Asterisk.On("Config").Return(&cfg)
-		cfg.On("Delete", "c1", "o1", "id1").Return(nil)
+		cfg.On("Delete", key).Return(nil)
 
-		err := cl.Asterisk().Config().Delete("c1", "o1", "id1")
+		err := cl.Asterisk().Config().Delete(key)
 		if err != nil {
 			t.Errorf("Unexpected error in remove config delete call: %s", err)
 		}
 
 		m.Asterisk.AssertCalled(t, "Config")
-		cfg.AssertCalled(t, "Delete", "c1", "o1", "id1")
+		cfg.AssertCalled(t, "Delete", key)
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
-		cfg := mocks.Config{}
+		cfg := arimocks.Config{}
 		m.Asterisk.On("Config").Return(&cfg)
-		cfg.On("Delete", "c1", "o1", "id1").Return(errors.New("error"))
+		cfg.On("Delete", key).Return(errors.New("error"))
 
-		err := cl.Asterisk().Config().Delete("c1", "o1", "id1")
+		err := cl.Asterisk().Config().Delete(key)
 		if err == nil {
 			t.Errorf("Expected error in remove config delete call")
 		}
 
 		m.Asterisk.AssertCalled(t, "Config")
-		cfg.AssertCalled(t, "Delete", "c1", "o1", "id1")
+		cfg.AssertCalled(t, "Delete", key)
 	})
 }
 
 func TestConfigUpdate(t *testing.T, s Server) {
+
+	var key = ari.NewKey("config", ari.ConfigID("c1", "o1", "id1"))
 
 	tuples := []ari.ConfigTuple{
 		ari.ConfigTuple{
@@ -120,31 +126,31 @@ func TestConfigUpdate(t *testing.T, s Server) {
 
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
-		cfg := mocks.Config{}
+		cfg := arimocks.Config{}
 		m.Asterisk.On("Config").Return(&cfg)
-		cfg.On("Update", "c1", "o1", "id1", tuples).Return(nil)
+		cfg.On("Update", key, tuples).Return(nil)
 
-		err := cl.Asterisk().Config().Update("c1", "o1", "id1", tuples)
+		err := cl.Asterisk().Config().Update(key, tuples)
 		if err != nil {
 			t.Errorf("Unexpected error in remove config Update call: %s", err)
 		}
 
 		m.Asterisk.AssertCalled(t, "Config")
-		cfg.AssertCalled(t, "Update", "c1", "o1", "id1", tuples)
+		cfg.AssertCalled(t, "Update", key, tuples)
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
-		cfg := mocks.Config{}
+		cfg := arimocks.Config{}
 		m.Asterisk.On("Config").Return(&cfg)
-		cfg.On("Update", "c1", "o1", "id1", tuples).Return(errors.New("error"))
+		cfg.On("Update", key, tuples).Return(errors.New("error"))
 
-		err := cl.Asterisk().Config().Update("c1", "o1", "id1", tuples)
+		err := cl.Asterisk().Config().Update(key, tuples)
 		if err == nil {
 			t.Errorf("Expected error in remove config Update call")
 		}
 
 		m.Asterisk.AssertCalled(t, "Config")
-		cfg.AssertCalled(t, "Update", "c1", "o1", "id1", tuples)
+		cfg.AssertCalled(t, "Update", key, tuples)
 	})
 }

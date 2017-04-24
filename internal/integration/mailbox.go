@@ -5,14 +5,13 @@ import (
 	"testing"
 
 	"github.com/CyCoreSystems/ari"
-	"github.com/CyCoreSystems/ari-proxy/internal/mocks"
 )
 
 func TestMailboxList(t *testing.T, s Server) {
 	runTest("empty", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		m.Mailbox.On("List").Return([]ari.MailboxHandle{}, nil)
+		m.Mailbox.On("List").Return([]*ari.Key{}, nil)
 
-		ret, err := cl.Mailbox().List()
+		ret, err := cl.Mailbox().List(nil)
 		if err != nil {
 			t.Errorf("Unexpected error in remote List call")
 		}
@@ -27,15 +26,12 @@ func TestMailboxList(t *testing.T, s Server) {
 
 	runTest("nonEmpty", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
-		var h1 = &mocks.MailboxHandle{}
-		var h2 = &mocks.MailboxHandle{}
+		var h1 = ari.NewKey(ari.MailboxKey, "h1")
+		var h2 = ari.NewKey(ari.MailboxKey, "h2")
 
-		h1.On("ID").Return("h1")
-		h2.On("ID").Return("h2")
+		m.Mailbox.On("List").Return([]*ari.Key{h1, h2}, nil)
 
-		m.Mailbox.On("List").Return([]ari.MailboxHandle{h1, h2}, nil)
-
-		ret, err := cl.Mailbox().List()
+		ret, err := cl.Mailbox().List(nil)
 		if err != nil {
 			t.Errorf("Unexpected error in remote List call")
 		}
@@ -45,15 +41,13 @@ func TestMailboxList(t *testing.T, s Server) {
 
 		m.Shutdown()
 
-		m.Mailbox.AssertCalled(t, "List")
-		h1.AssertCalled(t, "ID")
-		h2.AssertCalled(t, "ID")
+		m.Mailbox.AssertCalled(t, "List", nil)
 	})
 
 	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		m.Mailbox.On("List").Return(nil, errors.New("unknown error"))
+		m.Mailbox.On("List", nil).Return(nil, errors.New("unknown error"))
 
-		ret, err := cl.Mailbox().List()
+		ret, err := cl.Mailbox().List(nil)
 		if err == nil {
 			t.Errorf("Expected error in remote List call")
 		}
@@ -63,11 +57,11 @@ func TestMailboxList(t *testing.T, s Server) {
 
 		m.Shutdown()
 
-		m.Mailbox.AssertCalled(t, "List")
+		m.Mailbox.AssertCalled(t, "List", nil)
 	})
 }
 
-func testMailboxCommand(t *testing.T, m *mock, name string, id string, expected error, fn func(string) error) {
+func testMailboxCommand(t *testing.T, m *mock, name string, id *ari.Key, expected error, fn func(*ari.Key) error) {
 	m.Mailbox.On(name, id).Return(expected)
 	err := fn(id)
 	failed := false
@@ -83,21 +77,24 @@ func testMailboxCommand(t *testing.T, m *mock, name string, id string, expected 
 }
 
 func TestMailboxDelete(t *testing.T, s Server) {
+	var key = ari.NewKey(ari.MailboxKey, "mbox1")
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		testMailboxCommand(t, m, "Delete", "mbox1", nil, cl.Mailbox().Delete)
+		testMailboxCommand(t, m, "Delete", key, nil, cl.Mailbox().Delete)
 	})
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		testMailboxCommand(t, m, "Delete", "mbox1", errors.New("err"), cl.Mailbox().Delete)
+		testMailboxCommand(t, m, "Delete", key, errors.New("err"), cl.Mailbox().Delete)
 	})
 }
 
 func TestMailboxUpdate(t *testing.T, s Server) {
+	var key = ari.NewKey(ari.MailboxKey, "mbox1")
+
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		var expected error
 
-		m.Mailbox.On("Update", "mbox1", 1, 1).Return(expected)
+		m.Mailbox.On("Update", key, 1, 1).Return(expected)
 
-		err := cl.Mailbox().Update("mbox1", 1, 1)
+		err := cl.Mailbox().Update(key, 1, 1)
 
 		failed := false
 		failed = failed || err == nil && expected != nil
@@ -109,15 +106,15 @@ func TestMailboxUpdate(t *testing.T, s Server) {
 			)
 		}
 
-		m.Mailbox.AssertCalled(t, "Update", "mbox1", 1, 1)
+		m.Mailbox.AssertCalled(t, "Update", key, 1, 1)
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		var expected = errors.New("error")
 
-		m.Mailbox.On("Update", "mbox1", 1, 1).Return(expected)
+		m.Mailbox.On("Update", key, 1, 1).Return(expected)
 
-		err := cl.Mailbox().Update("mbox1", 1, 1)
+		err := cl.Mailbox().Update(key, 1, 1)
 
 		failed := false
 		failed = failed || err == nil && expected != nil
@@ -129,11 +126,13 @@ func TestMailboxUpdate(t *testing.T, s Server) {
 			)
 		}
 
-		m.Mailbox.AssertCalled(t, "Update", "mbox1", 1, 1)
+		m.Mailbox.AssertCalled(t, "Update", key, 1, 1)
 	})
 }
 
 func TestMailboxData(t *testing.T, s Server) {
+	var key = ari.NewKey(ari.MailboxKey, "mbox1")
+
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
 		var expected ari.MailboxData
@@ -141,9 +140,9 @@ func TestMailboxData(t *testing.T, s Server) {
 		expected.NewMessages = 2
 		expected.OldMessages = 3
 
-		m.Mailbox.On("Data", "mbox1").Return(&expected, nil)
+		m.Mailbox.On("Data", key).Return(&expected, nil)
 
-		data, err := cl.Mailbox().Data("mbox1")
+		data, err := cl.Mailbox().Data(key)
 		if err != nil {
 			t.Errorf("Unexpected error in remote mailbox Data: %s", err)
 		}
@@ -158,15 +157,15 @@ func TestMailboxData(t *testing.T, s Server) {
 			}
 		}
 
-		m.Mailbox.AssertCalled(t, "Data", "mbox1")
+		m.Mailbox.AssertCalled(t, "Data", key)
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		var expected = errors.New("error")
 
-		m.Mailbox.On("Data", "mbox1").Return(nil, expected)
+		m.Mailbox.On("Data", key).Return(nil, expected)
 
-		_, err := cl.Mailbox().Data("mbox1")
+		_, err := cl.Mailbox().Data(key)
 
 		failed := false
 		failed = failed || err == nil && expected != nil
@@ -178,6 +177,6 @@ func TestMailboxData(t *testing.T, s Server) {
 			)
 		}
 
-		m.Mailbox.AssertCalled(t, "Data", "mbox1")
+		m.Mailbox.AssertCalled(t, "Data", key)
 	})
 }

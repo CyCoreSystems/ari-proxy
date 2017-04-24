@@ -2,27 +2,28 @@ package integration
 
 import (
 	"github.com/CyCoreSystems/ari"
-	"github.com/CyCoreSystems/ari-proxy/internal/mocks"
+	"github.com/CyCoreSystems/ari/client/arimocks"
+	tmock "github.com/stretchr/testify/mock"
 )
 
 type mock struct {
-	Bus    *mocks.Bus
-	Client *mocks.Client
+	Bus    *arimocks.Bus
+	Client *arimocks.Client
 
-	Application   *mocks.Application
-	Asterisk      *mocks.Asterisk
-	Bridge        *mocks.Bridge
-	Channel       *mocks.Channel
-	DeviceState   *mocks.DeviceState
-	Endpoint      *mocks.Endpoint
-	LiveRecording *mocks.LiveRecording
-	Logging       *mocks.Logging
-	Mailbox       *mocks.Mailbox
-	Modules       *mocks.Modules
-	Playback      *mocks.Playback
-	Sound         *mocks.Sound
+	Application   *arimocks.Application
+	Asterisk      *arimocks.Asterisk
+	Bridge        *arimocks.Bridge
+	Channel       *arimocks.Channel
+	DeviceState   *arimocks.DeviceState
+	Endpoint      *arimocks.Endpoint
+	LiveRecording *arimocks.LiveRecording
+	Logging       *arimocks.Logging
+	Mailbox       *arimocks.Mailbox
+	Modules       *arimocks.Modules
+	Playback      *arimocks.Playback
+	Sound         *arimocks.Sound
 
-	AllSub          *mocks.Subscription
+	AllSub          *arimocks.Subscription
 	AllEventChannel <-chan ari.Event
 
 	Shutdown func()
@@ -31,29 +32,29 @@ type mock struct {
 func standardMock() *mock {
 	m := &mock{}
 
-	m.Bus = &mocks.Bus{}
-	m.Client = &mocks.Client{}
+	m.Bus = &arimocks.Bus{}
+	m.Client = &arimocks.Client{}
 
-	m.Asterisk = &mocks.Asterisk{}
-	m.Application = &mocks.Application{}
-	m.Bridge = &mocks.Bridge{}
-	m.Channel = &mocks.Channel{}
-	m.DeviceState = &mocks.DeviceState{}
-	m.Endpoint = &mocks.Endpoint{}
-	m.LiveRecording = &mocks.LiveRecording{}
-	m.Logging = &mocks.Logging{}
-	m.Mailbox = &mocks.Mailbox{}
-	m.Modules = &mocks.Modules{}
-	m.Playback = &mocks.Playback{}
-	m.Sound = &mocks.Sound{}
+	m.Asterisk = &arimocks.Asterisk{}
+	m.Application = &arimocks.Application{}
+	m.Bridge = &arimocks.Bridge{}
+	m.Channel = &arimocks.Channel{}
+	m.DeviceState = &arimocks.DeviceState{}
+	m.Endpoint = &arimocks.Endpoint{}
+	m.LiveRecording = &arimocks.LiveRecording{}
+	m.Logging = &arimocks.Logging{}
+	m.Mailbox = &arimocks.Mailbox{}
+	m.Modules = &arimocks.Modules{}
+	m.Playback = &arimocks.Playback{}
+	m.Sound = &arimocks.Sound{}
 
-	m.AllSub = &mocks.Subscription{}
+	m.AllSub = &arimocks.Subscription{}
 
 	eventCh := make(<-chan ari.Event)
 
 	m.AllSub.On("Cancel").Return(nil)
 	m.AllSub.On("Events").Return(eventCh)
-	m.Bus.On("Subscribe", "all").Return(m.AllSub).Times(1)
+	m.Bus.On("Subscribe", tmock.Anything, "all").Return(m.AllSub).Times(1)
 
 	m.Client.On("Bus").Return(m.Bus)
 
@@ -71,7 +72,7 @@ func standardMock() *mock {
 	m.Client.On("Playback").Return(m.Playback)
 	m.Client.On("Sound").Return(m.Sound)
 
-	m.Asterisk.On("Info", "").Return(&ari.AsteriskInfo{
+	m.Asterisk.On("Info", &ari.Key{Kind: "", ID: "", Node: "", Dialog: "", App: "asdf"}).Return(&ari.AsteriskInfo{
 		SystemInfo: ari.SystemInfo{
 			EntityID: "1",
 		},

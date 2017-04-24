@@ -21,9 +21,11 @@ func TestLiveRecordingData(t *testing.T, s Server) {
 			Duration:  ari.DurationSec(6 * time.Second),
 		}
 
-		m.LiveRecording.On("Data", "lr1").Return(&expected, nil)
+		key := ari.NewKey(ari.LiveRecordingKey, "lr1")
 
-		ret, err := cl.LiveRecording().Data("lr1")
+		m.LiveRecording.On("Data", key).Return(&expected, nil)
+
+		ret, err := cl.LiveRecording().Data(key)
 		if err != nil {
 			t.Errorf("Unexpected error in liverecording Data: %s", err)
 		}
@@ -44,13 +46,15 @@ func TestLiveRecordingData(t *testing.T, s Server) {
 			}
 		}
 
-		m.LiveRecording.AssertCalled(t, "Data", "lr1")
+		m.LiveRecording.AssertCalled(t, "Data", key)
 	})
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 
-		m.LiveRecording.On("Data", "lr1").Return(nil, errors.New("err"))
+		key := ari.NewKey(ari.LiveRecordingKey, "lr1")
 
-		ret, err := cl.LiveRecording().Data("lr1")
+		m.LiveRecording.On("Data", key).Return(nil, errors.New("err"))
+
+		ret, err := cl.LiveRecording().Data(key)
 		if err == nil {
 			t.Errorf("Expected error in liverecording Data")
 		}
@@ -58,11 +62,11 @@ func TestLiveRecordingData(t *testing.T, s Server) {
 			t.Errorf("Expected live recording data to be nil")
 		}
 
-		m.LiveRecording.AssertCalled(t, "Data", "lr1")
+		m.LiveRecording.AssertCalled(t, "Data", key)
 	})
 }
 
-func testLiveRecordingCommand(t *testing.T, m *mock, name string, id string, expected error, fn func(string) error) {
+func testLiveRecordingCommand(t *testing.T, m *mock, name string, id *ari.Key, expected error, fn func(*ari.Key) error) {
 	m.LiveRecording.On(name, id).Return(expected)
 	err := fn(id)
 	failed := false
@@ -77,65 +81,81 @@ func testLiveRecordingCommand(t *testing.T, m *mock, name string, id string, exp
 	m.LiveRecording.AssertCalled(t, name, id)
 }
 
+/*
 func TestLiveRecordingDelete(t *testing.T, s Server) {
+	key := ari.NewKey(ari.LiveRecordingKey, "lr1")
+
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		testLiveRecordingCommand(t, m, "Delete", "lr1", nil, cl.LiveRecording().Delete)
+		testLiveRecordingCommand(t, m, "Delete", key, nil, cl.LiveRecording().Delete)
 	})
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		testLiveRecordingCommand(t, m, "Delete", "lr1", errors.New("err"), cl.LiveRecording().Delete)
+		testLiveRecordingCommand(t, m, "Delete", key, errors.New("err"), cl.LiveRecording().Delete)
 	})
 }
+*/
 
 func TestLiveRecordingMute(t *testing.T, s Server) {
+	key := ari.NewKey(ari.LiveRecordingKey, "lr1")
+
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		testLiveRecordingCommand(t, m, "Mute", "lr1", nil, cl.LiveRecording().Mute)
+		testLiveRecordingCommand(t, m, "Mute", key, nil, cl.LiveRecording().Mute)
 	})
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		testLiveRecordingCommand(t, m, "Mute", "lr1", errors.New("err"), cl.LiveRecording().Mute)
+		testLiveRecordingCommand(t, m, "Mute", key, errors.New("err"), cl.LiveRecording().Mute)
 	})
 }
 
 func TestLiveRecordingPause(t *testing.T, s Server) {
+	key := ari.NewKey(ari.LiveRecordingKey, "lr1")
+
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		testLiveRecordingCommand(t, m, "Pause", "lr1", nil, cl.LiveRecording().Pause)
+		testLiveRecordingCommand(t, m, "Pause", key, nil, cl.LiveRecording().Pause)
 	})
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		testLiveRecordingCommand(t, m, "Pause", "lr1", errors.New("err"), cl.LiveRecording().Pause)
+		testLiveRecordingCommand(t, m, "Pause", key, errors.New("err"), cl.LiveRecording().Pause)
 	})
 }
 
 func TestLiveRecordingStop(t *testing.T, s Server) {
+	key := ari.NewKey(ari.LiveRecordingKey, "lr1")
+
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		testLiveRecordingCommand(t, m, "Stop", "lr1", nil, cl.LiveRecording().Stop)
+		testLiveRecordingCommand(t, m, "Stop", key, nil, cl.LiveRecording().Stop)
 	})
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		testLiveRecordingCommand(t, m, "Stop", "lr1", errors.New("err"), cl.LiveRecording().Stop)
+		testLiveRecordingCommand(t, m, "Stop", key, errors.New("err"), cl.LiveRecording().Stop)
 	})
 }
 
 func TestLiveRecordingUnmute(t *testing.T, s Server) {
+	key := ari.NewKey(ari.LiveRecordingKey, "lr1")
+
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		testLiveRecordingCommand(t, m, "Unmute", "lr1", nil, cl.LiveRecording().Unmute)
+		testLiveRecordingCommand(t, m, "Unmute", key, nil, cl.LiveRecording().Unmute)
 	})
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		testLiveRecordingCommand(t, m, "Unmute", "lr1", errors.New("err"), cl.LiveRecording().Unmute)
+		testLiveRecordingCommand(t, m, "Unmute", key, errors.New("err"), cl.LiveRecording().Unmute)
 	})
 }
 
 func TestLiveRecordingResume(t *testing.T, s Server) {
+	key := ari.NewKey(ari.LiveRecordingKey, "lr1")
+
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		testLiveRecordingCommand(t, m, "Resume", "lr1", nil, cl.LiveRecording().Resume)
+		testLiveRecordingCommand(t, m, "Resume", key, nil, cl.LiveRecording().Resume)
 	})
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		testLiveRecordingCommand(t, m, "Resume", "lr1", errors.New("err"), cl.LiveRecording().Resume)
+		testLiveRecordingCommand(t, m, "Resume", key, errors.New("err"), cl.LiveRecording().Resume)
 	})
 }
 
 func TestLiveRecordingScrap(t *testing.T, s Server) {
+	key := ari.NewKey(ari.LiveRecordingKey, "lr1")
+
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		testLiveRecordingCommand(t, m, "Scrap", "lr1", nil, cl.LiveRecording().Scrap)
+		testLiveRecordingCommand(t, m, "Scrap", key, nil, cl.LiveRecording().Scrap)
 	})
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		testLiveRecordingCommand(t, m, "Scrap", "lr1", errors.New("err"), cl.LiveRecording().Scrap)
+		testLiveRecordingCommand(t, m, "Scrap", key, errors.New("err"), cl.LiveRecording().Scrap)
 	})
 }

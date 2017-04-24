@@ -463,6 +463,7 @@ func (c *Client) makeRequest(class string, req *proxy.Request) (*proxy.Response,
 	for i := 0; i <= c.core.timeoutRetries; i++ {
 		err = c.nc.Request(c.subject(class, req), req, &resp, c.requestTimeout)
 		if err == nats.ErrTimeout {
+			c.countTimeouts++
 			continue
 		}
 		return &resp, err
@@ -590,4 +591,9 @@ func (c *Client) subject(class string, req *proxy.Request) string {
 		return proxy.Subject(c.core.prefix, class, c.appName, "")
 	}
 	return proxy.Subject(c.core.prefix, class, req.Key.App, req.Key.Node)
+}
+
+// TimeoutCount is the amount of times the NATS communication times out
+func (c *Client) TimeoutCount() int64 {
+	return c.countTimeouts
 }

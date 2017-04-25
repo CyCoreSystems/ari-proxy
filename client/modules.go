@@ -1,40 +1,61 @@
 package client
 
-import "github.com/CyCoreSystems/ari"
+import (
+	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari-proxy/proxy"
+)
 
-type natsModules struct {
-	conn *Conn
+type modules struct {
+	c *Client
 }
 
-func (m *natsModules) Get(name string) *ari.ModuleHandle {
-	return ari.NewModuleHandle(name, m)
-}
-
-func (m *natsModules) List() (mx []*ari.ModuleHandle, err error) {
-	var modules []string
-	err = m.conn.ReadRequest("ari.modules.all", "", nil, &modules)
-	for _, mh := range modules {
-		mx = append(mx, m.Get(mh))
+func (m *modules) Data(key *ari.Key) (*ari.ModuleData, error) {
+	data, err := m.c.dataRequest(&proxy.Request{
+		Kind: "AsteriskModuleData",
+		Key:  key,
+	})
+	if err != nil {
+		return nil, err
 	}
-	return
+	return data.Module, nil
 }
 
-func (m *natsModules) Reload(name string) (err error) {
-	err = m.conn.StandardRequest("ari.modules.reload", name, nil, nil)
-	return
+func (m *modules) Get(key *ari.Key) *ari.ModuleHandle {
+	k, err := m.c.getRequest(&proxy.Request{
+		Kind: "AsteriskModuleGet",
+		Key:  key,
+	})
+	if err != nil {
+		m.c.log.Warn("failed to get module for handle", "error", err)
+		return ari.NewModuleHandle(key, m)
+	}
+	return ari.NewModuleHandle(k, m)
 }
 
-func (m *natsModules) Unload(name string) (err error) {
-	err = m.conn.StandardRequest("ari.modules.unload", name, nil, nil)
-	return
+func (m *modules) List(filter *ari.Key) ([]*ari.Key, error) {
+	return m.c.listRequest(&proxy.Request{
+		Kind: "AsteriskModuleList",
+		Key:  filter,
+	})
 }
 
-func (m *natsModules) Load(name string) (err error) {
-	err = m.conn.StandardRequest("ari.modules.load", name, nil, nil)
-	return
+func (m *modules) Load(key *ari.Key) error {
+	return m.c.commandRequest(&proxy.Request{
+		Kind: "AsteriskModuleLoad",
+		Key:  key,
+	})
 }
 
-func (m *natsModules) Data(name string) (md ari.ModuleData, err error) {
-	err = m.conn.ReadRequest("ari.modules.data", name, nil, &md)
-	return
+func (m *modules) Reload(key *ari.Key) error {
+	return m.c.commandRequest(&proxy.Request{
+		Kind: "AsteriskModuleReload",
+		Key:  key,
+	})
+}
+
+func (m *modules) Unload(key *ari.Key) error {
+	return m.c.commandRequest(&proxy.Request{
+		Kind: "AsteriskModuleUnload",
+		Key:  key,
+	})
 }

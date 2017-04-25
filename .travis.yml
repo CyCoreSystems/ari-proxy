@@ -1,0 +1,8 @@
+language: go
+go:
+   - 1.8
+install:
+   - go get -u github.com/Masterminds/glide/...
+   - go get -u github.com/alecthomas/gometalinter/...
+   - gometalinter --install
+script: make ci

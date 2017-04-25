@@ -1,33 +1,65 @@
 package client
 
-import "github.com/CyCoreSystems/ari"
+import (
+	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari-proxy/proxy"
+)
 
-type natsPlayback struct {
-	conn       *Conn
-	subscriber ari.Subscriber
+type playback struct {
+	c *Client
 }
 
-func (p *natsPlayback) Get(id string) *ari.PlaybackHandle {
-	return ari.NewPlaybackHandle(id, p)
+func (p *playback) Get(key *ari.Key) *ari.PlaybackHandle {
+	k, err := p.c.getRequest(&proxy.Request{
+		Kind: "PlaybackGet",
+		Key:  key,
+	})
+	if err != nil {
+		p.c.log.Warn("failed to get playback for handle", "error", err)
+		return ari.NewPlaybackHandle(key, p, nil)
+	}
+	return ari.NewPlaybackHandle(k, p, nil)
 }
 
-func (p *natsPlayback) Data(id string) (d ari.PlaybackData, err error) {
-	err = p.conn.ReadRequest("ari.playback.data", id, nil, &d)
-	return
+func (p *playback) Data(key *ari.Key) (*ari.PlaybackData, error) {
+	data, err := p.c.dataRequest(&proxy.Request{
+		Kind: "PlaybackData",
+		Key:  key,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return data.Playback, nil
 }
 
-func (p *natsPlayback) Control(id string, op string) (err error) {
-	err = p.conn.StandardRequest("ari.playback.control", id, &op, nil)
-	return
+func (p *playback) Control(key *ari.Key, op string) error {
+	return p.c.commandRequest(&proxy.Request{
+		Kind: "PlaybackControl",
+		Key:  key,
+		PlaybackControl: &proxy.PlaybackControl{
+			Command: op,
+		},
+	})
 }
 
-func (p *natsPlayback) Stop(id string) (err error) {
-	err = p.conn.StandardRequest("ari.playback.stop", id, nil, nil)
-	return
+func (p *playback) Stop(key *ari.Key) error {
+	return p.c.commandRequest(&proxy.Request{
+		Kind: "PlaybackStop",
+		Key:  key,
+	})
 }
 
-func (p *natsPlayback) Subscribe(id string, nx ...string) ari.Subscription {
-	ns := newSubscription(p.Get(id))
-	ns.Start(p.subscriber, nx...)
-	return ns
+func (p *playback) Subscribe(key *ari.Key, n ...string) ari.Subscription {
+	err := p.c.commandRequest(&proxy.Request{
+		Kind: "PlaybackSubscribe",
+		Key:  key,
+	})
+	if err != nil {
+		p.c.log.Warn("failed to call bridge subscribe", "error", err)
+		if key.Dialog != "" {
+			p.c.log.Error("dialog present; failing", "error", err)
+			return nil
+		}
+	}
+	return p.c.Bus().Subscribe(key, n...)
 }

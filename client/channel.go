@@ -4,260 +4,370 @@ import (
 	"time"
 
 	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari-proxy/proxy"
 )
 
-// ContinueRequest is the request body for continuing over the message queue
-type ContinueRequest struct {
-	Context   string `json:"context"`
-	Extension string `json:"extension"`
-	Priority  int    `json:"priority"`
+type channel struct {
+	c *Client
 }
 
-type natsChannel struct {
-	conn          *Conn
-	subscriber    ari.Subscriber
-	playback      ari.Playback
-	liveRecording ari.LiveRecording
-}
-
-func (c *natsChannel) Playback() ari.Playback {
-	return c.playback
-}
-
-func (c *natsChannel) Get(id string) *ari.ChannelHandle {
-	return ari.NewChannelHandle(id, c)
-}
-
-func (c *natsChannel) List() (cx []*ari.ChannelHandle, err error) {
-	var channels []string
-	err = c.conn.ReadRequest("ari.channels.all", "", nil, &channels)
-	for _, ch := range channels {
-		cx = append(cx, c.Get(ch))
-	}
-	return
-}
-
-func (c *natsChannel) Originate(req ari.OriginateRequest) (h *ari.ChannelHandle, err error) {
-	var channelID string
-	err = c.conn.StandardRequest("ari.channels.originate", "", &req, &channelID)
+func (c *channel) Get(key *ari.Key) *ari.ChannelHandle {
+	k, err := c.c.getRequest(&proxy.Request{
+		Kind: "ChannelGet",
+		Key:  key,
+	})
 	if err != nil {
-		return
+		c.c.log.Warn("failed to make data request for channel", "error", err)
+		return ari.NewChannelHandle(key, c, nil)
 	}
-	h = c.Get(channelID)
-	return
+	return ari.NewChannelHandle(k, c, nil)
 }
 
-func (c *natsChannel) Create(req ari.ChannelCreateRequest) (h *ari.ChannelHandle, err error) {
-	var channelID string
-	err = c.conn.StandardRequest("ari.channels.create", "", &req, &channelID)
+func (c *channel) List(filter *ari.Key) ([]*ari.Key, error) {
+	return c.c.listRequest(&proxy.Request{
+		Kind: "ChannelList",
+		Key:  filter,
+	})
+}
+
+func (c *channel) Originate(key *ari.Key, o ari.OriginateRequest) (*ari.ChannelHandle, error) {
+	k, err := c.c.createRequest(&proxy.Request{
+		Kind: "ChannelOriginate",
+		Key:  key,
+		ChannelOriginate: &proxy.ChannelOriginate{
+			OriginateRequest: o,
+		},
+	})
 	if err != nil {
-		return
+		return nil, err
 	}
-	h = c.Get(channelID)
-	return
+	return ari.NewChannelHandle(k, c, nil), nil
 }
 
-func (c *natsChannel) Data(id string) (cd ari.ChannelData, err error) {
-	err = c.conn.ReadRequest("ari.channels.data", id, nil, &cd)
-	return
+func (c *channel) StageOriginate(key *ari.Key, o ari.OriginateRequest) (*ari.ChannelHandle, error) {
+	k, err := c.c.createRequest(&proxy.Request{
+		Kind: "ChannelStageOriginate",
+		Key:  key,
+		ChannelOriginate: &proxy.ChannelOriginate{
+			OriginateRequest: o,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return ari.NewChannelHandle(k, c, func(h *ari.ChannelHandle) error {
+		_, err := c.Originate(k, o)
+		return err
+	}), nil
 }
 
-func (c *natsChannel) Continue(id string, context string, extension string, priority int) (err error) {
-	err = c.conn.StandardRequest("ari.channels.continue", id, &ContinueRequest{
-		Context:   context,
-		Extension: extension,
-		Priority:  priority,
-	}, nil)
-	return
+func (c *channel) Create(key *ari.Key, o ari.ChannelCreateRequest) (*ari.ChannelHandle, error) {
+	k, err := c.c.createRequest(&proxy.Request{
+		Kind: "ChannelCreate",
+		Key:  key,
+		ChannelCreate: &proxy.ChannelCreate{
+			ChannelCreateRequest: o,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return ari.NewChannelHandle(k, c, nil), nil
 }
 
-func (c *natsChannel) Busy(id string) (err error) {
-	err = c.Hangup(id, "busy")
-	return
+func (c *channel) Data(key *ari.Key) (*ari.ChannelData, error) {
+	data, err := c.c.dataRequest(&proxy.Request{
+		Kind: "ChannelData",
+		Key:  key,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return data.Channel, nil
 }
 
-func (c *natsChannel) Congestion(id string) (err error) {
-	err = c.Hangup(id, "congestion")
-	return
+func (c *channel) Continue(key *ari.Key, context string, extension string, priority int) error {
+	return c.c.commandRequest(&proxy.Request{
+		Kind: "ChannelContinue",
+		Key:  key,
+		ChannelContinue: &proxy.ChannelContinue{
+			Context:   context,
+			Extension: extension,
+			Priority:  priority,
+		},
+	})
 }
 
-func (c *natsChannel) Hangup(id string, reason string) (err error) {
-	err = c.conn.StandardRequest("ari.channels.hangup", id, &reason, nil)
-	return
+func (c *channel) Busy(key *ari.Key) error {
+	return c.c.commandRequest(&proxy.Request{
+		Kind: "ChannelBusy",
+		Key:  key,
+	})
 }
 
-func (c *natsChannel) Answer(id string) (err error) {
-	err = c.conn.StandardRequest("ari.channels.answer", id, nil, nil)
-	return
+func (c *channel) Congestion(key *ari.Key) error {
+	return c.c.commandRequest(&proxy.Request{
+		Kind: "ChannelCongestion",
+		Key:  key,
+	})
 }
 
-func (c *natsChannel) Ring(id string) (err error) {
-	err = c.conn.StandardRequest("ari.channels.ring", id, nil, nil)
-	return
+func (c *channel) Hangup(key *ari.Key, reason string) error {
+	return c.c.commandRequest(&proxy.Request{
+		Kind: "ChannelHangup",
+		Key:  key,
+		ChannelHangup: &proxy.ChannelHangup{
+			Reason: reason,
+		},
+	})
 }
 
-func (c *natsChannel) StopRing(id string) (err error) {
-	err = c.conn.StandardRequest("ari.channels.stopring", id, nil, nil)
-	return
+func (c *channel) Answer(key *ari.Key) error {
+	return c.c.commandRequest(&proxy.Request{
+		Kind: "ChannelAnswer",
+		Key:  key,
+	})
 }
 
-func (c *natsChannel) SendDTMF(id string, dtmf string, opts *ari.DTMFOptions) (err error) {
+func (c *channel) Ring(key *ari.Key) error {
+	return c.c.commandRequest(&proxy.Request{
+		Kind: "ChannelRing",
+		Key:  key,
+	})
+}
+
+func (c *channel) StopRing(key *ari.Key) error {
+	return c.c.commandRequest(&proxy.Request{
+		Kind: "ChannelStopRing",
+		Key:  key,
+	})
+}
+
+func (c *channel) SendDTMF(key *ari.Key, dtmf string, opts *ari.DTMFOptions) error {
 	if opts == nil {
 		opts = &ari.DTMFOptions{}
 	}
+	return c.c.commandRequest(&proxy.Request{
+		Kind: "ChannelSendDTMF",
+		Key:  key,
+		ChannelSendDTMF: &proxy.ChannelSendDTMF{
+			DTMF:    dtmf,
+			Options: opts,
+		},
+	})
+}
 
-	type request struct {
-		Dtmf string           `json:"dtmf,omitempty"`
-		Opts *ari.DTMFOptions `json:"options,omitempty"`
+func (c *channel) Hold(key *ari.Key) error {
+	return c.c.commandRequest(&proxy.Request{
+		Kind: "ChannelHold",
+		Key:  key,
+	})
+}
+
+func (c *channel) StopHold(key *ari.Key) error {
+	return c.c.commandRequest(&proxy.Request{
+		Kind: "ChannelStopHold",
+		Key:  key,
+	})
+}
+
+func (c *channel) Mute(key *ari.Key, dir ari.Direction) error {
+	return c.c.commandRequest(&proxy.Request{
+		Kind: "ChannelMute",
+		Key:  key,
+		ChannelMute: &proxy.ChannelMute{
+			Direction: dir,
+		},
+	})
+}
+
+func (c *channel) Unmute(key *ari.Key, dir ari.Direction) error {
+	return c.c.commandRequest(&proxy.Request{
+		Kind: "ChannelUnmute",
+		Key:  key,
+		ChannelMute: &proxy.ChannelMute{
+			Direction: dir,
+		},
+	})
+}
+
+func (c *channel) MOH(key *ari.Key, moh string) error {
+	return c.c.commandRequest(&proxy.Request{
+		Kind: "ChannelMOH",
+		Key:  key,
+		ChannelMOH: &proxy.ChannelMOH{
+			Music: moh,
+		},
+	})
+}
+
+func (c *channel) StopMOH(key *ari.Key) error {
+	return c.c.commandRequest(&proxy.Request{
+		Kind: "ChannelStopMOH",
+		Key:  key,
+	})
+}
+
+func (c *channel) Silence(key *ari.Key) error {
+	return c.c.commandRequest(&proxy.Request{
+		Kind: "ChannelSilence",
+		Key:  key,
+	})
+}
+
+func (c *channel) StopSilence(key *ari.Key) error {
+	return c.c.commandRequest(&proxy.Request{
+		Kind: "ChannelStopSilence",
+		Key:  key,
+	})
+}
+
+func (c *channel) Snoop(key *ari.Key, snoopID string, opts *ari.SnoopOptions) (*ari.ChannelHandle, error) {
+	k, err := c.c.createRequest(&proxy.Request{
+		Kind: "ChannelSnoop",
+		Key:  key,
+		ChannelSnoop: &proxy.ChannelSnoop{
+			SnoopID: snoopID,
+			Options: opts,
+		},
+	})
+	if err != nil {
+		return nil, err
 	}
-
-	req := request{dtmf, opts}
-
-	err = c.conn.StandardRequest("ari.channels.dtmf", id, &req, nil)
-	return
+	return ari.NewChannelHandle(k, c, nil), nil
 }
 
-func (c *natsChannel) Hold(id string) (err error) {
-	err = c.conn.StandardRequest("ari.channels.hold", id, nil, nil)
-	return
-}
-
-func (c *natsChannel) StopHold(id string) (err error) {
-	err = c.conn.StandardRequest("ari.channels.stophold", id, nil, nil)
-	return
-}
-
-func (c *natsChannel) Mute(id string, dir string) (err error) {
-	err = c.conn.StandardRequest("ari.channels.mute", id, &dir, nil)
-	return
-}
-
-func (c *natsChannel) Unmute(id string, dir string) (err error) {
-	err = c.conn.StandardRequest("ari.channels.unmute", id, &dir, nil)
-	return
-}
-
-func (c *natsChannel) MOH(id string, moh string) (err error) {
-	err = c.conn.StandardRequest("ari.channels.moh", id, &moh, nil)
-	return
-}
-
-func (c *natsChannel) StopMOH(id string) (err error) {
-	err = c.conn.StandardRequest("ari.channels.stopmoh", id, nil, nil)
-	return
-}
-
-func (c *natsChannel) Silence(id string) (err error) {
-	err = c.conn.StandardRequest("ari.channels.silence", id, nil, nil)
-	return
-}
-
-func (c *natsChannel) StopSilence(id string) (err error) {
-	err = c.conn.StandardRequest("ari.channels.stopsilence", id, nil, nil)
-	return
-}
-
-// SnoopRequest is the NATs snoop request
-type SnoopRequest struct {
-	SnoopID string
-	App     string
-	Options *ari.SnoopOptions
-}
-
-func (c *natsChannel) Snoop(id string, snoopID string, app string, opts *ari.SnoopOptions) (ch *ari.ChannelHandle, err error) {
-	req := &SnoopRequest{
-		SnoopID: snoopID,
-		App:     app,
-		Options: opts,
+func (c *channel) StageSnoop(key *ari.Key, snoopID string, opts *ari.SnoopOptions) (*ari.ChannelHandle, error) {
+	k, err := c.c.getRequest(&proxy.Request{
+		Kind: "ChannelStageSnoop",
+		Key:  key,
+		ChannelSnoop: &proxy.ChannelSnoop{
+			SnoopID: snoopID,
+			Options: opts,
+		},
+	})
+	if err != nil {
+		return nil, err
 	}
-	err = c.conn.StandardRequest("ari.channels.snoop", id, &req, nil)
-	if err == nil {
-		ch = c.Get(snoopID)
+	return ari.NewChannelHandle(k, c, func(h *ari.ChannelHandle) error {
+		_, err := c.Snoop(ari.NewKey(ari.ChannelKey, key.ID, ari.WithLocationOf(k)), k.ID, opts)
+		return err
+	}), nil
+}
+
+func (c *channel) Dial(key *ari.Key, caller string, timeout time.Duration) error {
+	return c.c.commandRequest(&proxy.Request{
+		Kind: "ChannelDial",
+		Key:  key,
+		ChannelDial: &proxy.ChannelDial{
+			Caller:  caller,
+			Timeout: timeout,
+		},
+	})
+}
+
+func (c *channel) Play(key *ari.Key, playbackID string, mediaURI string) (*ari.PlaybackHandle, error) {
+	pb, err := c.c.createRequest(&proxy.Request{
+		Kind: "ChannelPlay",
+		Key:  key,
+		ChannelPlay: &proxy.ChannelPlay{
+			PlaybackID: playbackID,
+			MediaURI:   mediaURI,
+		},
+	})
+	if err != nil {
+		return nil, err
 	}
-	return
+	return ari.NewPlaybackHandle(pb, c.c.Playback(), nil), nil
 }
 
-// DialRequest is the request for the channel dial operation
-type DialRequest struct {
-	Caller  string `json:"caller"`
-	Timeout int    `json:"timeout"`
-}
-
-func (c *natsChannel) Dial(id string, caller string, timeout time.Duration) (err error) {
-	//TODO: the dial documentation does not reference the unit of timeout,
-	// second is assumed from similar parameters
-	req := DialRequest{caller, int(timeout / time.Second)}
-	err = c.conn.StandardRequest("ari.channels.dial", id, &req, nil)
-	return
-}
-
-func (c *natsChannel) Play(id string, playbackID string, mediaURI string) (p *ari.PlaybackHandle, err error) {
-	err = c.conn.StandardRequest("ari.channels.play", id, &PlayRequest{
-		PlaybackID: playbackID,
-		MediaURI:   mediaURI,
-	}, nil)
-
-	p = c.playback.Get(playbackID)
-
-	return
-}
-
-func (c *natsChannel) Record(id string, name string, opts *ari.RecordingOptions) (h *ari.LiveRecordingHandle, err error) {
-
-	if opts == nil {
-		opts = &ari.RecordingOptions{}
+func (c *channel) StagePlay(key *ari.Key, playbackID string, mediaURI string) (*ari.PlaybackHandle, error) {
+	k, err := c.c.getRequest(&proxy.Request{
+		Kind: "ChannelStagePlay",
+		Key:  key,
+		ChannelPlay: &proxy.ChannelPlay{
+			PlaybackID: playbackID,
+			MediaURI:   mediaURI,
+		},
+	})
+	if err != nil {
+		return nil, err
 	}
+	return ari.NewPlaybackHandle(key, c.c.Playback(), func(h *ari.PlaybackHandle) error {
+		_, err := c.Play(k, playbackID, mediaURI)
+		return err
+	}), nil
+}
 
-	req := RecordRequest{
-		Name:        name,
-		Format:      opts.Format,
-		MaxDuration: int(opts.MaxDuration / time.Second),
-		MaxSilence:  int(opts.MaxSilence / time.Second),
-		IfExists:    opts.Exists,
-		Beep:        opts.Beep,
-		TerminateOn: opts.Terminate,
+func (c *channel) Record(key *ari.Key, name string, opts *ari.RecordingOptions) (*ari.LiveRecordingHandle, error) {
+	rb, err := c.c.createRequest(&proxy.Request{
+		Kind: "ChannelRecord",
+		Key:  key,
+		ChannelRecord: &proxy.ChannelRecord{
+			Name:    name,
+			Options: opts,
+		},
+	})
+	if err != nil {
+		return nil, err
 	}
-	err = c.conn.StandardRequest("ari.channels.record", id, req, nil)
-	if err == nil {
-		h = c.liveRecording.Get(name)
+	return ari.NewLiveRecordingHandle(rb, c.c.LiveRecording(), nil), nil
+}
+
+func (c *channel) StageRecord(key *ari.Key, name string, opts *ari.RecordingOptions) (*ari.LiveRecordingHandle, error) {
+	k, err := c.c.getRequest(&proxy.Request{
+		Kind: "ChannelStageRecord",
+		Key:  key,
+		ChannelRecord: &proxy.ChannelRecord{
+			Name:    name,
+			Options: opts,
+		},
+	})
+	if err != nil {
+		return nil, err
 	}
-	return
+	return ari.NewLiveRecordingHandle(k, c.c.LiveRecording(), func(h *ari.LiveRecordingHandle) error {
+		_, err := c.Record(k, name, opts)
+		return err
+	}), nil
 }
 
-func (c *natsChannel) Subscribe(id string, n ...string) ari.Subscription {
-	ns := newSubscription(c.Get(id))
-	ns.Start(c.subscriber, n...)
-	return ns
+func (c *channel) Subscribe(key *ari.Key, n ...string) ari.Subscription {
+	err := c.c.commandRequest(&proxy.Request{
+		Kind: "ChannelSubscribe",
+		Key:  key,
+	})
+	if err != nil {
+		c.c.log.Warn("failed to call channel subscribe")
+		if key.Dialog != "" {
+			c.c.log.Error("dialog present; failing")
+			return nil
+		}
+	}
+	return c.c.Bus().Subscribe(key, n...)
 }
 
-type natsChannelVariables struct {
-	conn *Conn
-	id   string
+func (c *channel) GetVariable(key *ari.Key, name string) (string, error) {
+	data, err := c.c.dataRequest(&proxy.Request{
+		Kind: "ChannelVariableGet",
+		Key:  key,
+		ChannelVariable: &proxy.ChannelVariable{
+			Name: name,
+		},
+	})
+	if err != nil {
+		return "", err
+	}
+	return data.Variable, nil
 }
 
-func (c *natsChannel) Variables(id string) ari.Variables {
-	return &natsChannelVariables{c.conn, id}
-}
-
-// GetChannelVariable is the request object for getting a channel variable
-type GetChannelVariable struct {
-	Name string `json:"name"`
-}
-
-// SetChannelVariable is the request object for setting a channel variable
-type SetChannelVariable struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
-}
-
-func (c *natsChannelVariables) Get(variable string) (ret string, err error) {
-	req := GetChannelVariable{variable}
-	err = c.conn.ReadRequest("ari.channels.variables.get", c.id, &req, &ret)
-	return
-}
-
-func (c *natsChannelVariables) Set(variable string, value string) (err error) {
-	req := SetChannelVariable{variable, value}
-	err = c.conn.StandardRequest("ari.channels.variables.set", c.id, &req, nil)
-	return
+func (c *channel) SetVariable(key *ari.Key, name, value string) error {
+	return c.c.commandRequest(&proxy.Request{
+		Kind: "ChannelVariableSet",
+		Key:  key,
+		ChannelVariable: &proxy.ChannelVariable{
+			Name:  name,
+			Value: value,
+		},
+	})
 }

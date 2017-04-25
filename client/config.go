@@ -1,29 +1,42 @@
 package client
 
-import "github.com/CyCoreSystems/ari"
+import (
+	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari-proxy/proxy"
+)
 
-type natsConfig struct {
-	conn *Conn
+type config struct {
+	c *Client
 }
 
-func (c *natsConfig) Get(configClass string, objectType string, id string) *ari.ConfigHandle {
-	return ari.NewConfigHandle(configClass, objectType, id, c)
+func (c *config) Get(key *ari.Key) *ari.ConfigHandle {
+	return ari.NewConfigHandle(key, c)
 }
 
-func (c *natsConfig) Data(configClass string, objectType string, id string) (cd ari.ConfigData, err error) {
-	cd.ID = id
-	cd.Type = objectType
-	cd.Class = configClass
-	err = c.conn.ReadRequest("ari.asterisk.config.data", configClass+"."+objectType+"."+id, nil, &cd.Fields)
-	return
+func (c *config) Data(key *ari.Key) (*ari.ConfigData, error) {
+	data, err := c.c.dataRequest(&proxy.Request{
+		Kind: "AsteriskConfigData",
+		Key:  key,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return data.Config, nil
 }
 
-func (c *natsConfig) Update(configClass string, objectType string, id string, tuples []ari.ConfigTuple) (err error) {
-	err = c.conn.StandardRequest("ari.asterisk.config.update", configClass+"."+objectType+"."+id, &tuples, nil)
-	return
+func (c *config) Update(key *ari.Key, tuples []ari.ConfigTuple) error {
+	return c.c.commandRequest(&proxy.Request{
+		Kind: "AsteriskConfigUpdate",
+		Key:  key,
+		AsteriskConfig: &proxy.AsteriskConfig{
+			Tuples: tuples,
+		},
+	})
 }
 
-func (c *natsConfig) Delete(configClass string, objectType string, id string) (err error) {
-	err = c.conn.StandardRequest("ari.asterisk.config.delete", configClass+"."+objectType+"."+id, nil, nil)
-	return
+func (c *config) Delete(key *ari.Key) error {
+	return c.c.commandRequest(&proxy.Request{
+		Kind: "AsteriskConfigDelete",
+		Key:  key,
+	})
 }

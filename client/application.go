@@ -1,35 +1,60 @@
 package client
 
-import "github.com/CyCoreSystems/ari"
+import (
+	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari-proxy/proxy"
+)
 
-type natsApplication struct {
-	conn *Conn
+type application struct {
+	c *Client
 }
 
-func (a *natsApplication) Get(name string) *ari.ApplicationHandle {
-	return ari.NewApplicationHandle(name, a)
+func (a *application) List(filter *ari.Key) ([]*ari.Key, error) {
+	return a.c.listRequest(&proxy.Request{
+		Kind: "ApplicationList",
+		Key:  filter,
+	})
 }
 
-func (a *natsApplication) List() (ax []*ari.ApplicationHandle, err error) {
-	var apps []string
-	err = a.conn.ReadRequest("ari.applications.all", "", nil, &apps)
-	for _, app := range apps {
-		ax = append(ax, a.Get(app))
+func (a *application) Data(key *ari.Key) (*ari.ApplicationData, error) {
+	ret, err := a.c.dataRequest(&proxy.Request{
+		Kind: "ApplicationData",
+		Key:  key,
+	})
+	if err != nil {
+		return nil, err
 	}
-	return
+	return ret.Application, nil
 }
 
-func (a *natsApplication) Data(name string) (d ari.ApplicationData, err error) {
-	err = a.conn.ReadRequest("ari.applications.data", name, nil, &d)
-	return
+func (a *application) Get(key *ari.Key) *ari.ApplicationHandle {
+	k, err := a.c.getRequest(&proxy.Request{
+		Kind: "ApplicationGet",
+		Key:  key,
+	})
+	if err != nil {
+		a.c.log.Warn("failed to make data request for application", "error", err)
+		return ari.NewApplicationHandle(key, a)
+	}
+	return ari.NewApplicationHandle(k, a)
 }
 
-func (a *natsApplication) Subscribe(name string, eventSource string) (err error) {
-	err = a.conn.StandardRequest("ari.applications.subscribe", name, eventSource, nil)
-	return
+func (a *application) Subscribe(key *ari.Key, eventSource string) (err error) {
+	return a.c.commandRequest(&proxy.Request{
+		Kind: "ApplicationSubscribe",
+		Key:  key,
+		ApplicationSubscribe: &proxy.ApplicationSubscribe{
+			EventSource: eventSource,
+		},
+	})
 }
 
-func (a *natsApplication) Unsubscribe(name string, eventSource string) (err error) {
-	err = a.conn.StandardRequest("ari.applications.unsubscribe", name, eventSource, nil)
-	return
+func (a *application) Unsubscribe(key *ari.Key, eventSource string) (err error) {
+	return a.c.commandRequest(&proxy.Request{
+		Kind: "ApplicationUnsubscribe",
+		Key:  key,
+		ApplicationSubscribe: &proxy.ApplicationSubscribe{
+			EventSource: eventSource,
+		},
+	})
 }

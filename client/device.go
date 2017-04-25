@@ -1,35 +1,57 @@
 package client
 
-import "github.com/CyCoreSystems/ari"
+import (
+	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari-proxy/proxy"
+)
 
-type natsDeviceState struct {
-	conn *Conn
+type deviceState struct {
+	c *Client
 }
 
-func (ds *natsDeviceState) Get(name string) *ari.DeviceStateHandle {
-	return ari.NewDeviceStateHandle(name, ds)
-}
-
-func (ds *natsDeviceState) List() (dx []*ari.DeviceStateHandle, err error) {
-	var devices []string
-	err = ds.conn.ReadRequest("ari.devices.all", "", nil, &devices)
-	for _, d := range devices {
-		dx = append(dx, ds.Get(d))
+func (ds *deviceState) Get(key *ari.Key) *ari.DeviceStateHandle {
+	k, err := ds.c.getRequest(&proxy.Request{
+		Kind: "DeviceStateGet",
+		Key:  key,
+	})
+	if err != nil {
+		ds.c.log.Warn("failed to get device state for handle")
+		return ari.NewDeviceStateHandle(key, ds)
 	}
-	return
+	return ari.NewDeviceStateHandle(k, ds)
 }
 
-func (ds *natsDeviceState) Data(name string) (d ari.DeviceStateData, err error) {
-	err = ds.conn.ReadRequest("ari.devices.data", name, nil, &d)
-	return
+func (ds *deviceState) List(filter *ari.Key) ([]*ari.Key, error) {
+	return ds.c.listRequest(&proxy.Request{
+		Kind: "DeviceStateList",
+		Key:  filter,
+	})
 }
 
-func (ds *natsDeviceState) Update(name string, state string) (err error) {
-	err = ds.conn.StandardRequest("ari.devices.update", name, &state, nil)
-	return
+func (ds *deviceState) Data(key *ari.Key) (*ari.DeviceStateData, error) {
+	data, err := ds.c.dataRequest(&proxy.Request{
+		Kind: "DeviceStateData",
+		Key:  key,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return data.DeviceState, nil
 }
 
-func (ds *natsDeviceState) Delete(name string) (err error) {
-	err = ds.conn.StandardRequest("ari.devices.delete", name, nil, nil)
-	return
+func (ds *deviceState) Update(key *ari.Key, state string) error {
+	return ds.c.commandRequest(&proxy.Request{
+		Kind: "DeviceStateUpdate",
+		Key:  key,
+		DeviceStateUpdate: &proxy.DeviceStateUpdate{
+			State: state,
+		},
+	})
+}
+
+func (ds *deviceState) Delete(key *ari.Key) error {
+	return ds.c.commandRequest(&proxy.Request{
+		Kind: "DeviceStateDelete",
+		Key:  key,
+	})
 }

@@ -1,45 +1,64 @@
 package client
 
-import "github.com/CyCoreSystems/ari"
+import (
+	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari-proxy/proxy"
+)
 
-type natsStoredRecording struct {
-	conn *Conn
+type storedRecording struct {
+	c *Client
 }
 
-// tests and other advanced utility functions can cast to an interface to get the NatsConnection object out
-func (sr *natsStoredRecording) NatsConnection() *Conn {
-	return sr.conn
+func (s *storedRecording) List(filter *ari.Key) ([]*ari.Key, error) {
+	return s.c.listRequest(&proxy.Request{
+		Kind: "RecordingStoredList",
+		Key:  filter,
+	})
 }
 
-func (sr *natsStoredRecording) List() (sx []*ari.StoredRecordingHandle, err error) {
-	var recordings []string
-	err = sr.conn.ReadRequest("ari.recording.stored.all", "", nil, &recordings)
-	for _, r := range recordings {
-		sx = append(sx, sr.Get(r))
-	}
-
-	return
-}
-
-func (sr *natsStoredRecording) Get(name string) *ari.StoredRecordingHandle {
-	return ari.NewStoredRecordingHandle(name, sr)
-}
-
-func (sr *natsStoredRecording) Data(name string) (srd ari.StoredRecordingData, err error) {
-	err = sr.conn.ReadRequest("ari.recording.stored.data", name, nil, &srd)
-	return
-}
-
-func (sr *natsStoredRecording) Copy(name string, dest string) (h *ari.StoredRecordingHandle, err error) {
-	err = sr.conn.StandardRequest("ari.recording.stored.copy", name, &dest, nil)
+func (s *storedRecording) Get(key *ari.Key) *ari.StoredRecordingHandle {
+	k, err := s.c.getRequest(&proxy.Request{
+		Kind: "RecordingStoredGet",
+		Key:  key,
+	})
 	if err != nil {
-		return
+		s.c.log.Warn("failed to get stored recording for handle", "error", err)
+		return ari.NewStoredRecordingHandle(key, s, nil)
 	}
-	h = sr.Get(dest) //TODO: confirm dest is ID of the new copy. Should be.
-	return
+	return ari.NewStoredRecordingHandle(k, s, nil)
 }
 
-func (sr *natsStoredRecording) Delete(name string) (err error) {
-	err = sr.conn.StandardRequest("ari.recording.stored.delete", name, nil, nil)
-	return
+func (s *storedRecording) Data(key *ari.Key) (*ari.StoredRecordingData, error) {
+	data, err := s.c.dataRequest(&proxy.Request{
+		Kind: "RecordingStoredData",
+		Key:  key,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return data.StoredRecording, nil
+}
+
+func (s *storedRecording) Copy(key *ari.Key, dest string) (*ari.StoredRecordingHandle, error) {
+	err := s.c.commandRequest(&proxy.Request{
+		Kind: "RecordingStoredCopy",
+		Key:  key,
+		RecordingStoredCopy: &proxy.RecordingStoredCopy{
+			Destination: dest,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	k := key
+	k.ID = dest
+	return ari.NewStoredRecordingHandle(k, s, nil), nil
+}
+
+func (s *storedRecording) Delete(key *ari.Key) error {
+	return s.c.commandRequest(&proxy.Request{
+		Kind: "RecordingStoredDelete",
+		Key:  key,
+	})
 }

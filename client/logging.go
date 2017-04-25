@@ -1,27 +1,68 @@
 package client
 
-import "github.com/CyCoreSystems/ari"
+import (
+	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari-proxy/proxy"
+)
 
-type natsLogging struct {
-	conn *Conn
+type logging struct {
+	c *Client
 }
 
-func (l *natsLogging) Create(name string, level string) (err error) {
-	err = l.conn.StandardRequest("ari.logging.create", name, level, nil)
-	return
+func (l *logging) Create(key *ari.Key, levels string) (*ari.LogHandle, error) {
+	k, err := l.c.createRequest(&proxy.Request{
+		Kind: "AsteriskLoggingCreate",
+		Key:  key,
+		AsteriskLoggingChannel: &proxy.AsteriskLoggingChannel{
+			Levels: levels,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return ari.NewLogHandle(k, l), nil
 }
 
-func (l *natsLogging) List() (ld []ari.LogData, err error) {
-	err = l.conn.ReadRequest("ari.logging.all", "", nil, &ld)
-	return
+func (l *logging) Data(key *ari.Key) (*ari.LogData, error) {
+	data, err := l.c.dataRequest(&proxy.Request{
+		Kind: "AsteriskLoggingData",
+		Key:  key,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return data.Log, nil
 }
 
-func (l *natsLogging) Rotate(name string) (err error) {
-	err = l.conn.StandardRequest("ari.logging.rotate", name, nil, nil)
-	return
+func (l *logging) Get(key *ari.Key) *ari.LogHandle {
+	k, err := l.c.getRequest(&proxy.Request{
+		Kind: "AsteriskLoggingGet",
+		Key:  key,
+	})
+	if err != nil {
+		l.c.log.Warn("failed to get logging key for handle", "error", err)
+		return ari.NewLogHandle(key, l)
+	}
+	return ari.NewLogHandle(k, l)
 }
 
-func (l *natsLogging) Delete(name string) (err error) {
-	err = l.conn.StandardRequest("ari.logging.delete", name, nil, nil)
-	return
+func (l *logging) List(filter *ari.Key) ([]*ari.Key, error) {
+	return l.c.listRequest(&proxy.Request{
+		Kind: "AsteriskLoggingList",
+		Key:  filter,
+	})
+}
+
+func (l *logging) Rotate(key *ari.Key) error {
+	return l.c.commandRequest(&proxy.Request{
+		Kind: "AsteriskLoggingRotate",
+		Key:  key,
+	})
+}
+
+func (l *logging) Delete(key *ari.Key) error {
+	return l.c.commandRequest(&proxy.Request{
+		Kind: "AsteriskLoggingDelete",
+		Key:  key,
+	})
 }

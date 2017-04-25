@@ -1,5 +1,6 @@
 
 all:
+	go build `go list ./... | grep -v /vendor/`
 	mkdir -p bin
 	go build -o bin/ari-proxy ./cmd/ari-proxy
 
@@ -10,3 +11,13 @@ docker: all
 test:
 	go test `go list ./... | grep -v /vendor/`
 
+lint:
+	gometalinter --disable=gotype client/... server/... proxy/...
+
+check: all lint test
+
+deps:
+	glide cc
+	glide i
+
+ci: deps check

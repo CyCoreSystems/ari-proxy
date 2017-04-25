@@ -1,42 +1,58 @@
 package client
 
-import "github.com/CyCoreSystems/ari"
+import (
+	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari-proxy/proxy"
+)
 
-type natsMailbox struct {
-	conn *Conn
+type mailbox struct {
+	c *Client
 }
 
-func (m *natsMailbox) Get(name string) *ari.MailboxHandle {
-	return ari.NewMailboxHandle(name, m)
-}
-
-func (m *natsMailbox) List() (mx []*ari.MailboxHandle, err error) {
-	var boxes []string
-	err = m.conn.ReadRequest("ari.mailboxes.all", "", nil, &boxes)
-	for _, id := range boxes {
-		mx = append(mx, m.Get(id))
+func (m *mailbox) Get(key *ari.Key) *ari.MailboxHandle {
+	k, err := m.c.getRequest(&proxy.Request{
+		Kind: "MailboxGet",
+		Key:  key,
+	})
+	if err != nil {
+		m.c.log.Warn("failed to get bridge for handle", "error", err)
+		return ari.NewMailboxHandle(key, m)
 	}
-	return
+	return ari.NewMailboxHandle(k, m)
 }
 
-func (m *natsMailbox) Data(name string) (d ari.MailboxData, err error) {
-	err = m.conn.ReadRequest("ari.mailboxes.data", name, nil, &d)
-	return
+func (m *mailbox) List(filter *ari.Key) ([]*ari.Key, error) {
+	return m.c.listRequest(&proxy.Request{
+		Kind: "MailboxList",
+		Key:  filter,
+	})
 }
 
-// UpdateMailboxRequest is the encoded request for updating the mailbox
-type UpdateMailboxRequest struct {
-	Old int `json:"old"`
-	New int `json:"new"`
+func (m *mailbox) Data(key *ari.Key) (*ari.MailboxData, error) {
+	data, err := m.c.dataRequest(&proxy.Request{
+		Kind: "MailboxData",
+		Key:  key,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return data.Mailbox, nil
 }
 
-func (m *natsMailbox) Update(name string, oldMessages int, newMessages int) (err error) {
-	request := UpdateMailboxRequest{Old: oldMessages, New: newMessages}
-	err = m.conn.StandardRequest("ari.mailboxes.update", name, &request, nil)
-	return
+func (m *mailbox) Update(key *ari.Key, oldMessages int, newMessages int) error {
+	return m.c.commandRequest(&proxy.Request{
+		Kind: "MailboxUpdate",
+		Key:  key,
+		MailboxUpdate: &proxy.MailboxUpdate{
+			New: newMessages,
+			Old: oldMessages,
+		},
+	})
 }
 
-func (m *natsMailbox) Delete(name string) (err error) {
-	err = m.conn.StandardRequest("ari.mailboxes.delete", name, nil, nil)
-	return
+func (m *mailbox) Delete(key *ari.Key) error {
+	return m.c.commandRequest(&proxy.Request{
+		Kind: "MailboxDelete",
+		Key:  key,
+	})
 }

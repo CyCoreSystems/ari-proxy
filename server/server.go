@@ -299,6 +299,8 @@ func (s *Server) newRequestHandler(ctx context.Context) func(subject string, rep
 	}
 }
 
+// TODO: see if there is a more programmatic approach to this
+// nolint: gocyclo
 func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.Request) {
 	var f func(context.Context, string, *proxy.Request)
 

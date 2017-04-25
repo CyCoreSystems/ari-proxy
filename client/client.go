@@ -519,6 +519,8 @@ func (c *Client) makeRequests(class string, req *proxy.Request) (responses []*pr
 	}
 }
 
+// TODO: simplify
+// nolint: gocyclo
 func (c *Client) makeBroadcastRequestReturnFirstGoodResponse(class string, req *proxy.Request) (*proxy.Response, error) {
 	if req == nil {
 		return nil, errors.New("empty request")
@@ -527,10 +529,11 @@ func (c *Client) makeBroadcastRequestReturnFirstGoodResponse(class string, req *
 		req.Key = ari.NewKey("", "")
 	}
 
-	var responseCount int
 	expected := len(c.core.cluster.Matching(req.Key.Node, req.Key.App, c.core.clusterMaxAge))
 	reply := uuid.NewV1().String()
 	replyChan := make(chan *proxy.Response)
+
+	var responseCount int
 	replySub, err := c.core.nc.Subscribe(reply, func(o *proxy.Response) {
 		responseCount++
 
@@ -563,6 +566,9 @@ func (c *Client) makeBroadcastRequestReturnFirstGoodResponse(class string, req *
 			return nil, err
 		case resp, more := <-replyChan:
 			if !more {
+				if err == nil {
+					err = errors.New("no data")
+				}
 				return nil, err
 			}
 			if resp != nil {

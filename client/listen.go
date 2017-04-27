@@ -2,117 +2,59 @@ package client
 
 import (
 	"context"
-	"encoding/json"
+	"fmt"
 
 	"github.com/CyCoreSystems/ari"
-	"github.com/CyCoreSystems/ari-proxy/session"
-	"github.com/nats-io/nats"
 	"github.com/pkg/errors"
 )
 
-// Handler defines a function which is called when a new dialog is created
-type Handler func(context.Context, ari.Client, *session.Dialog, *session.AppStart)
+// ListenQueue is the queue group to use for distributing StasisStart events to Listeners.
+var ListenQueue = "ARIProxyStasisStartDistributorQueue"
 
-// Listen listens for an AppStart event and calls the handler when an event comes in
+// Listen listens for StasisStart events, filtered by the given key.  Any
+// matching events will be sent down the returned StasisStart channel.  The
+// context which is passed to Listen can be used to stop the Listen execution.
 //
-// TODO:  this should go away, with V2.  similar functionality can be offered by a method on Client which generates a dialog and a new client for each StasisStart.
-//
-func Listen(ctx context.Context, nc *nats.EncodedConn, appName string, h Handler) error {
+// Importantly, the StasisStart events are listened in a NATS Queue, which
+// means that this may be used to deliver new calls to only a single handler
+// out of a set of 1 or more handlers in a cluster.
+func Listen(ctx context.Context, ac ari.Client, h func(*ari.Key, *ari.StasisStart)) error {
+	c, ok := ac.(*Client)
+	if !ok {
+		return errors.New("ARI Client must be a proxy client")
+	}
 
-	Logger.Debug("Listening on endpoint", "endpoint", "ari.app."+appName)
+	subj := fmt.Sprintf("%sevent.%s.>", c.core.prefix, c.appName)
 
-	ch := make(chan *nats.Msg, 100)
-	sub, err := nc.BindRecvQueueChan("ari.app."+appName, appName+"_app_listener", ch)
+	sub, err := c.nc.QueueSubscribe(subj, ListenQueue, listenProcessor(h))
 	if err != nil {
-		Logger.Debug("Error listening on endpoint", "error", err)
-		return errors.Wrap(err, "Unable to subscribe to ARI application start queue")
-	}
-
-	defer func() {
-		if err := sub.Unsubscribe(); err != nil {
-			//TODO: log error
-		}
-	}()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return nil
-		case msg, ok := <-ch:
-
-			if !ok {
-				return nil
-			}
-			Logger.Debug("Got message", "msg", string(msg.Data), "ok", ok)
-
-			var appStart session.AppStart
-			err := json.Unmarshal(msg.Data, &appStart)
-			if err != nil {
-				Logger.Error("error unmarshaling appstart", "error", err)
-				sendErrorReply(nc, msg.Reply, err)
-				continue
-			}
-
-			if !sendOkReply(nc, msg.Reply) {
-				continue
-			}
-
-			go handler(ctx, nc, appStart, h)
-		}
-	}
-}
-
-func sendErrorReply(conn *nats.EncodedConn, reply string, err error) {
-	// we got an error in the AppStart, reply with the error
-	data := []byte(err.Error())
-	if err := conn.Publish(reply, data); err != nil {
-		Logger.Error("error publishing error response", "error", err)
-	}
-}
-
-func sendOkReply(conn *nats.EncodedConn, reply string) bool {
-	Logger.Debug("Sending OK", "reply", reply)
-	// send okay outside of goroutine, so the other side doesn't time out
-	data := []byte("ok")
-	if err := conn.Publish(reply, data); err != nil {
-		Logger.Error("error publishing ok response", "error", err)
-		return false
-	}
-
-	return true
-}
-
-func handler(ctx context.Context, nc *nats.EncodedConn, appStart session.AppStart, h Handler) {
-	// Construct a new Dialog handle
-	d := session.NewDialog(appStart.DialogID, nil)
-	d.ChannelID = appStart.ChannelID
-
-	// Construct the new ARI client
-	cl, err := New(ctx, WithApplication(appStart.Application), WithNATS(nc))
-	if err != nil {
-		Logger.Error("error creating client", "error", err)
-		return
-	}
-
-	//cl.ApplicationArguments = appStart.AppArgs
-
-	// Bind dialog-related events to the ARI client bus
-	sub, err := nc.Subscribe("events.dialog."+d.ID, func(msg *nats.Msg) {
-		//TODO
-		//ariMessage, err := ari.NewMessage(msg.Data)
-		//if err != nil {
-		//	Logger.Error("failed to create new message from payload", "error", err)
-		//	return
-		//}
-
-		//cl.Bus.Send(ariMessage)
-	})
-	if err != nil {
-		Logger.Error("failed to bind dialog events to ARI client", "error", err)
-		return
+		return errors.Wrap(err, "failed to subscribe to events")
 	}
 	defer sub.Unsubscribe()
 
-	// Execute the handler
-	h(ctx, cl, d, &appStart)
+	<-ctx.Done()
+
+	return nil
+}
+
+func listenProcessor(h func(*ari.Key, *ari.StasisStart)) func(o *ari.RawEvent) {
+	return func(o *ari.RawEvent) {
+		if o.GetType() != "StasisStart" {
+			return
+		}
+
+		e, err := o.ToEvent()
+		if err != nil {
+			Logger.Error("failed to decode raw event to real event", "error", err)
+			return
+		}
+
+		v, ok := e.(*ari.StasisStart)
+		if !ok {
+			Logger.Error("failed to convert event to StasisStart event", "error", err)
+			return
+		}
+
+		h(v.Key(ari.ChannelKey, v.Channel.ID), v)
+	}
 }

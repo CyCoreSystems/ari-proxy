@@ -1,8 +1,8 @@
-hash: 00fcac7abd0de3b775d4a7268cdf6996b735b364463b6c1b0570715682f8e89e
-updated: 2017-04-24T07:30:02.924966553-04:00
+hash: aa38597c7cb5ef4f57b0785b32fbcb368153c8597d3866cd008e8b95b3e74b55
+updated: 2017-04-27T00:24:39.271707149-04:00
 imports:
 - name: github.com/CyCoreSystems/ari
-  version: 9e32bd2841d782cac5d15d1447b60ff4665ce46f
+  version: 4c524993348528dd863872db7971230fa2ece730
   subpackages:
   - client/arimocks
   - client/native
@@ -60,11 +60,11 @@ imports:
 - name: github.com/spf13/cast
   version: acbeb36b902d72a7a4c18e8f3241075e7ab763e4
 - name: github.com/spf13/cobra
-  version: 63121c8814fc0b99184dbc1c8b7ef4fddae437c3
+  version: 6dd90846ba124894ee1206c89021e90e8179f1a4
 - name: github.com/spf13/jwalterweatherman
   version: fa7ca7e836cf3a8bb4ebf799f472c12d7e903d66
 - name: github.com/spf13/pflag
-  version: 2300d0f8576fe575f71aaa5b9bbe4e1b0dc2eb51
+  version: 314c91c3e94238576bab29cbcdd44b57ab8e0d39
 - name: github.com/spf13/viper
   version: 0967fc9aceab2ce9da34061253ac10fb99bba5b2
 - name: github.com/stretchr/objx
@@ -75,12 +75,12 @@ imports:
   - assert
   - mock
 - name: golang.org/x/net
-  version: d212a1ef2de2f5d441c327b8f26cf3ea3ea9f265
+  version: da118f7b8e5954f39d0d2130ab35d4bf0e3cb344
   subpackages:
   - context
   - websocket
 - name: golang.org/x/sys
-  version: ea9bcade75cb975a0b9738936568ab388b845617
+  version: 9ccfe848b9db8435a24c424abbc07a921adf1df5
   subpackages:
   - unix
 - name: golang.org/x/text

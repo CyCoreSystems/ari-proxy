@@ -16,19 +16,33 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
+// ClosureGracePeriod is the amount of time to wait after the closure of the
+// context to close the client.  The delay here is important in order to allow
+// wrap-up code to finish processing before losing connection to ARI.
+// Depending on the characteristics of traffic and code, this value may need to
+// be tweaked.
+//
+// NOTE: It is always possible to call `Close()` on the client to close it
+// immediately.
+var ClosureGracePeriod = 10 * time.Second
+
 // DefaultRequestTimeout is the default timeout for a NATS request
 const DefaultRequestTimeout = 200 * time.Millisecond
 
-// DefaultInputBufferLength is the default size of the event buffer for events coming in from NATS
+// DefaultInputBufferLength is the default size of the event buffer for events
+// coming in from NATS
 const DefaultInputBufferLength = 100
 
-// DefaultClusterMaxAge is the default maximum age for cluster members to be considered by this client
+// DefaultClusterMaxAge is the default maximum age for cluster members to be
+// considered by this client
 var DefaultClusterMaxAge = 5 * time.Minute
 
 // ErrNil indicates that the request returned an empty response
 var ErrNil = errors.New("Nil")
 
-// core is the core, functional piece of a Client which is the same across the family of derived clients.  It manages stateful elements such as the bus, the NATS connection, and the cluster membership
+// core is the core, functional piece of a Client which is the same across the
+// family of derived clients.  It manages stateful elements such as the bus,
+// the NATS connection, and the cluster membership
 type core struct {
 	// cluster describes the cluster of ARI proxies
 	cluster *cluster.Cluster
@@ -41,7 +55,8 @@ type core struct {
 
 	log log15.Logger
 
-	// nc provides the nats.EncodedConn over which messages will be transceived.  One of NATS or NATSURI must be specified.
+	// nc provides the nats.EncodedConn over which messages will be transceived.
+	// One of NATS or NATSURI must be specified.
 	nc *nats.EncodedConn
 
 	// prefix is the prefix to use on all NATS subjects.  It defaults to "ari.".
@@ -50,7 +65,8 @@ type core struct {
 	// readOperationRetryCount is the amount of times to retry a read operation
 	readOperationRetryCount int
 
-	// refCounter is the reference counter for derived clients.  When there are no more referenced clients, the core is shut down.
+	// refCounter is the reference counter for derived clients.  When there are
+	// no more referenced clients, the core is shut down.
 	refCounter int
 
 	// requestTimeout is the timeout duration of a request
@@ -62,26 +78,32 @@ type core struct {
 	// countTimeouts tracks how many timeouts the client has received, for metrics.
 	countTimeouts int64
 
-	// uri provies the URI to which a NATS connection should be established. One of NATS or NATSURI must be specified. This option may also be supplied by the `NATS_URI` environment variable.
+	// uri provies the URI to which a NATS connection should be established. One
+	// of NATS or NATSURI must be specified. This option may also be supplied by
+	// the `NATS_URI` environment variable.
 	uri string
 
 	// annSub is the NATS subscription to proxy announcements
 	annSub *nats.Subscription
 
-	// closeChan is the signal channel responsible for shutting down core services.  When it is closed, all core services should exit.
+	// closeChan is the signal channel responsible for shutting down core
+	// services.  When it is closed, all core services should exit.
 	closeChan chan struct{}
 
 	// closed indicates the core has been closed
 	closed bool
 
-	// closeNATSOnClose indicates that the NATS connection should be closed when the ari.Client is closed
+	// closeNATSOnClose indicates that the NATS connection should be closed when
+	// the ari.Client is closed
 	closeNATSOnClose bool
 
-	// started indicates whether this core has been started; a started core will no-op core.start()
+	// started indicates whether this core has been started; a started core will
+	// no-op core.start()
 	started bool
 }
 
-// clientClosed is called any time a derived ARI client is closed; if the reference counter is ever dropped to zero, the core is also shut down
+// clientClosed is called any time a derived ARI client is closed; if the
+// reference counter is ever dropped to zero, the core is also shut down
 func (c *core) ClientClosed() {
 	c.refCounter--
 
@@ -216,6 +238,12 @@ func New(ctx context.Context, opts ...OptionFunc) (*Client, error) {
 	// Call Close whenever the context is closed
 	go func() {
 		<-ctx.Done()
+		if !c.closed {
+			// Only wait the grace period if we have not
+			// already been closed.
+			<-time.After(ClosureGracePeriod)
+		}
+
 		c.Close()
 	}()
 

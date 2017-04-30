@@ -63,7 +63,7 @@ func (s *Server) Listen(ctx context.Context, ariOpts native.Options, natsURI str
 	s.cancel = cancel
 
 	// Connect to ARI
-	s.ari, err = native.Connect(ctx, &ariOpts)
+	s.ari, err = native.Connect(&ariOpts)
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to ARI")
 	}

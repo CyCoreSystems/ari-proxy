@@ -255,10 +255,13 @@ func New(ctx context.Context, opts ...OptionFunc) (*Client, error) {
 // and handles derived from the client by simply closing the client.  The
 // underlying NATS connection and cluster awareness (the common Core) will be
 // preserved across derived Client lifecycles.
-func (c *Client) New() *Client {
+func (c *Client) New(ctx context.Context) *Client {
+	_, cancel := context.WithCancel(ctx)
+
 	return &Client{
-		core: c.core,
-		bus:  bus.New(c.core.prefix, c.core.nc, c.core.log),
+		cancel: cancel,
+		core:   c.core,
+		bus:    bus.New(c.core.prefix, c.core.nc, c.core.log),
 	}
 }
 

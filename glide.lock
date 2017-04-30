@@ -1,8 +1,8 @@
 hash: aa38597c7cb5ef4f57b0785b32fbcb368153c8597d3866cd008e8b95b3e74b55
-updated: 2017-04-27T00:24:39.271707149-04:00
+updated: 2017-04-30T01:52:35.507205528-04:00
 imports:
 - name: github.com/CyCoreSystems/ari
-  version: 4c524993348528dd863872db7971230fa2ece730
+  version: ae613515dce0c547990b975b37bb801f25d5e4b4
   subpackages:
   - client/arimocks
   - client/native
@@ -60,11 +60,11 @@ imports:
 - name: github.com/spf13/cast
   version: acbeb36b902d72a7a4c18e8f3241075e7ab763e4
 - name: github.com/spf13/cobra
-  version: 6dd90846ba124894ee1206c89021e90e8179f1a4
+  version: 7b1b6e8dc027253d45fc029bc269d1c019f83a34
 - name: github.com/spf13/jwalterweatherman
   version: fa7ca7e836cf3a8bb4ebf799f472c12d7e903d66
 - name: github.com/spf13/pflag
-  version: 314c91c3e94238576bab29cbcdd44b57ab8e0d39
+  version: f1d95a35e132e8a1868023a08932b14f0b8b8fcb
 - name: github.com/spf13/viper
   version: 0967fc9aceab2ce9da34061253ac10fb99bba5b2
 - name: github.com/stretchr/objx
@@ -84,7 +84,7 @@ imports:
   subpackages:
   - unix
 - name: golang.org/x/text
-  version: a9a820217f98f7c8a207ec1e45a874e1fe12c478
+  version: 470f45bf29f4147d6fbd7dfd0a02a848e49f5bf4
   subpackages:
   - transform
   - unicode/norm

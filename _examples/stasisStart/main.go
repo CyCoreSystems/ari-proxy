@@ -82,14 +82,6 @@ func createCall(cl ari.Client) (h *ari.ChannelHandle, err error) {
 	return
 }
 
-func connect(ctx context.Context) (cl ari.Client, err error) {
-
-	log.Info("Connecting")
-
-	cl, err = native.Connect(&native.Options{})
-	return
-}
-
 func channelHandler(h *ari.ChannelHandle, startEvent *ari.StasisStart) {
 	log.Info("Running channel handler")
 

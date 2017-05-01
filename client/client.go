@@ -259,9 +259,10 @@ func (c *Client) New(ctx context.Context) *Client {
 	_, cancel := context.WithCancel(ctx)
 
 	return &Client{
-		cancel: cancel,
-		core:   c.core,
-		bus:    bus.New(c.core.prefix, c.core.nc, c.core.log),
+		appName: c.appName,
+		cancel:  cancel,
+		core:    c.core,
+		bus:     bus.New(c.core.prefix, c.core.nc, c.core.log),
 	}
 }
 

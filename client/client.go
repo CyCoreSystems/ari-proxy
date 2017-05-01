@@ -229,11 +229,11 @@ func New(ctx context.Context, opts ...OptionFunc) (*Client, error) {
 		opt(c)
 	}
 
-	// Create the bus
-	c.bus = bus.New(c.core.prefix, c.core.nc, c.core.log)
-
 	// Start the core, if it is not already started
 	c.core.Start()
+
+	// Create the bus
+	c.bus = bus.New(c.core.prefix, c.core.nc, c.core.log)
 
 	// Call Close whenever the context is closed
 	go func() {

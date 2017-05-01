@@ -104,6 +104,7 @@ func (s *Server) Ready() <-chan struct{} {
 
 // nolint: gocyclo
 func (s *Server) listen(ctx context.Context) error {
+	s.Log.Debug("starting listener")
 
 	var wg closeGroup
 	defer func() {
@@ -256,32 +257,25 @@ func (s *Server) announce() {
 
 // runEventHandler processes events which are received from ARI
 func (s *Server) runEventHandler(ctx context.Context) {
-	sub := s.ari.Bus().Subscribe(ari.NewKey("", ""), ari.Events.All)
+	sub := s.ari.Bus().Subscribe(nil, ari.Events.All)
 	defer sub.Cancel()
 
 	for {
+		s.Log.Debug("listening for events", "application", s.Application)
 		select {
 		case <-ctx.Done():
 			return
 		case e := <-sub.Events():
-			raw := ari.EventToRaw(e)
-			if raw == nil {
-				s.Log.Error("Failed to encode event to RawEvent")
-				continue
-			}
-
-			// Add metadata
-			raw.Header.Set("application", s.Application)
-			raw.Header.Set("asterisk", s.AsteriskID)
+			s.Log.Debug("event received", "kind", e.GetType())
 
 			// Publish event to canonical destination
-			s.nats.Publish(fmt.Sprintf("%sevent.%s.%s", s.NATSPrefix, s.Application, s.AsteriskID), raw)
+			s.nats.Publish(fmt.Sprintf("%sevent.%s.%s", s.NATSPrefix, s.Application, s.AsteriskID), e)
 
 			// Publish event to any associated dialogs
 			for _, d := range s.dialogsForEvent(e) {
-				dRaw := raw
-				dRaw.Header.Set("dialog", d)
-				s.nats.Publish(fmt.Sprintf("%sdialogevent.%s", s.NATSPrefix, d), dRaw)
+				de := e
+				de.SetDialog(d)
+				s.nats.Publish(fmt.Sprintf("%sdialogevent.%s", s.NATSPrefix, d), de)
 			}
 		}
 	}

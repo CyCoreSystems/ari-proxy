@@ -2,7 +2,6 @@ package bus
 
 import (
 	"fmt"
-	"strings"
 
 	log15 "gopkg.in/inconshreveable/log15.v2"
 
@@ -29,14 +28,24 @@ func New(prefix string, nc *nats.EncodedConn, log log15.Logger) *Bus {
 }
 
 func (b *Bus) subjectFromKey(key *ari.Key) string {
+	if key == nil {
+		return fmt.Sprintf("%sevent.>", b.prefix)
+	}
+
 	if key.Dialog != "" {
 		return fmt.Sprintf("%sdialogevent.%s", b.prefix, key.Dialog)
 	}
 
-	subj := fmt.Sprintf("%sevent.%s.%s", b.prefix, key.App, key.Node)
-	subj = strings.TrimRight(subj, ".")
+	subj := fmt.Sprintf("%sevent.", b.prefix)
+	if key.App == "" {
+		return subj + ">"
+	}
+	subj += key.App + "."
 
-	return subj
+	if key.Node == "" {
+		return subj + ">"
+	}
+	return subj + key.Node
 }
 
 // Subscription represents an ari.Subscription over NATS
@@ -75,7 +84,9 @@ func (b *Bus) Subscribe(key *ari.Key, n ...string) ari.Subscription {
 		events:    n,
 	}
 
-	s.subscription, err = b.nc.Subscribe(b.subjectFromKey(key), s.receive)
+	s.subscription, err = b.nc.Subscribe(b.subjectFromKey(key), func(m *nats.Msg) {
+		s.receive(m)
+	})
 	if err != nil {
 		b.log.Error("failed to subscribe to NATS", "error", err)
 		return nil
@@ -103,10 +114,10 @@ func (s *Subscription) Cancel() {
 	}
 }
 
-func (s *Subscription) receive(o *ari.RawEvent) {
-	e, err := o.ToEvent()
+func (s *Subscription) receive(o *nats.Msg) {
+	e, err := ari.DecodeEvent(o.Data)
 	if err != nil {
-		s.log.Error("failed to convert RawEvent to ari.Event", "error", err)
+		s.log.Error("failed to convert received message to ari.Event", "error", err)
 		return
 	}
 
@@ -130,7 +141,7 @@ func (s *Subscription) matchEvent(o ari.Event) bool {
 
 	// If we don't have a resource ID, we match everything
 	// Next, match the entity
-	if s.key.ID != "" {
+	if s.key == nil || s.key.ID != "" {
 		return true
 	}
 

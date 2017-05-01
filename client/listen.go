@@ -24,8 +24,9 @@ func Listen(ctx context.Context, ac ari.Client, h func(*ari.Key, *ari.StasisStar
 		return errors.New("ARI Client must be a proxy client")
 	}
 
-	subj := fmt.Sprintf("%sevent.%s.>", c.core.prefix, c.appName)
+	subj := fmt.Sprintf("%sevent.%s.>", c.core.prefix, c.ApplicationName())
 
+	c.log.Debug("listening for events", "subject", subj)
 	sub, err := c.nc.QueueSubscribe(subj, ListenQueue, listenProcessor(h))
 	if err != nil {
 		return errors.Wrap(err, "failed to subscribe to events")
@@ -37,21 +38,15 @@ func Listen(ctx context.Context, ac ari.Client, h func(*ari.Key, *ari.StasisStar
 	return nil
 }
 
-func listenProcessor(h func(*ari.Key, *ari.StasisStart)) func(o *ari.RawEvent) {
-	return func(o *ari.RawEvent) {
-		if o.GetType() != "StasisStart" {
-			return
-		}
-
-		e, err := o.ToEvent()
-		if err != nil {
-			Logger.Error("failed to decode raw event to real event", "error", err)
+func listenProcessor(h func(*ari.Key, *ari.StasisStart)) func(ari.Event) {
+	return func(e ari.Event) {
+		if e.GetType() != "StasisStart" {
 			return
 		}
 
 		v, ok := e.(*ari.StasisStart)
 		if !ok {
-			Logger.Error("failed to convert event to StasisStart event", "error", err)
+			Logger.Error("failed to type-assert StasisStart event")
 			return
 		}
 

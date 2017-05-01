@@ -1,8 +1,8 @@
 hash: aa38597c7cb5ef4f57b0785b32fbcb368153c8597d3866cd008e8b95b3e74b55
-updated: 2017-04-30T22:40:23.361561408-04:00
+updated: 2017-05-01T02:13:30.289171258-04:00
 imports:
 - name: github.com/CyCoreSystems/ari
-  version: 24fedf9f42b757b20d5dc376e2b572c5834e15e9
+  version: 969217f24d0b55705e4013129d416316f6bb082a
   subpackages:
   - client/arimocks
   - client/native

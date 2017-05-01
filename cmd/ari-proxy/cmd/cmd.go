@@ -36,6 +36,8 @@ var RootCmd = &cobra.Command{
 		}
 		Log.SetHandler(handler)
 
+		native.Logger.SetHandler(handler)
+
 		return runServer(ctx, Log)
 	},
 }

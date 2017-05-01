@@ -58,12 +58,12 @@ func New() *Server {
 }
 
 // Listen runs the given server, listening to ARI and NATS, as specified
-func (s *Server) Listen(ctx context.Context, ariOpts native.Options, natsURI string) (err error) {
+func (s *Server) Listen(ctx context.Context, ariOpts *native.Options, natsURI string) (err error) {
 	ctx, cancel := context.WithCancel(ctx)
 	s.cancel = cancel
 
 	// Connect to ARI
-	s.ari, err = native.Connect(&ariOpts)
+	s.ari, err = native.Connect(ariOpts)
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to ARI")
 	}

@@ -457,8 +457,8 @@ func TestChannelCreate(t *testing.T, s Server) {
 		}
 		if h == nil {
 			t.Errorf("Expected non-nil channel handle")
-		} else if h.ID() != chkey.ID {
-			t.Errorf("Expected handle id '%s', got '%s'", chkey.ID, h.ID())
+		} else if h.ID() != req.ChannelID {
+			t.Errorf("Expected handle id '%s', got '%s'", h.ID(), req.ChannelID)
 		}
 
 		m.Shutdown()
@@ -763,8 +763,8 @@ func TestChannelOriginate(t *testing.T, s Server) {
 		}
 		if h == nil {
 			t.Error("Expected non-nil handle")
-		} else if h.ID() != key.ID {
-			t.Errorf("Expected handle id '%s', got '%s'", key.ID, h.ID())
+		} else if h.ID() != req.ChannelID {
+			t.Errorf("Expected handle id '%s', got '%s'", h.ID(), req.ChannelID)
 		}
 
 		m.Shutdown()
@@ -815,8 +815,8 @@ func TestChannelPlay(t *testing.T, s Server) {
 		}
 		if h == nil {
 			t.Error("Expected non-nil handle")
-		} else if h.ID() != pbkey.ID {
-			t.Errorf("Expected handle id '%s', got '%s'", pbkey.ID, h.ID())
+		} else if h.ID() != "playbackID" {
+			t.Errorf("Expected handle id '%s', got '%s'", h.ID(), "playbackID")
 		}
 
 		m.Shutdown()
@@ -838,8 +838,6 @@ func TestChannelPlay(t *testing.T, s Server) {
 		}
 		if h == nil {
 			t.Error("Expected non-nil handle")
-		} else if h.ID() != pbkey.ID {
-			t.Errorf("Expected handle id '%s', got '%s'", pbkey.ID, h.ID())
 		}
 
 		m.Shutdown()
@@ -884,8 +882,8 @@ func TestChannelRecord(t *testing.T, s Server) {
 		}
 		if h == nil {
 			t.Error("Expected non-nil handle")
-		} else if h.ID() != lrkey.ID {
-			t.Errorf("Expected handle id '%s', got '%s'", lrkey.ID, h.ID())
+		} else if h.ID() != "recordid" {
+			t.Errorf("Expected handle id '%s', got '%s'", "recordid", h.ID())
 		}
 
 		m.Shutdown()
@@ -908,8 +906,6 @@ func TestChannelRecord(t *testing.T, s Server) {
 		}
 		if h == nil {
 			t.Error("Expected non-nil handle")
-		} else if h.ID() != lrkey.ID {
-			t.Errorf("Expected handle id '%s', got '%s'", lrkey.ID, h.ID())
 		}
 
 		m.Shutdown()
@@ -955,8 +951,8 @@ func TestChannelSnoop(t *testing.T, s Server) {
 		}
 		if h == nil {
 			t.Error("Expected non-nil handle")
-		} else if h.ID() != chkey.ID {
-			t.Errorf("Expected handle id '%s', got '%s'", chkey.ID, h.ID())
+		} else if h.ID() != "snoopID" {
+			t.Errorf("Expected handle id '%s', got '%s'", "snoopID", h.ID())
 		}
 
 		m.Shutdown()
@@ -979,8 +975,6 @@ func TestChannelSnoop(t *testing.T, s Server) {
 		}
 		if h == nil {
 			t.Error("Expected non-nil handle")
-		} else if h.ID() != chkey.ID {
-			t.Errorf("Expected handle id '%s', got '%s'", chkey.ID, h.ID())
 		}
 
 		m.Shutdown()

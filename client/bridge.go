@@ -101,7 +101,7 @@ func (b *bridge) Delete(key *ari.Key) error {
 }
 
 func (b *bridge) Play(key *ari.Key, id string, uri string) (*ari.PlaybackHandle, error) {
-	pb, err := b.c.createRequest(&proxy.Request{
+	k, err := b.c.createRequest(&proxy.Request{
 		Kind: "BridgePlay",
 		Key:  key,
 		BridgePlay: &proxy.BridgePlay{
@@ -112,7 +112,7 @@ func (b *bridge) Play(key *ari.Key, id string, uri string) (*ari.PlaybackHandle,
 	if err != nil {
 		return nil, err
 	}
-	return ari.NewPlaybackHandle(pb, b.c.Playback(), nil), nil
+	return ari.NewPlaybackHandle(k.New(ari.PlaybackKey, id), b.c.Playback(), nil), nil
 }
 
 func (b *bridge) StagePlay(key *ari.Key, id string, uri string) (*ari.PlaybackHandle, error) {
@@ -128,7 +128,7 @@ func (b *bridge) StagePlay(key *ari.Key, id string, uri string) (*ari.PlaybackHa
 		return nil, err
 	}
 
-	return ari.NewPlaybackHandle(k, b.c.Playback(), func(h *ari.PlaybackHandle) error {
+	return ari.NewPlaybackHandle(k.New(ari.PlaybackKey, id), b.c.Playback(), func(h *ari.PlaybackHandle) error {
 		_, err := b.Play(k, id, uri)
 		return err
 	}), nil
@@ -142,7 +142,7 @@ func (b *bridge) Record(key *ari.Key, name string, opts *ari.RecordingOptions) (
 		name = uuid.NewV1().String()
 	}
 
-	rh, err := b.c.createRequest(&proxy.Request{
+	k, err := b.c.createRequest(&proxy.Request{
 		Kind: "BridgeRecord",
 		Key:  key,
 		BridgeRecord: &proxy.BridgeRecord{
@@ -153,7 +153,7 @@ func (b *bridge) Record(key *ari.Key, name string, opts *ari.RecordingOptions) (
 	if err != nil {
 		return nil, err
 	}
-	return ari.NewLiveRecordingHandle(rh, b.c.LiveRecording(), nil), nil
+	return ari.NewLiveRecordingHandle(k.New(ari.LiveRecordingKey, name), b.c.LiveRecording(), nil), nil
 }
 
 func (b *bridge) StageRecord(key *ari.Key, name string, opts *ari.RecordingOptions) (*ari.LiveRecordingHandle, error) {
@@ -176,7 +176,7 @@ func (b *bridge) StageRecord(key *ari.Key, name string, opts *ari.RecordingOptio
 		return nil, err
 	}
 
-	return ari.NewLiveRecordingHandle(k, b.c.LiveRecording(), func(h *ari.LiveRecordingHandle) error {
+	return ari.NewLiveRecordingHandle(k.New(ari.LiveRecordingKey, name), b.c.LiveRecording(), func(h *ari.LiveRecordingHandle) error {
 		_, err := b.Record(k, name, opts)
 		return err
 	}), nil

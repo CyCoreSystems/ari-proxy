@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/CyCoreSystems/ari"
+	"github.com/nats-io/nats"
 	"github.com/pkg/errors"
 )
 
@@ -18,7 +19,7 @@ var ListenQueue = "ARIProxyStasisStartDistributorQueue"
 // Importantly, the StasisStart events are listened in a NATS Queue, which
 // means that this may be used to deliver new calls to only a single handler
 // out of a set of 1 or more handlers in a cluster.
-func Listen(ctx context.Context, ac ari.Client, h func(*ari.Key, *ari.StasisStart)) error {
+func Listen(ctx context.Context, ac ari.Client, h func(*ari.ChannelHandle, *ari.StasisStart)) error {
 	c, ok := ac.(*Client)
 	if !ok {
 		return errors.New("ARI Client must be a proxy client")
@@ -27,7 +28,7 @@ func Listen(ctx context.Context, ac ari.Client, h func(*ari.Key, *ari.StasisStar
 	subj := fmt.Sprintf("%sevent.%s.>", c.core.prefix, c.ApplicationName())
 
 	c.log.Debug("listening for events", "subject", subj)
-	sub, err := c.nc.QueueSubscribe(subj, ListenQueue, listenProcessor(h))
+	sub, err := c.nc.QueueSubscribe(subj, ListenQueue, listenProcessor(ac, h))
 	if err != nil {
 		return errors.Wrap(err, "failed to subscribe to events")
 	}
@@ -38,8 +39,15 @@ func Listen(ctx context.Context, ac ari.Client, h func(*ari.Key, *ari.StasisStar
 	return nil
 }
 
-func listenProcessor(h func(*ari.Key, *ari.StasisStart)) func(ari.Event) {
-	return func(e ari.Event) {
+func listenProcessor(ac ari.Client, h func(*ari.ChannelHandle, *ari.StasisStart)) func(*nats.Msg) {
+	return func(m *nats.Msg) {
+		e, err := ari.DecodeEvent(m.Data)
+		if err != nil {
+			Logger.Error("failed to decode event", "error", err)
+			return
+		}
+
+		Logger.Debug("received event", e.GetType())
 		if e.GetType() != "StasisStart" {
 			return
 		}
@@ -50,6 +58,6 @@ func listenProcessor(h func(*ari.Key, *ari.StasisStart)) func(ari.Event) {
 			return
 		}
 
-		h(v.Key(ari.ChannelKey, v.Channel.ID), v)
+		h(ari.NewChannelHandle(v.Key(ari.ChannelKey, v.Channel.ID), ac.Channel(), nil), v)
 	}
 }

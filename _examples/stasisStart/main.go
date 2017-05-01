@@ -13,6 +13,8 @@ import (
 	"github.com/CyCoreSystems/ari/client/native"
 )
 
+var ariApp = "test"
+
 var log = log15.New()
 
 func main() {
@@ -23,7 +25,7 @@ func main() {
 	native.Logger = log
 
 	log.Info("Connecting to ARI")
-	cl, err := client.New(ctx, client.WithApplication("test"))
+	cl, err := client.New(ctx, client.WithApplication(ariApp))
 	if err != nil {
 		log.Error("Failed to build ARI client", "error", err)
 		return
@@ -33,7 +35,7 @@ func main() {
 
 	log.Info("Starting listener app")
 
-	go listenApp(ctx, cl, channelHandler)
+	listenApp(ctx, cl, channelHandler)
 
 	// start call start listener
 
@@ -60,29 +62,21 @@ func main() {
 	return
 }
 
-func listenApp(ctx context.Context, cl ari.Client, handler func(cl ari.Client, h *ari.ChannelHandle)) {
-	sub := cl.Bus().Subscribe(nil, "StasisStart")
-	end := cl.Bus().Subscribe(nil, "StasisEnd")
-
-	for {
-		select {
-		case e := <-sub.Events():
-			v := e.(*ari.StasisStart)
-			log.Info("Got stasis start", "channel", v.Channel.ID)
-			go handler(cl, cl.Channel().Get(v.Key(ari.ChannelKey, v.Channel.ID)))
-		case <-end.Events():
-			log.Info("Got stasis end")
-		case <-ctx.Done():
-			return
-		}
+func listenApp(ctx context.Context, cl ari.Client, handler func(*ari.ChannelHandle, *ari.StasisStart)) {
+	err := client.Listen(ctx, cl, func(ch *ari.ChannelHandle, v *ari.StasisStart) {
+		log.Info("Got stasis start", "channel", v.Channel.ID)
+		go handler(ch, v)
+	})
+	if err != nil {
+		log.Crit("failed to listen for new calls", "error", err)
 	}
-
+	return
 }
 
 func createCall(cl ari.Client) (h *ari.ChannelHandle, err error) {
 	h, err = cl.Channel().Create(nil, ari.ChannelCreateRequest{
 		Endpoint: "Local/1000",
-		App:      "example",
+		App:      ariApp,
 	})
 
 	return
@@ -96,12 +90,18 @@ func connect(ctx context.Context) (cl ari.Client, err error) {
 	return
 }
 
-func channelHandler(cl ari.Client, h *ari.ChannelHandle) {
+func channelHandler(h *ari.ChannelHandle, startEvent *ari.StasisStart) {
 	log.Info("Running channel handler")
 
+	// Subscribe to channel state changes
 	stateChange := h.Subscribe(ari.Events.ChannelStateChange)
 	defer stateChange.Cancel()
 
+	// Subscribe to StasisEnd events (channel leaving ARI app)
+	end := h.Subscribe(ari.Events.StasisEnd)
+	defer end.Cancel()
+
+	// Pull the current channel data
 	data, err := h.Data()
 	if err != nil {
 		log.Error("Error getting data", "error", err)
@@ -119,20 +119,17 @@ func channelHandler(cl ari.Client, h *ari.ChannelHandle) {
 
 		for {
 			select {
-			case <-stateChange.Events():
-				log.Info("Got state change request")
-
-				data, err = h.Data()
-				if err != nil {
-					log.Error("Error getting data", "error", err)
-					continue
-				}
-				log.Info("New Channel State", "state", data.State)
-
-				if data.State == "Up" {
-					stateChange.Cancel() // stop subscription to state change events
+			case <-end.Events():
+				log.Info("Got stasis end")
+				return
+			case e := <-stateChange.Events():
+				v, ok := e.(*ari.ChannelStateChange)
+				if !ok {
+					log.Error("failed to interpret event as ChannelStateChange", "error", err)
 					return
 				}
+
+				log.Info("New Channel State", "state", v.Channel.State)
 			}
 		}
 

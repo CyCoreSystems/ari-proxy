@@ -2,12 +2,17 @@ package bus
 
 import (
 	"fmt"
+	"sync"
 
 	log15 "gopkg.in/inconshreveable/log15.v2"
 
 	"github.com/CyCoreSystems/ari"
 	"github.com/nats-io/nats"
 )
+
+// EventChanBufferLength is the number of unhandled events which can be queued
+// to the event channel buffer before further events are lost.
+var EventChanBufferLength = 10
 
 // Bus provides an ari.Bus interface to NATS
 type Bus struct {
@@ -61,6 +66,8 @@ type Subscription struct {
 	events []string
 
 	closed bool
+
+	mu sync.RWMutex
 }
 
 // Close implements ari.Bus
@@ -80,7 +87,7 @@ func (b *Bus) Subscribe(key *ari.Key, n ...string) ari.Subscription {
 	s := &Subscription{
 		key:       key,
 		log:       b.log,
-		eventChan: make(chan ari.Event),
+		eventChan: make(chan ari.Event, EventChanBufferLength),
 		events:    n,
 	}
 
@@ -108,10 +115,12 @@ func (s *Subscription) Cancel() {
 		}
 	}
 
+	s.mu.Lock()
 	if !s.closed {
 		s.closed = true
 		close(s.eventChan)
 	}
+	s.mu.Unlock()
 }
 
 func (s *Subscription) receive(o *nats.Msg) {
@@ -122,9 +131,11 @@ func (s *Subscription) receive(o *nats.Msg) {
 	}
 
 	if s.matchEvent(e) {
+		s.mu.RLock()
 		if !s.closed {
 			s.eventChan <- e
 		}
+		s.mu.RUnlock()
 	}
 }
 

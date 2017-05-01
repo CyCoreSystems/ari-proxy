@@ -98,7 +98,7 @@ func runServer(ctx context.Context, log log15.Logger) error {
 	srv.Log = log
 
 	log.Info("Starting ari-proxy server")
-	err := srv.Listen(ctx, native.Options{
+	err := srv.Listen(ctx, &native.Options{
 		Application:  viper.GetString("ari.application"),
 		Username:     viper.GetString("ari.username"),
 		Password:     viper.GetString("ari.password"),

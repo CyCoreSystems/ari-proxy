@@ -14,8 +14,10 @@ import (
 	"github.com/spf13/viper"
 )
 
+// Log is the package logger
 var Log log15.Logger
 
+// RootCmd is the Cobra root command descriptor
 var RootCmd = &cobra.Command{
 	Use:   "ari-proxy",
 	Short: "Proxy for the Asterisk REST interface.",
@@ -81,7 +83,7 @@ func readConfig() {
 	// If a config file is found, read it in.
 	err := viper.ReadInConfig()
 	if err != nil {
-		panic("failed to read config file: " + err.Error())
+		Log.Info("failed to read configuration from file", "error", err)
 	}
 }
 

@@ -1,8 +1,8 @@
 hash: aa38597c7cb5ef4f57b0785b32fbcb368153c8597d3866cd008e8b95b3e74b55
-updated: 2017-04-30T12:51:50.517105755-04:00
+updated: 2017-04-30T22:40:23.361561408-04:00
 imports:
 - name: github.com/CyCoreSystems/ari
-  version: 79e67bafee032497ea8eae622ed6ec6c31e88b33
+  version: 24fedf9f42b757b20d5dc376e2b572c5834e15e9
   subpackages:
   - client/arimocks
   - client/native
@@ -76,12 +76,12 @@ imports:
   - assert
   - mock
 - name: golang.org/x/net
-  version: d212a1ef2de2f5d441c327b8f26cf3ea3ea9f265
+  version: da118f7b8e5954f39d0d2130ab35d4bf0e3cb344
   subpackages:
   - context
   - websocket
 - name: golang.org/x/sys
-  version: ea9bcade75cb975a0b9738936568ab388b845617
+  version: 9ccfe848b9db8435a24c424abbc07a921adf1df5
   subpackages:
   - unix
 - name: golang.org/x/text

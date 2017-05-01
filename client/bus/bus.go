@@ -122,7 +122,9 @@ func (s *Subscription) receive(o *nats.Msg) {
 	}
 
 	if s.matchEvent(e) {
-		s.eventChan <- e
+		if !s.closed {
+			s.eventChan <- e
+		}
 	}
 }
 

@@ -184,6 +184,7 @@ func (s *Server) channelPlay(ctx context.Context, reply string, req *proxy.Reque
 func (s *Server) channelStagePlay(ctx context.Context, reply string, req *proxy.Request) {
 	data, err := s.ari.Channel().Data(req.Key)
 	if err != nil || data == nil {
+		s.Log.Debug("failed to get channel data", "channel", req.Key)
 		s.sendError(reply, err)
 		return
 	}

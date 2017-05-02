@@ -56,7 +56,8 @@ var ErrNotFound = errors.New("Not found")
 
 // Response is a response to a request.  This acts as a base type for more complicated responses, as well.
 type Response struct {
-	Error string `json:"error,omitempty"`
+	// Error is the error encountered
+	Error string `json:"error"`
 
 	// Data is the returned entity data, if applicable
 	Data *EntityData `json:"data,omitempty"`
@@ -70,6 +71,9 @@ type Response struct {
 
 // Err returns an error from the Response.  If the response's Error is empty, a nil error is returned.  Otherwise, the error will be filled with the value of response.Error.
 func (e *Response) Err() error {
+	if e == nil {
+		return nil
+	}
 	if e.Error != "" {
 		return errors.New(e.Error)
 	}

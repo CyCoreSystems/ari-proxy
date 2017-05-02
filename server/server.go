@@ -298,6 +298,7 @@ func (s *Server) newRequestHandler(ctx context.Context) func(subject string, rep
 func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.Request) {
 	var f func(context.Context, string, *proxy.Request)
 
+	s.Log.Debug("received request", "kind", req.Kind)
 	switch req.Kind {
 	case "ApplicationData":
 		f = s.applicationData

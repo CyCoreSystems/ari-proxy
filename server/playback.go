@@ -25,6 +25,7 @@ func (s *Server) playbackData(ctx context.Context, reply string, req *proxy.Requ
 }
 
 func (s *Server) playbackGet(ctx context.Context, reply string, req *proxy.Request) {
+	s.Log.Debug("Fetching playback data", "playback", req.Key)
 	data, err := s.ari.Playback().Data(req.Key)
 	if err != nil {
 		s.sendError(reply, err)

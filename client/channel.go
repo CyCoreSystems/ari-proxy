@@ -5,6 +5,7 @@ import (
 
 	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/proxy"
+	uuid "github.com/satori/go.uuid"
 )
 
 type channel struct {
@@ -56,7 +57,7 @@ func (c *channel) StageOriginate(key *ari.Key, o ari.OriginateRequest) (*ari.Cha
 		return nil, err
 	}
 	return ari.NewChannelHandle(k.New(ari.ChannelKey, o.ChannelID), c, func(h *ari.ChannelHandle) error {
-		_, err := c.Originate(k, o)
+		_, err := c.Originate(k.New(ari.ChannelKey, key.ID), o)
 		return err
 	}), nil
 }
@@ -250,7 +251,7 @@ func (c *channel) StageSnoop(key *ari.Key, snoopID string, opts *ari.SnoopOption
 		return nil, err
 	}
 	return ari.NewChannelHandle(k, c, func(h *ari.ChannelHandle) error {
-		_, err := c.Snoop(k.New(ari.ChannelKey, snoopID), snoopID, opts)
+		_, err := c.Snoop(k.New(ari.ChannelKey, key.ID), snoopID, opts)
 		return err
 	}), nil
 }
@@ -267,7 +268,7 @@ func (c *channel) Dial(key *ari.Key, caller string, timeout time.Duration) error
 }
 
 func (c *channel) Play(key *ari.Key, playbackID string, mediaURI string) (*ari.PlaybackHandle, error) {
-	pb, err := c.c.createRequest(&proxy.Request{
+	k, err := c.c.createRequest(&proxy.Request{
 		Kind: "ChannelPlay",
 		Key:  key,
 		ChannelPlay: &proxy.ChannelPlay{
@@ -278,10 +279,14 @@ func (c *channel) Play(key *ari.Key, playbackID string, mediaURI string) (*ari.P
 	if err != nil {
 		return nil, err
 	}
-	return ari.NewPlaybackHandle(pb.New(ari.PlaybackKey, playbackID), c.c.Playback(), nil), nil
+	return ari.NewPlaybackHandle(k.New(ari.PlaybackKey, playbackID), c.c.Playback(), nil), nil
 }
 
 func (c *channel) StagePlay(key *ari.Key, playbackID string, mediaURI string) (*ari.PlaybackHandle, error) {
+	if playbackID == "" {
+		playbackID = uuid.NewV1().String()
+	}
+
 	k, err := c.c.getRequest(&proxy.Request{
 		Kind: "ChannelStagePlay",
 		Key:  key,
@@ -294,7 +299,7 @@ func (c *channel) StagePlay(key *ari.Key, playbackID string, mediaURI string) (*
 		return nil, err
 	}
 	return ari.NewPlaybackHandle(k.New(ari.PlaybackKey, playbackID), c.c.Playback(), func(h *ari.PlaybackHandle) error {
-		_, err := c.Play(k, playbackID, mediaURI)
+		_, err := c.Play(k.New(ari.ChannelKey, key.ID), playbackID, mediaURI)
 		return err
 	}), nil
 }
@@ -327,7 +332,7 @@ func (c *channel) StageRecord(key *ari.Key, name string, opts *ari.RecordingOpti
 		return nil, err
 	}
 	return ari.NewLiveRecordingHandle(k.New(ari.LiveRecordingKey, name), c.c.LiveRecording(), func(h *ari.LiveRecordingHandle) error {
-		_, err := c.Record(k, name, opts)
+		_, err := c.Record(k.New(ari.ChannelKey, key.ID), name, opts)
 		return err
 	}), nil
 }

@@ -129,7 +129,7 @@ func (b *bridge) StagePlay(key *ari.Key, id string, uri string) (*ari.PlaybackHa
 	}
 
 	return ari.NewPlaybackHandle(k.New(ari.PlaybackKey, id), b.c.Playback(), func(h *ari.PlaybackHandle) error {
-		_, err := b.Play(k, id, uri)
+		_, err := b.Play(k.New(ari.BridgeKey, key.ID), id, uri)
 		return err
 	}), nil
 }
@@ -177,7 +177,7 @@ func (b *bridge) StageRecord(key *ari.Key, name string, opts *ari.RecordingOptio
 	}
 
 	return ari.NewLiveRecordingHandle(k.New(ari.LiveRecordingKey, name), b.c.LiveRecording(), func(h *ari.LiveRecordingHandle) error {
-		_, err := b.Record(k, name, opts)
+		_, err := b.Record(k.New(ari.BridgeKey, key.ID), name, opts)
 		return err
 	}), nil
 }

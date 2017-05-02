@@ -26,8 +26,8 @@ import (
 // immediately.
 var ClosureGracePeriod = 10 * time.Second
 
-// DefaultRequestTimeout is the default timeout for a NATS request
-const DefaultRequestTimeout = 200 * time.Millisecond
+// DefaultRequestTimeout is the default timeout for a NATS request.  (Note: Answer() takes longer than 250ms on average)
+const DefaultRequestTimeout = 500 * time.Millisecond
 
 // DefaultInputBufferLength is the default size of the event buffer for events
 // coming in from NATS

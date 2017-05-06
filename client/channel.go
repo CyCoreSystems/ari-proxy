@@ -331,8 +331,8 @@ func (c *channel) StageRecord(key *ari.Key, name string, opts *ari.RecordingOpti
 	if err != nil {
 		return nil, err
 	}
-	return ari.NewLiveRecordingHandle(k.New(ari.LiveRecordingKey, name), c.c.LiveRecording(), func(h *ari.LiveRecordingHandle) error {
-		_, err := c.Record(k.New(ari.ChannelKey, key.ID), name, opts)
+	return ari.NewLiveRecordingHandle(k.New(ari.LiveRecordingKey, k.ID), c.c.LiveRecording(), func(h *ari.LiveRecordingHandle) error {
+		_, err := c.Record(k.New(ari.ChannelKey, key.ID), k.ID, opts)
 		return err
 	}), nil
 }

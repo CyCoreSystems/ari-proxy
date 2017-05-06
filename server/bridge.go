@@ -199,7 +199,7 @@ func (s *Server) bridgeStageRecord(ctx context.Context, reply string, req *proxy
 	}
 
 	s.nats.Publish(reply, &proxy.Response{
-		Key: s.ari.LiveRecording().Get(ari.NewKey(ari.LiveRecordingKey, req.BridgeRecord.Name)).Key(),
+		Key: data.Key.New(ari.LiveRecordingKey, req.BridgeRecord.Name),
 	})
 }
 

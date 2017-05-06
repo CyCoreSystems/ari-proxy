@@ -75,6 +75,10 @@ func (l *liveRecording) Scrap(key *ari.Key) error {
 	})
 }
 
+func (l *liveRecording) Stored(key *ari.Key) *ari.StoredRecordingHandle {
+	return ari.NewStoredRecordingHandle(key.New(ari.StoredRecordingKey, key.ID), l.c.StoredRecording(), nil)
+}
+
 func (l *liveRecording) Subscribe(key *ari.Key, n ...string) ari.Subscription {
 	err := l.c.commandRequest(&proxy.Request{
 		Kind: "RecordingLiveSubscribe",

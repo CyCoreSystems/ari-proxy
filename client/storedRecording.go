@@ -40,6 +40,10 @@ func (s *storedRecording) Data(key *ari.Key) (*ari.StoredRecordingData, error) {
 }
 
 func (s *storedRecording) Copy(key *ari.Key, dest string) (*ari.StoredRecordingHandle, error) {
+	k := key
+	k.ID = dest
+	h := ari.NewStoredRecordingHandle(k, s, nil)
+
 	err := s.c.commandRequest(&proxy.Request{
 		Kind: "RecordingStoredCopy",
 		Key:  key,
@@ -47,13 +51,9 @@ func (s *storedRecording) Copy(key *ari.Key, dest string) (*ari.StoredRecordingH
 			Destination: dest,
 		},
 	})
-	if err != nil {
-		return nil, err
-	}
 
-	k := key
-	k.ID = dest
-	return ari.NewStoredRecordingHandle(k, s, nil), nil
+	// NOTE: Always return the handle, even when we have an error
+	return h, err
 }
 
 func (s *storedRecording) Delete(key *ari.Key) error {

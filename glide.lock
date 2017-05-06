@@ -1,8 +1,8 @@
 hash: aa38597c7cb5ef4f57b0785b32fbcb368153c8597d3866cd008e8b95b3e74b55
-updated: 2017-05-01T19:15:33.463754823-04:00
+updated: 2017-05-06T01:30:03.041892903-04:00
 imports:
 - name: github.com/CyCoreSystems/ari
-  version: d6394336cb843d88d0acdf2b7d7cc69232939471
+  version: 78368a3672cefad939a28b75b86c4a0639bc7031
   subpackages:
   - client/arimocks
   - client/native
@@ -15,7 +15,7 @@ imports:
 - name: github.com/fsnotify/fsnotify
   version: 4da3e2cfbabc9f751898f250b49f2439785783a1
 - name: github.com/hashicorp/hcl
-  version: 7fa7fff964d035e8a162cce3a164b3ad02ad651b
+  version: a4b07c25de5ff55ad3b8936cea69a79a3d95a855
   subpackages:
   - hcl/ast
   - hcl/parser
@@ -45,7 +45,7 @@ imports:
 - name: github.com/pelletier/go-buffruneio
   version: c37440a7cf42ac63b919c752ca73a85067e05992
 - name: github.com/pelletier/go-toml
-  version: fe206efb84b2bc8e8cfafe6b4c1826622be969e3
+  version: 97253b98df84f9eef872866d079e74b8265150f1
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/pmezard/go-difflib
@@ -61,11 +61,11 @@ imports:
 - name: github.com/spf13/cast
   version: acbeb36b902d72a7a4c18e8f3241075e7ab763e4
 - name: github.com/spf13/cobra
-  version: 69f86e6d5d7a67467ecd43b4a3c98d9c143d11c4
+  version: db6b9a8b3f3f400c8ecb4a4d7d02245b8facad66
 - name: github.com/spf13/jwalterweatherman
   version: fa7ca7e836cf3a8bb4ebf799f472c12d7e903d66
 - name: github.com/spf13/pflag
-  version: f1d95a35e132e8a1868023a08932b14f0b8b8fcb
+  version: 80fe0fb4eba54167e2ccae1c6c950e72abf61b73
 - name: github.com/spf13/viper
   version: 0967fc9aceab2ce9da34061253ac10fb99bba5b2
 - name: github.com/stretchr/objx
@@ -76,7 +76,7 @@ imports:
   - assert
   - mock
 - name: golang.org/x/net
-  version: da118f7b8e5954f39d0d2130ab35d4bf0e3cb344
+  version: feeb485667d1fdabe727840fe00adc22431bc86e
   subpackages:
   - context
   - websocket

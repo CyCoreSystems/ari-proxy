@@ -154,7 +154,7 @@ func (s *Subscription) matchEvent(o ari.Event) bool {
 
 	// If we don't have a resource ID, we match everything
 	// Next, match the entity
-	if s.key == nil || s.key.ID != "" {
+	if s.key == nil || s.key.ID == "" {
 		return true
 	}
 

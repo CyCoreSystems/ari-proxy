@@ -145,12 +145,16 @@ func (s *Server) channelOriginate(ctx context.Context, reply string, req *proxy.
 func (s *Server) channelStageOriginate(ctx context.Context, reply string, req *proxy.Request) {
 	h := s.ari.Channel().Get(req.Key)
 
+	if req.ChannelOriginate.OriginateRequest.ChannelID == "" {
+		req.ChannelOriginate.OriginateRequest.ChannelID = uuid.NewV1().String()
+	}
+
 	if req.Key.Dialog != "" {
 		s.Dialog.Bind(req.Key.Dialog, "channel", req.Key.ID)
 	}
 
 	s.nats.Publish(reply, &proxy.Response{
-		Key: h.Key(),
+		Key: h.Key().New(ari.ChannelKey, req.ChannelOriginate.OriginateRequest.ChannelID),
 	})
 }
 

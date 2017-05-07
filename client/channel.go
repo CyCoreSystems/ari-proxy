@@ -42,10 +42,14 @@ func (c *channel) Originate(key *ari.Key, o ari.OriginateRequest) (*ari.ChannelH
 	if err != nil {
 		return nil, err
 	}
-	return ari.NewChannelHandle(k.New(ari.ChannelKey, o.ChannelID), c, nil), nil
+	return ari.NewChannelHandle(k, c, nil), nil
 }
 
 func (c *channel) StageOriginate(key *ari.Key, o ari.OriginateRequest) (*ari.ChannelHandle, error) {
+	if o.ChannelID == "" {
+		o.ChannelID = uuid.NewV1().String()
+	}
+
 	k, err := c.c.createRequest(&proxy.Request{
 		Kind: "ChannelStageOriginate",
 		Key:  key,
@@ -57,6 +61,8 @@ func (c *channel) StageOriginate(key *ari.Key, o ari.OriginateRequest) (*ari.Cha
 		return nil, err
 	}
 	return ari.NewChannelHandle(k.New(ari.ChannelKey, o.ChannelID), c, func(h *ari.ChannelHandle) error {
+		// Call the subsequent Originate with the original key ID (the source
+		// channel), so that Originator mapping will work
 		_, err := c.Originate(k.New(ari.ChannelKey, key.ID), o)
 		return err
 	}), nil

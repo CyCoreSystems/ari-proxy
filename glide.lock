@@ -1,8 +1,8 @@
 hash: aa38597c7cb5ef4f57b0785b32fbcb368153c8597d3866cd008e8b95b3e74b55
-updated: 2017-05-06T01:57:12.040798499-04:00
+updated: 2017-05-06T21:15:14.391366907-04:00
 imports:
 - name: github.com/CyCoreSystems/ari
-  version: a4d66f7a8da914e880e0f5ebee377a3ed180bbe7
+  version: 4fbbf1a51895c385eafe408391cdc018ac78b3be
   subpackages:
   - client/arimocks
   - client/native
@@ -61,7 +61,7 @@ imports:
 - name: github.com/spf13/cast
   version: acbeb36b902d72a7a4c18e8f3241075e7ab763e4
 - name: github.com/spf13/cobra
-  version: db6b9a8b3f3f400c8ecb4a4d7d02245b8facad66
+  version: fe69f2e3a341cc3f84b5416441d1e6a25bc8fb8f
 - name: github.com/spf13/jwalterweatherman
   version: fa7ca7e836cf3a8bb4ebf799f472c12d7e903d66
 - name: github.com/spf13/pflag

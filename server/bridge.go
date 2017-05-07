@@ -139,8 +139,8 @@ func (s *Server) bridgeStagePlay(ctx context.Context, reply string, req *proxy.R
 		return
 	}
 
-	if req.ChannelPlay.PlaybackID == "" {
-		req.ChannelPlay.PlaybackID = uuid.NewV1().String()
+	if req.BridgePlay.PlaybackID == "" {
+		req.BridgePlay.PlaybackID = uuid.NewV1().String()
 	}
 
 	// bind dialog

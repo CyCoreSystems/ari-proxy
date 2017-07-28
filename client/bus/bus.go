@@ -72,12 +72,12 @@ type Subscription struct {
 
 // Close implements ari.Bus
 func (b *Bus) Close() {
-	return
+	// No-op
 }
 
 // Send implements ari.Bus
 func (b *Bus) Send(e ari.Event) {
-	return
+	// No-op
 }
 
 // Subscribe implements ari.Bus

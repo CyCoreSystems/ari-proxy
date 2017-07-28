@@ -521,10 +521,6 @@ func (s *Server) sendError(reply string, err error) {
 	s.nats.Publish(reply, proxy.NewErrorResponse(err))
 }
 
-func (s *Server) sendNotFound(reply string) {
-	s.nats.Publish(reply, proxy.NewErrorResponse(proxy.ErrNotFound))
-}
-
 /*
 // Start runs the server side instance
 func (i *Instance) Start(ctx context.Context) {

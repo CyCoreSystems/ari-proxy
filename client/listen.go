@@ -32,7 +32,7 @@ func Listen(ctx context.Context, ac ari.Client, h func(*ari.ChannelHandle, *ari.
 	if err != nil {
 		return errors.Wrap(err, "failed to subscribe to events")
 	}
-	defer sub.Unsubscribe()
+	defer sub.Unsubscribe() // nolint: errcheck
 
 	<-ctx.Done()
 

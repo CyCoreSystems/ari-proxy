@@ -62,9 +62,6 @@ type core struct {
 	// prefix is the prefix to use on all NATS subjects.  It defaults to "ari.".
 	prefix string
 
-	// readOperationRetryCount is the amount of times to retry a read operation
-	readOperationRetryCount int
-
 	// refCounter is the reference counter for derived clients.  When there are
 	// no more referenced clients, the core is shut down.
 	refCounter int
@@ -76,7 +73,7 @@ type core struct {
 	timeoutRetries int
 
 	// countTimeouts tracks how many timeouts the client has received, for metrics.
-	countTimeouts int64
+	countTimeouts int64 // nolint: structcheck
 
 	// uri provies the URI to which a NATS connection should be established. One
 	// of NATS or NATSURI must be specified. This option may also be supplied by
@@ -230,7 +227,10 @@ func New(ctx context.Context, opts ...OptionFunc) (*Client, error) {
 	}
 
 	// Start the core, if it is not already started
-	c.core.Start()
+	err := c.core.Start()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to start core")
+	}
 
 	// Create the bus
 	c.bus = bus.New(c.core.prefix, c.core.nc, c.core.log)
@@ -529,7 +529,7 @@ func (c *Client) makeRequests(class string, req *proxy.Request) (responses []*pr
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to subscribe to data responses")
 	}
-	defer replySub.Unsubscribe()
+	defer replySub.Unsubscribe() // nolint: errcheck
 
 	// Make an all-call for the entity data
 	err = c.core.nc.PublishRequest(c.subject(class, req), reply, req)
@@ -579,7 +579,7 @@ func (c *Client) makeBroadcastRequestReturnFirstGoodResponse(class string, req *
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to subscribe to data responses")
 	}
-	defer replySub.Unsubscribe()
+	defer replySub.Unsubscribe() // nolint: errcheck
 
 	// Make an all-call for the entity data
 	err = c.core.nc.PublishRequest(c.subject(class, req), reply, req)

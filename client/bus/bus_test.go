@@ -25,15 +25,12 @@ func TestMatchEvent(t *testing.T) {
 		},
 		Header: make(ari.Header),
 		Channel: ari.ChannelData{
-			Key:          nil,
-			ID:           "testB",
-			Name:         "Local/bozo",
-			State:        "up",
-			Accountcode:  "49er",
-			Caller:       ari.CallerID{},
-			Connected:    ari.CallerID{},
-			Creationtime: ari.DateTime(time.Now()),
-			Dialplan: ari.DialplanCEP{
+			Key:         nil,
+			ID:          "testB",
+			Name:        "Local/bozo",
+			State:       "up",
+			Accountcode: "49er",
+			Dialplan: &ari.DialplanCEP{
 				Context:  "default",
 				Exten:    "s",
 				Priority: 1,

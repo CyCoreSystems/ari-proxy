@@ -15,11 +15,14 @@ func (s *Server) applicationData(ctx context.Context, reply string, req *proxy.R
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	err = s.nats.Publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
 			Application: data,
 		},
 	})
+	if err != nil {
+		s.Log.Warn("failed to publish applicationData response", "error", err)
+	}
 }
 
 func (s *Server) applicationList(ctx context.Context, reply string, req *proxy.Request) {
@@ -29,9 +32,12 @@ func (s *Server) applicationList(ctx context.Context, reply string, req *proxy.R
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	err = s.nats.Publish(reply, &proxy.Response{
 		Keys: list,
 	})
+	if err != nil {
+		s.Log.Warn("failed to publish applicationList response", "error", err)
+	}
 }
 
 func (s *Server) applicationGet(ctx context.Context, reply string, req *proxy.Request) {
@@ -41,9 +47,12 @@ func (s *Server) applicationGet(ctx context.Context, reply string, req *proxy.Re
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	err = s.nats.Publish(reply, &proxy.Response{
 		Key: data.Key,
 	})
+	if err != nil {
+		s.Log.Warn("failed to publish applicationGet response", "error", err)
+	}
 }
 
 func parseEventSource(src string) (string, string, error) {

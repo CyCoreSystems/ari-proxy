@@ -9,9 +9,10 @@ import (
 	"github.com/CyCoreSystems/ari-proxy/proxy"
 	"github.com/CyCoreSystems/ari-proxy/server/dialog"
 	"github.com/CyCoreSystems/ari/client/native"
+
+	"github.com/inconshreveable/log15"
 	"github.com/nats-io/nats"
 	"github.com/pkg/errors"
-	log15 "gopkg.in/inconshreveable/log15.v2"
 )
 
 // Server describes the asterisk-facing ARI proxy server

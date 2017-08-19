@@ -5,10 +5,10 @@ import (
 	"os"
 	"strings"
 
-	log15 "gopkg.in/inconshreveable/log15.v2"
-
 	"github.com/CyCoreSystems/ari-proxy/server"
 	"github.com/CyCoreSystems/ari/client/native"
+
+	"github.com/inconshreveable/log15"
 	"github.com/nats-io/nats"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

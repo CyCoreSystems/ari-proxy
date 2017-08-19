@@ -4,8 +4,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/inconshreveable/log15"
+
 	"github.com/CyCoreSystems/ari"
-	log15 "gopkg.in/inconshreveable/log15.v2"
 )
 
 func TestMatchEvent(t *testing.T) {

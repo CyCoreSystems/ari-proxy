@@ -6,11 +6,11 @@ import (
 
 	"golang.org/x/net/context"
 
-	log15 "gopkg.in/inconshreveable/log15.v2"
-
 	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/client"
 	"github.com/CyCoreSystems/ari/client/native"
+
+	"github.com/inconshreveable/log15"
 )
 
 var ariApp = "test"

@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 
-	log15 "gopkg.in/inconshreveable/log15.v2"
+	"github.com/inconshreveable/log15"
 )
 
 // Options are the group of options for the ari-proxy server

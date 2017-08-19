@@ -5,12 +5,12 @@ import (
 	"os"
 	"time"
 
-	log15 "gopkg.in/inconshreveable/log15.v2"
-
 	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/client/bus"
 	"github.com/CyCoreSystems/ari-proxy/client/cluster"
 	"github.com/CyCoreSystems/ari-proxy/proxy"
+
+	"github.com/inconshreveable/log15"
 	"github.com/nats-io/nats"
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"

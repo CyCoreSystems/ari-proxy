@@ -1,8 +1,8 @@
-hash: 41be598da521fcbaf276c508090e452eabbbcc9646e873b344b9ba5a62f3042f
-updated: 2017-07-27T16:00:48.057025005-04:00
+hash: 1f38ab3ced26c9a34b555921b2483c8db0c94613732a852aef80ce128644922c
+updated: 2017-08-19T14:59:28.713592409-04:00
 imports:
 - name: github.com/CyCoreSystems/ari
-  version: 3bdeb0f52a3f4e3de7a1aec1138a796d3b86282e
+  version: e4c85dc96d3eeb05f68e60f49e886f04ff4c2626
   subpackages:
   - client/arimocks
   - client/native
@@ -33,25 +33,29 @@ imports:
   - json/parser
   - json/scanner
   - json/token
+- name: github.com/inconshreveable/log15
+  version: b105bd37f74e5d9dc7b6ad7806715c7a2b83fd3f
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/magiconair/properties
   version: be5ece7dd465ab0765a9682137865547526d1dfb
 - name: github.com/mattn/go-colorable
-  version: 3fa8c76f9daed4067e4a806fb7e4dc86455c6d6a
+  version: ad5389df28cdac544c99bd7b9161a0b5b6ca9d1b
 - name: github.com/mattn/go-isatty
   version: fc9e8d8ef48496124e79ae0df75490096eccf6fe
 - name: github.com/mitchellh/mapstructure
   version: d0303fe809921458f417bcf828397a65db30a7e4
-- name: github.com/nats-io/nats
-  version: 61923ed1eaf8398000991fbbee2ef11ab5a5be0d
+- name: github.com/nats-io/go-nats
+  version: b4479c874d87db74c2049a1b4abd55eb162c70fb
   subpackages:
   - encoders/builtin
   - util
+- name: github.com/nats-io/nats
+  version: 29f9728a183bf3fa7e809e14edac00b33be72088
 - name: github.com/nats-io/nuid
   version: 3cf34f9fca4e88afa9da8eabd75e3326c9941b44
 - name: github.com/pelletier/go-toml
-  version: 69d355db5304c0f7f809a2edc054553e7142f016
+  version: 4692b8f9babfc93db58cc592ba2689d8736781de
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/pmezard/go-difflib
@@ -67,7 +71,7 @@ imports:
 - name: github.com/spf13/cast
   version: acbeb36b902d72a7a4c18e8f3241075e7ab763e4
 - name: github.com/spf13/cobra
-  version: 34594c771f2c18301dc152640ad40ece28795373
+  version: cb731b898346822cc0c225c28550a8a29d93c732
 - name: github.com/spf13/jwalterweatherman
   version: 0efa5202c04663c757d84f90f5219c1250baf94f
 - name: github.com/spf13/pflag
@@ -82,16 +86,16 @@ imports:
   - assert
   - mock
 - name: golang.org/x/net
-  version: f5079bd7f6f74e23c4d65efa0f4ce14cbd6a3c0f
+  version: 1c05540f6879653db88113bc4a2b70aec4bd491f
   subpackages:
   - context
   - websocket
 - name: golang.org/x/sys
-  version: 35ef4487ce0a1ea5d4b616ffe71e34febe723695
+  version: 9f7170bcd8e9f4d3691c06401119c46a769a1e03
   subpackages:
   - unix
 - name: golang.org/x/text
-  version: 836efe42bb4aa16aaa17b9c155d8813d336ed720
+  version: e56139fd9c5bc7244c76116c68e500765bb6db6b
   subpackages:
   - transform
   - unicode/norm
@@ -101,5 +105,5 @@ imports:
   - stack
   - term
 - name: gopkg.in/yaml.v2
-  version: 25c4ec802a7d637f88d584ab26798e94ad14c13b
+  version: eb3733d160e74a9c7e442f435eb3bea458e1d19f
 testImports: []

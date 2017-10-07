@@ -108,6 +108,10 @@ func (s *Subscription) Events() <-chan ari.Event {
 
 // Cancel destroys the subscription
 func (s *Subscription) Cancel() {
+	if s == nil {
+		return
+	}
+
 	if s.subscription != nil {
 		err := s.subscription.Unsubscribe()
 		if err != nil {

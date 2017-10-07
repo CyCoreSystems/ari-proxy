@@ -12,7 +12,7 @@ test:
 	go test `go list ./... | grep -v /vendor/`
 
 lint:
-	gometalinter --disable=gotype client/... server/... proxy/...
+	gometalinter --disable=gotype --disable=errcheck client/... server/... proxy/...
 
 check: all lint test
 

@@ -17,7 +17,6 @@ lint:
 check: all lint test
 
 deps:
-	glide cc
-	glide i
+	dep ensure
 
 ci: deps check

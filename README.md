@@ -1,7 +1,7 @@
 # ari-proxy
 [![Build Status](https://travis-ci.org/CyCoreSystems/ari-proxy.png)](https://travis-ci.org/CyCoreSystems/ari-proxy) [![](https://godoc.org/github.com/CyCoreSystems/ari-proxy?status.svg)](https://godoc.org/github.com/CyCoreSystems/ari-proxy)
 
-Proxy for the Asterisk REST interface.
+Proxy for the Asterisk REST interface (ARI).
 
 Version 1 of this system sought to maintain compatibility with the other ARI
 proxies.  Version 2 is written to address many shortcomings of the Version 1

@@ -13,7 +13,7 @@ func (s *Server) deviceStateData(ctx context.Context, reply string, req *proxy.R
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
 			DeviceState: data,
 		},
@@ -27,7 +27,7 @@ func (s *Server) deviceStateGet(ctx context.Context, reply string, req *proxy.Re
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Key: data.Key,
 	})
 }
@@ -43,7 +43,7 @@ func (s *Server) deviceStateList(ctx context.Context, reply string, req *proxy.R
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Keys: list,
 	})
 }

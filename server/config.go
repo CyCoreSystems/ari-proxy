@@ -14,7 +14,7 @@ func (s *Server) asteriskConfigData(ctx context.Context, reply string, req *prox
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
 			Config: data,
 		},

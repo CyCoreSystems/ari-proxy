@@ -250,7 +250,7 @@ func (s *Server) runAnnouncer(ctx context.Context) {
 
 // announce publishes the presence of this server to the cluster
 func (s *Server) announce() {
-	s.nats.Publish(proxy.AnnouncementSubject(s.NATSPrefix), &proxy.Announcement{
+	s.publish(proxy.AnnouncementSubject(s.NATSPrefix), &proxy.Announcement{
 		Node:        s.AsteriskID,
 		Application: s.Application,
 	})
@@ -270,13 +270,13 @@ func (s *Server) runEventHandler(ctx context.Context) {
 			s.Log.Debug("event received", "kind", e.GetType())
 
 			// Publish event to canonical destination
-			s.nats.Publish(fmt.Sprintf("%sevent.%s.%s", s.NATSPrefix, s.Application, s.AsteriskID), e)
+			s.publish(fmt.Sprintf("%sevent.%s.%s", s.NATSPrefix, s.Application, s.AsteriskID), e)
 
 			// Publish event to any associated dialogs
 			for _, d := range s.dialogsForEvent(e) {
 				de := e
 				de.SetDialog(d)
-				s.nats.Publish(fmt.Sprintf("%sdialogevent.%s", s.NATSPrefix, d), de)
+				s.publish(fmt.Sprintf("%sdialogevent.%s", s.NATSPrefix, d), de)
 			}
 		}
 	}
@@ -285,6 +285,13 @@ func (s *Server) runEventHandler(ctx context.Context) {
 // pingHandler publishes the server's presence
 func (s *Server) pingHandler(m *nats.Msg) {
 	s.announce()
+}
+
+// publish sends a message out over NATS, logging any error
+func (s *Server) publish(subject string, msg interface{}) {
+	if err := s.nats.Publish(subject, msg); err != nil {
+		s.Log.Warn("failed to publish NATS message", "subject", subject, "data", msg)
+	}
 }
 
 // newRequestHandler returns a context-wrapped nats.Handler to handle requests
@@ -519,7 +526,7 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 }
 
 func (s *Server) sendError(reply string, err error) {
-	s.nats.Publish(reply, proxy.NewErrorResponse(err))
+	s.publish(reply, proxy.NewErrorResponse(err))
 }
 
 /*

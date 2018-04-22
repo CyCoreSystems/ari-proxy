@@ -13,7 +13,7 @@ func (s *Server) soundData(ctx context.Context, reply string, req *proxy.Request
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
 			Sound: data,
 		},
@@ -34,7 +34,7 @@ func (s *Server) soundList(ctx context.Context, reply string, req *proxy.Request
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Keys: list,
 	})
 }

@@ -1,10 +1,16 @@
 #!/bin/bash
 
-# Login to Docker
-echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+# Only run if we are inside Travis-CI
+if [ ! -e $CI ]; then
+   echo "Logging in to Docker..."
+   echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
-# Install goreleaser
-go get -u github.com/goreleaser/goreleaser
+   # Install goreleaser
+   echo "Fetching goreleaser..."
+   go get -u github.com/goreleaser/goreleaser
 
-# Create the release
-goreleaser release
+   # Create the release
+   echo "Creating release..."
+   goreleaser release
+fi
+

@@ -1,7 +1,6 @@
 
 all:
-	go build `go list ./... | grep -v /vendor/`
-	mkdir -p bin
+	go build ./...
 	go build
 
 docker: all
@@ -9,10 +8,10 @@ docker: all
 	docker push cycoresystems/ari-proxy
 
 test:
-	go test `go list ./... | grep -v /vendor/`
+	go test ./...
 
 lint:
-	gometalinter --disable=gotype --disable=errcheck ./... --skip internal --vendor
+	gometalinter --skip internal --vendor ./...
 
 check: all lint test
 

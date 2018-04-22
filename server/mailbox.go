@@ -13,7 +13,7 @@ func (s *Server) mailboxData(ctx context.Context, reply string, req *proxy.Reque
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
 			Mailbox: data,
 		},
@@ -27,7 +27,7 @@ func (s *Server) mailboxGet(ctx context.Context, reply string, req *proxy.Reques
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Key: data.Key,
 	})
 }
@@ -43,7 +43,7 @@ func (s *Server) mailboxList(ctx context.Context, reply string, req *proxy.Reque
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Keys: list,
 	})
 }

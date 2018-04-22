@@ -25,7 +25,7 @@ func (s *Server) asteriskModuleData(ctx context.Context, reply string, req *prox
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
 			Module: data,
 		},
@@ -39,7 +39,7 @@ func (s *Server) asteriskModuleGet(ctx context.Context, reply string, req *proxy
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Key: data.Key,
 	})
 }
@@ -51,7 +51,7 @@ func (s *Server) asteriskModuleList(ctx context.Context, reply string, req *prox
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Keys: list,
 	})
 }

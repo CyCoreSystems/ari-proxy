@@ -51,7 +51,7 @@ func (s *Server) channelCreate(ctx context.Context, reply string, req *proxy.Req
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Key: h.Key(),
 	})
 }
@@ -63,7 +63,7 @@ func (s *Server) channelData(ctx context.Context, reply string, req *proxy.Reque
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
 			Channel: d,
 		},
@@ -77,7 +77,7 @@ func (s *Server) channelGet(ctx context.Context, reply string, req *proxy.Reques
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Key: data.Key,
 	})
 }
@@ -105,7 +105,7 @@ func (s *Server) channelList(ctx context.Context, reply string, req *proxy.Reque
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Keys: list,
 	})
 }
@@ -137,7 +137,7 @@ func (s *Server) channelOriginate(ctx context.Context, reply string, req *proxy.
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Key: h.Key(),
 	})
 }
@@ -153,7 +153,7 @@ func (s *Server) channelStageOriginate(ctx context.Context, reply string, req *p
 		s.Dialog.Bind(req.Key.Dialog, "channel", req.Key.ID)
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Key: h.Key().New(ari.ChannelKey, req.ChannelOriginate.OriginateRequest.ChannelID),
 	})
 }
@@ -180,7 +180,7 @@ func (s *Server) channelPlay(ctx context.Context, reply string, req *proxy.Reque
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Key: ph.Key(),
 	})
 }
@@ -202,7 +202,7 @@ func (s *Server) channelStagePlay(ctx context.Context, reply string, req *proxy.
 		s.Dialog.Bind(req.Key.Dialog, "playback", req.ChannelPlay.PlaybackID)
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Key: s.ari.Playback().Get(ari.NewKey(ari.PlaybackKey, req.ChannelPlay.PlaybackID)).Key(),
 	})
 }
@@ -223,7 +223,7 @@ func (s *Server) channelRecord(ctx context.Context, reply string, req *proxy.Req
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Key: h.Key(),
 	})
 }
@@ -244,7 +244,7 @@ func (s *Server) channelStageRecord(ctx context.Context, reply string, req *prox
 		s.Dialog.Bind(req.Key.Dialog, "recording", req.ChannelRecord.Name)
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Key: data.Key.New(ari.LiveRecordingKey, req.ChannelRecord.Name),
 	})
 }
@@ -276,7 +276,7 @@ func (s *Server) channelSnoop(ctx context.Context, reply string, req *proxy.Requ
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Key: h.Key(),
 	})
 }
@@ -296,7 +296,7 @@ func (s *Server) channelStageSnoop(ctx context.Context, reply string, req *proxy
 		s.Dialog.Bind(req.Key.Dialog, "channel", req.ChannelSnoop.SnoopID)
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Key: s.ari.Channel().Get(ari.NewKey(ari.ChannelKey, req.ChannelSnoop.SnoopID)).Key(),
 	})
 
@@ -339,7 +339,7 @@ func (s *Server) channelVariableGet(ctx context.Context, reply string, req *prox
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
 			Variable: val,
 		},

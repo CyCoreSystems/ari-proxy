@@ -17,7 +17,7 @@ func (s *Server) playbackData(ctx context.Context, reply string, req *proxy.Requ
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
 			Playback: data,
 		},
@@ -32,7 +32,7 @@ func (s *Server) playbackGet(ctx context.Context, reply string, req *proxy.Reque
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Key: data.Key,
 	})
 }

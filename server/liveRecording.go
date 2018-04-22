@@ -13,7 +13,7 @@ func (s *Server) recordingLiveData(ctx context.Context, reply string, req *proxy
 		return
 	}
 
-	s.nats.Publish(reply, proxy.Response{
+	s.publish(reply, proxy.Response{
 		Data: &proxy.EntityData{
 			LiveRecording: data,
 		},
@@ -27,7 +27,7 @@ func (s *Server) recordingLiveGet(ctx context.Context, reply string, req *proxy.
 		return
 	}
 
-	s.nats.Publish(reply, proxy.Response{
+	s.publish(reply, proxy.Response{
 		Key: data.Key,
 	})
 }

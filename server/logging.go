@@ -13,7 +13,7 @@ func (s *Server) asteriskLoggingList(ctx context.Context, reply string, req *pro
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Keys: list,
 	})
 }
@@ -25,7 +25,7 @@ func (s *Server) asteriskLoggingGet(ctx context.Context, reply string, req *prox
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Key: data.Key,
 	})
 }
@@ -37,7 +37,7 @@ func (s *Server) asteriskLoggingCreate(ctx context.Context, reply string, req *p
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Key: h.Key(),
 	})
 }
@@ -49,7 +49,7 @@ func (s *Server) asteriskLoggingData(ctx context.Context, reply string, req *pro
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
 			Log: data,
 		},

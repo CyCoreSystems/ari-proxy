@@ -39,7 +39,7 @@ func (s *Server) bridgeCreate(ctx context.Context, reply string, req *proxy.Requ
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Key: h.Key(),
 	})
 }
@@ -51,7 +51,7 @@ func (s *Server) bridgeStageCreate(ctx context.Context, reply string, req *proxy
 		s.Dialog.Bind(req.Key.Dialog, "bridge", req.Key.ID)
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Key: bh.Key(),
 	})
 }
@@ -63,7 +63,7 @@ func (s *Server) bridgeData(ctx context.Context, reply string, req *proxy.Reques
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
 			Bridge: bd,
 		},
@@ -96,7 +96,7 @@ func (s *Server) bridgeGet(ctx context.Context, reply string, req *proxy.Request
 		s.Dialog.Bind(req.Key.Dialog, "bridge", req.Key.ID)
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Key: data.Key,
 	})
 }
@@ -108,7 +108,7 @@ func (s *Server) bridgeList(ctx context.Context, reply string, req *proxy.Reques
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Keys: list,
 	})
 }
@@ -127,7 +127,7 @@ func (s *Server) bridgePlay(ctx context.Context, reply string, req *proxy.Reques
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Key: ph.Key(),
 	})
 }
@@ -149,7 +149,7 @@ func (s *Server) bridgeStagePlay(ctx context.Context, reply string, req *proxy.R
 		s.Dialog.Bind(req.Key.Dialog, "playback", req.BridgePlay.PlaybackID)
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Key: s.ari.Playback().Get(ari.NewKey(ari.PlaybackKey, req.BridgePlay.PlaybackID)).Key(),
 	})
 }
@@ -177,7 +177,7 @@ func (s *Server) bridgeRecord(ctx context.Context, reply string, req *proxy.Requ
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Key: h.Key(),
 	})
 }
@@ -198,7 +198,7 @@ func (s *Server) bridgeStageRecord(ctx context.Context, reply string, req *proxy
 		s.Dialog.Bind(req.Key.Dialog, "recording", req.BridgeRecord.Name)
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Key: data.Key.New(ari.LiveRecordingKey, req.BridgeRecord.Name),
 	})
 }

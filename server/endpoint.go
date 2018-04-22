@@ -13,7 +13,7 @@ func (s *Server) endpointData(ctx context.Context, reply string, req *proxy.Requ
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
 			Endpoint: data,
 		},
@@ -27,7 +27,7 @@ func (s *Server) endpointGet(ctx context.Context, reply string, req *proxy.Reque
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Key: data.Key,
 	})
 }
@@ -39,7 +39,7 @@ func (s *Server) endpointList(ctx context.Context, reply string, req *proxy.Requ
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Keys: list,
 	})
 }
@@ -51,7 +51,7 @@ func (s *Server) endpointListByTech(ctx context.Context, reply string, req *prox
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Keys: list,
 	})
 }

@@ -13,7 +13,7 @@ func (s *Server) recordingStoredCopy(ctx context.Context, reply string, req *pro
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Key: h.Key(),
 	})
 }
@@ -25,7 +25,7 @@ func (s *Server) recordingStoredData(ctx context.Context, reply string, req *pro
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Data: &proxy.EntityData{
 			StoredRecording: data,
 		},
@@ -39,7 +39,7 @@ func (s *Server) recordingStoredGet(ctx context.Context, reply string, req *prox
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Key: data.Key,
 	})
 }
@@ -55,7 +55,7 @@ func (s *Server) recordingStoredList(ctx context.Context, reply string, req *pro
 		return
 	}
 
-	s.nats.Publish(reply, &proxy.Response{
+	s.publish(reply, &proxy.Response{
 		Keys: list,
 	})
 }

@@ -313,7 +313,7 @@ func WithLogHandler(h log15.Handler) OptionFunc {
 // The NATS URI may also be configured by the environment variable `NATS_URI`.
 func WithURI(uri string) OptionFunc {
 	return func(c *Client) {
-		c.uri = uri
+		c.core.uri = uri
 	}
 }
 

@@ -1,6 +1,6 @@
 project_name: Asterisk ARI Proxy
 builds:
-   - main: cmd/ari-proxy/ari-proxy/main.go
+   - main: cmd/ari-proxy/ari-proxy/
      env:
         - CGO_ENABLED=0
      goos:

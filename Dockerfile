@@ -1,2 +1,2 @@
 FROM ulexus/go-minimal
-COPY bin/ari-proxy /app
+COPY cmd/ari-proxy/ari-proxy /app

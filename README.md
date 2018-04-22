@@ -21,7 +21,7 @@ However, it does need to know how to connect to both Asterisk and NATS.
      -e ARI_USERNAME="demo-user" \
      -e ARI_PASSWORD="supersecret" \
      -e ARI_HTTP_URL="http://asterisk:8088/ari" \
-     -e ARI_WEBSOCKET_URL="http://asterisk:8088/ari/events" \
+     -e ARI_WEBSOCKET_URL="ws://asterisk:8088/ari/events" \
      -e NATS_URL="nats://nats:4222" \
      cycoresystems/ari-proxy
 ```

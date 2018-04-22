@@ -8,8 +8,6 @@ builds:
         - linux
      goarch:
         - amd64
-     hooks:
-        pre: dep ensure
 
 checksum:
   name_template: 'checksums.txt'

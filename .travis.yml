@@ -4,6 +4,7 @@ go:
 install:
    - go get -u github.com/golang/dep/cmd/dep/...
    - go get -u github.com/alecthomas/gometalinter/...
+   - go get -u github.com/goreleaser/goreleaser
    - gometalinter --install
 script: make ci
 services:

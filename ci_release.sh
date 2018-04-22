@@ -5,10 +5,6 @@ if [ ! -e $CI ]; then
    echo "Logging in to Docker..."
    echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
-   # Install goreleaser
-   echo "Fetching goreleaser..."
-   go get -u github.com/goreleaser/goreleaser
-
    # Create the release
    echo "Creating release..."
    goreleaser release

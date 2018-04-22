@@ -8,17 +8,99 @@ proxies.  Version 2 is written to address many shortcomings of the Version 1
 system and fundamentally alters the wire protocol.  End-user API, however,
 should be identical.
 
-## Installation
+## Proxy server
+
+
+Docker images are kept up to date with releases and are tagged accordingly.  The
+`ari-proxy` does not expose any services, so no ports need to be opened for it.
+However, it does need to know how to connect to both Asterisk and NATS.
+
+```
+   docker run \
+     -e ARI_APPLICATION="my_test_app" \
+     -e ARI_USERNAME="demo-user" \
+     -e ARI_PASSWORD="supersecret" \
+     -e ARI_HTTP_URL="http://asterisk:8088/ari" \
+     -e ARI_WEBSOCKET_URL="http://asterisk:8088/ari/events" \
+     -e NATS_URL="nats://nats:4222" \
+     cycoresystems/ari-proxy
+```
+
+Binary releases are available on the [releases page](https://github.com/CyCoreSystems/ari-proxy/releases).
+
+You can also install the server manually.  It is not (yet) go-gettable, but we
+use [dep](https://github.com/golang/dep) for dependency management.
+
+```
+   dep ensure
+   go install
+```
+
+You may need to explicitly install dependencies for this to work
+
+## Client library
+
+`ari-proxy` uses semantic versioning and [dep](https://github.com/golang/dep).
+To use it in your own Go package, simply reference the
+`github.com/CyCoreSystems/ari-proxy/client` package, and your dependency management
+tool should be able to manage it.
+
+For manual dependency management:
+
+```
+  go get github.com/CyCoreSystems/ari-proxy
+  cd $GOPATH/github.com/CyCoreSystems/ari-proxy
+  dep ensure
+```
 
 `master` should be the latest stable, so a simple `go get` is required:
 
-	go get github.com/CyCoreSystems/ari-proxy/cmd/ari-proxy
+### Usage
 
-## Development
+Connecting the client to NATS is simple:
 
-New development occurs on `develop` branch.
+```go
+import (
+   "github.com/CyCoreSystems/ari"
+   "github.com/CyCoreSystems/ari-proxy/client"
+)
 
-## Client lifecycle
+func connect(ctx context.Context, appName string) (ari.Client,error) {
+   c, err := client.New(ctx,
+      client.WithApplication(appName),
+      client.WithURI("nats://natshost:4222"),
+   )
+}
+```
+
+Configuration of the client can also be done with environment variables.
+`ARI_APPLICATION` can be used to set the ARI application name, and `NATS_URI`
+can be used to set the NATS URI.  Doing so allows you to get a client connection
+simply with `client.New(ctx)`.
+
+Once an `ari.Client` is obtained, the client functions exactly as the native
+[ari](https://github.com/CyCoreSystems/ari) client.
+
+More documentation:
+
+  * [ARI library docs](https://godoc.org/github.com/CyCoreSystems/ari)
+
+  * [ARI client examples](https://github.com/CyCoreSystems/ari/tree/master/_examples)
+
+
+### Context
+
+Note the use of the `context.Context` parameter.  This can be useful to properly
+shutdown the client by a controlling context.  This shutdown will also close any
+open subscriptions on the client.
+
+Layers of clients can be used efficiently with different contexts using the
+`New(context.Context)` function of each client instance.  Subtended clients will
+be closed with their parents, use a common internal NATS connection, and can be
+severally closed by their individual contexts.  This makes managing many active
+channels easy and efficient.
+
+### Lifecycle
 
 There are two levels of client in use.  The first is a connection, which is a
 long-lived network connection to the NATS cluster.  In general, the end user
@@ -32,7 +114,7 @@ connection is maintained, but all subscriptions are released.  Users should
 always `Close()` their clients when done with them to avoid accumulating stale
 subscriptions.
 
-## Clustering
+### Clustering
 
 The ARI proxy works in a cluster setting by utilizing two coordinates:
 
@@ -44,13 +126,13 @@ of where the client is located.  These pieces of information are handled
 transparently and internally by the ARI proxy and the ARI proxy client to route
 commands and events where they should be sent.
 
-## NATS protocol details
+### NATS protocol details
 
 The protocol details described below are only necessary to know if you do not use the
 provided client and/or server.  By using both components in this repository, the
 protocol details below are transparently handled for you.
 
-### Subject structure
+#### Subject structure
 
 The NATS subject prefix defaults to `ari.`, and all messages used by this proxy
 will be prefixed by that term.
@@ -89,7 +171,7 @@ subscribe to:
 
 `ari.event.test.>`
 
-### Dialogs
+#### Dialogs
 
 Events may be further classified by the arbitrary "dialog" ID.  If any command
 specifies a Dialog ID in its metadata, the ARI proxy will further classify
@@ -110,7 +192,7 @@ a mechanism to:
   - transcend ARI Applications and/or Asterisk nodes while maintaining logical
     separation of events
 
-### Message delivery
+#### Message delivery
 
 The means of a delivery for a generically-routed message depends on the type of
 message it is.
@@ -123,7 +205,7 @@ message it is.
 Thus, for efficiency, it is always recommended to use as precise a subject line
 as possible.
 
-### Node discovery
+#### Node discovery
 
 Each ARI proxy sends out a periodic ping announcing itself in the cluster.
 Clients may aggregate these pings to construct an expected map of machines in
@@ -141,7 +223,7 @@ structure of the announcement is thus:
 }
 ```
 
-### Payload structure
+#### Payload structure
 
 For most requests, payloads exactly match their ARI library values.  However,
 treatment of handlers is slightly different.

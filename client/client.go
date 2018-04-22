@@ -309,6 +309,14 @@ func WithLogHandler(h log15.Handler) OptionFunc {
 	}
 }
 
+// WithURI sets the NATS URI to which the client will attempt to connect.
+// The NATS URI may also be configured by the environment variable `NATS_URI`.
+func WithURI(uri string) OptionFunc {
+	return func(c *Client) {
+		c.uri = uri
+	}
+}
+
 // WithNATS binds an existing NATS connection
 func WithNATS(nc *nats.EncodedConn) OptionFunc {
 	return func(c *Client) {

@@ -1,7 +1,8 @@
-package cmd
+package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 
@@ -27,6 +28,11 @@ var RootCmd = &cobra.Command{
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
+		if ok, _ := cmd.PersistentFlags().GetBool("version"); ok {
+			fmt.Println(version)
+			os.Exit(0)
+		}
+
 		var handler = log15.StdoutHandler
 		if viper.GetBool("verbose") {
 			Log.Info("Verbose logging enabled")
@@ -50,6 +56,8 @@ func init() {
 	cobra.OnInitialize(readConfig)
 
 	p := RootCmd.PersistentFlags()
+
+	p.BoolP("version", "V", false, "Print version information and exit")
 
 	p.StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ari-proxy.yaml)")
 	p.BoolP("verbose", "v", false, "Enable verbose logging")
@@ -99,7 +107,7 @@ func runServer(ctx context.Context, log log15.Logger) error {
 	srv := server.New()
 	srv.Log = log
 
-	log.Info("Starting ari-proxy server")
+	log.Info("Starting ari-proxy server", "version", version)
 	err := srv.Listen(ctx, &native.Options{
 		Application:  viper.GetString("ari.application"),
 		Username:     viper.GetString("ari.username"),

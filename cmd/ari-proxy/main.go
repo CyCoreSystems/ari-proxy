@@ -1,9 +1,9 @@
 package main
 
-import "github.com/CyCoreSystems/ari-proxy/cmd/ari-proxy/cmd"
+var version = "master"
 
 func main() {
-	if err := cmd.RootCmd.Execute(); err != nil {
-		cmd.Log.Error("server died", "error", err)
+	if err := RootCmd.Execute(); err != nil {
+		Log.Error("server died", "error", err)
 	}
 }

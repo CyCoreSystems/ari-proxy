@@ -1,6 +1,6 @@
 [[constraint]]
   name = "github.com/CyCoreSystems/ari"
-  version = "4.4.1"
+  version = "4.6.0"
 
 [[constraint]]
   name = "github.com/inconshreveable/log15"

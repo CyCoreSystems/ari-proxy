@@ -4,8 +4,8 @@
 [[projects]]
   name = "github.com/CyCoreSystems/ari"
   packages = [".","client/arimocks","client/native","ext/play","stdbus"]
-  revision = "22f05f82d7da387e6897cd4c2845f0c45503186e"
-  version = "v4.4.1"
+  revision = "27303213f907680298d6a9622ebf891248d69260"
+  version = "v4.6.0"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -182,6 +182,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f7ed0451b2680d9cdffb4ac649da22d6fd5b02053df16942d6022b922321924e"
+  inputs-digest = "da779673630af35b6c4467fea61f4c8eb193c0a34fa50d001f3586f4bd96b2d4"
   solver-name = "gps-cdcl"
   solver-version = 1

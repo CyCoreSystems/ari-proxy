@@ -1,2 +1,3 @@
-FROM ulexus/go-minimal
-COPY ari-proxy /app
+FROM scratch
+COPY ari-proxy /
+ENTRYPOINT ["/ari-proxy"]

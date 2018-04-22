@@ -11,13 +11,7 @@ services:
 deploy:
    - provider: script
      skip_cleanup: true
-     script: docker_login
-     on:
-        tags: true
-        condition: $TRAVIS_OS_NAME = linux
-   - provider: script
-     skip_cleanup: true
-     script: curl -sL https://git.io/goreleaser | bash
+     script: ci_release.sh
      on:
         tags: true
         condition: $TRAVIS_OS_NAME = linux

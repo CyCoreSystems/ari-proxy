@@ -27,3 +27,5 @@ _testmain.go
 *.swp
 
 /vendor/*
+/dist/
+/ari-proxy

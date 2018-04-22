@@ -28,7 +28,7 @@ var RootCmd = &cobra.Command{
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
-		if ok, _ := cmd.PersistentFlags().GetBool("version"); ok {
+		if ok, _ := cmd.PersistentFlags().GetBool("version"); ok { // nolint: gas
 			fmt.Println(version)
 			os.Exit(0)
 		}
@@ -108,16 +108,12 @@ func runServer(ctx context.Context, log log15.Logger) error {
 	srv.Log = log
 
 	log.Info("Starting ari-proxy server", "version", version)
-	err := srv.Listen(ctx, &native.Options{
+	return srv.Listen(ctx, &native.Options{
 		Application:  viper.GetString("ari.application"),
 		Username:     viper.GetString("ari.username"),
 		Password:     viper.GetString("ari.password"),
 		URL:          viper.GetString("ari.http_url"),
 		WebsocketURL: viper.GetString("ari.websocket_url"),
 	}, natsURL)
-	if err != nil {
-		return err
-	}
 
-	return nil
 }

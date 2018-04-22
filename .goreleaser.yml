@@ -1,0 +1,21 @@
+project_name: Asterisk ARI Proxy
+builds:
+   - main: cmd/ari-proxy/ari-proxy/main.go
+     env:
+        - CGO_ENABLED=0
+     goos:
+        - windows
+        - darwin
+        - linux
+     goarch:
+        - amd64
+     hooks:
+        pre: dep ensure
+
+dockers:
+   - image: cycoresystems/ari-proxy
+     tag_templates:
+        - "{{ .Tag }}"
+        - "v{{ .Major }}"
+        - "v{{ .Major }}.{{ .Minor }}"
+        - latest

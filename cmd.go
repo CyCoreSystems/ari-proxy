@@ -35,7 +35,7 @@ var RootCmd = &cobra.Command{
 
 		var handler = log15.StdoutHandler
 		if viper.GetBool("verbose") {
-			Log.Info("Verbose logging enabled")
+			Log.Info("verbose logging enabled")
 			handler = log15.LvlFilterHandler(log15.LvlDebug, handler)
 		} else {
 			handler = log15.LvlFilterHandler(log15.LvlInfo, handler)
@@ -92,8 +92,8 @@ func readConfig() {
 
 	// If a config file is found, read it in.
 	err := viper.ReadInConfig()
-	if err != nil {
-		Log.Info("failed to read configuration from file", "error", err)
+	if err == nil {
+		Log.Debug("read configuration from file")
 	}
 }
 
@@ -107,7 +107,7 @@ func runServer(ctx context.Context, log log15.Logger) error {
 	srv := server.New()
 	srv.Log = log
 
-	log.Info("Starting ari-proxy server", "version", version)
+	log.Info("starting ari-proxy server", "version", version)
 	return srv.Listen(ctx, &native.Options{
 		Application:  viper.GetString("ari.application"),
 		Username:     viper.GetString("ari.username"),

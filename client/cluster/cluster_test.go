@@ -5,12 +5,12 @@ import (
 	"testing"
 	"time"
 
-	uuid "github.com/satori/go.uuid"
+	"github.com/CyCoreSystems/ari/rid"
 )
 
 func TestHash(t *testing.T) {
-	id := uuid.NewV1().String()
-	app := uuid.NewV1().String()
+	id := rid.New("")
+	app := rid.New("")
 
 	testID, testApp := dehash(hash(id, app))
 	if id != testID {

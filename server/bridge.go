@@ -5,7 +5,7 @@ import (
 
 	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/proxy"
-	uuid "github.com/satori/go.uuid"
+	"github.com/CyCoreSystems/ari/rid"
 )
 
 func (s *Server) bridgeAddChannel(ctx context.Context, reply string, req *proxy.Request) {
@@ -140,7 +140,7 @@ func (s *Server) bridgeStagePlay(ctx context.Context, reply string, req *proxy.R
 	}
 
 	if req.BridgePlay.PlaybackID == "" {
-		req.BridgePlay.PlaybackID = uuid.NewV1().String()
+		req.BridgePlay.PlaybackID = rid.New(rid.Playback)
 	}
 
 	// bind dialog
@@ -162,7 +162,7 @@ func (s *Server) bridgeRecord(ctx context.Context, reply string, req *proxy.Requ
 	}
 
 	if req.BridgeRecord.Name == "" {
-		req.BridgeRecord.Name = uuid.NewV1().String()
+		req.BridgeRecord.Name = rid.New(rid.Recording)
 	}
 
 	// bind dialog
@@ -190,7 +190,7 @@ func (s *Server) bridgeStageRecord(ctx context.Context, reply string, req *proxy
 	}
 
 	if req.BridgeRecord.Name == "" {
-		req.BridgeRecord.Name = uuid.NewV1().String()
+		req.BridgeRecord.Name = rid.New(rid.Recording)
 	}
 
 	if req.Key.Dialog != "" {

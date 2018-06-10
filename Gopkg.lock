@@ -3,9 +3,9 @@
 
 [[projects]]
   name = "github.com/CyCoreSystems/ari"
-  packages = [".","client/arimocks","client/native","ext/play","stdbus"]
-  revision = "93f80598879bfbcd1ebb4087988b61f6fcdc6f55"
-  version = "v4.6.1"
+  packages = [".","client/arimocks","client/native","ext/play","rid","stdbus"]
+  revision = "902b7bccacb25a5ee78ba8bd51bfa03b25386dc3"
+  version = "v4.7.0"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -90,6 +90,12 @@
   revision = "3cf34f9fca4e88afa9da8eabd75e3326c9941b44"
 
 [[projects]]
+  name = "github.com/oklog/ulid"
+  packages = ["."]
+  revision = "d311cb43c92434ec4072dfbbda3400741d0a6337"
+  version = "v0.3.0"
+
+[[projects]]
   name = "github.com/pelletier/go-toml"
   packages = ["."]
   revision = "4692b8f9babfc93db58cc592ba2689d8736781de"
@@ -105,12 +111,6 @@
   packages = ["difflib"]
   revision = "792786c7400a136282c1664665ae0a8db921c6c2"
   version = "v1.0.0"
-
-[[projects]]
-  name = "github.com/satori/go.uuid"
-  packages = ["."]
-  revision = "f58768cc1a7a7e77a3bd49e98cdd21419399b6a3"
-  version = "v1.2.0"
 
 [[projects]]
   name = "github.com/spf13/afero"
@@ -161,7 +161,7 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
-  packages = ["context","websocket"]
+  packages = ["websocket"]
   revision = "6078986fec03a1dcc236c34816c71b0e05018fda"
 
 [[projects]]
@@ -183,6 +183,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8ef0f3b6a3ac41d349733acda73dbb8f8fc480e78c12428e20b84d618c88cc66"
+  inputs-digest = "d223b2aba0e8f37688d7857edbb4b6ca7e1dd45d6f13dc4341e6dbbbc8c7661c"
   solver-name = "gps-cdcl"
   solver-version = 1

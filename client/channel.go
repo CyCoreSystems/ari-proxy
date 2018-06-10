@@ -5,7 +5,7 @@ import (
 
 	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/proxy"
-	uuid "github.com/satori/go.uuid"
+	"github.com/CyCoreSystems/ari/rid"
 )
 
 type channel struct {
@@ -47,7 +47,7 @@ func (c *channel) Originate(key *ari.Key, o ari.OriginateRequest) (*ari.ChannelH
 
 func (c *channel) StageOriginate(key *ari.Key, o ari.OriginateRequest) (*ari.ChannelHandle, error) {
 	if o.ChannelID == "" {
-		o.ChannelID = uuid.NewV1().String()
+		o.ChannelID = rid.New(rid.Channel)
 	}
 
 	k, err := c.c.createRequest(&proxy.Request{
@@ -290,7 +290,7 @@ func (c *channel) Play(key *ari.Key, playbackID string, mediaURI string) (*ari.P
 
 func (c *channel) StagePlay(key *ari.Key, playbackID string, mediaURI string) (*ari.PlaybackHandle, error) {
 	if playbackID == "" {
-		playbackID = uuid.NewV1().String()
+		playbackID = rid.New(rid.Playback)
 	}
 
 	k, err := c.c.getRequest(&proxy.Request{

@@ -5,7 +5,7 @@ import (
 
 	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/proxy"
-	uuid "github.com/satori/go.uuid"
+	"github.com/CyCoreSystems/ari/rid"
 )
 
 func (s *Server) channelAnswer(ctx context.Context, reply string, req *proxy.Request) {
@@ -36,7 +36,7 @@ func (s *Server) channelCreate(ctx context.Context, reply string, req *proxy.Req
 	create := req.ChannelCreate.ChannelCreateRequest
 
 	if create.ChannelID == "" {
-		create.ChannelID = uuid.NewV1().String()
+		create.ChannelID = rid.New(rid.Channel)
 	}
 
 	// bind dialog
@@ -122,7 +122,7 @@ func (s *Server) channelOriginate(ctx context.Context, reply string, req *proxy.
 	orig := req.ChannelOriginate.OriginateRequest
 
 	if orig.ChannelID == "" {
-		orig.ChannelID = uuid.NewV1().String()
+		orig.ChannelID = rid.New(rid.Channel)
 	}
 
 	if req.Key.Dialog != "" {
@@ -146,7 +146,7 @@ func (s *Server) channelStageOriginate(ctx context.Context, reply string, req *p
 	h := s.ari.Channel().Get(req.Key)
 
 	if req.ChannelOriginate.OriginateRequest.ChannelID == "" {
-		req.ChannelOriginate.OriginateRequest.ChannelID = uuid.NewV1().String()
+		req.ChannelOriginate.OriginateRequest.ChannelID = rid.New(rid.Channel)
 	}
 
 	if req.Key.Dialog != "" {
@@ -166,7 +166,7 @@ func (s *Server) channelPlay(ctx context.Context, reply string, req *proxy.Reque
 	}
 
 	if req.ChannelPlay.PlaybackID == "" {
-		req.ChannelPlay.PlaybackID = uuid.NewV1().String()
+		req.ChannelPlay.PlaybackID = rid.New(rid.Playback)
 	}
 
 	if req.Key.Dialog != "" {
@@ -194,7 +194,7 @@ func (s *Server) channelStagePlay(ctx context.Context, reply string, req *proxy.
 	}
 
 	if req.ChannelPlay.PlaybackID == "" {
-		req.ChannelPlay.PlaybackID = uuid.NewV1().String()
+		req.ChannelPlay.PlaybackID = rid.New(rid.Playback)
 	}
 
 	if req.Key.Dialog != "" {
@@ -209,7 +209,7 @@ func (s *Server) channelStagePlay(ctx context.Context, reply string, req *proxy.
 
 func (s *Server) channelRecord(ctx context.Context, reply string, req *proxy.Request) {
 	if req.ChannelRecord.Name == "" {
-		req.ChannelRecord.Name = uuid.NewV1().String()
+		req.ChannelRecord.Name = rid.New(rid.Recording)
 	}
 
 	if req.Key.Dialog != "" {
@@ -236,7 +236,7 @@ func (s *Server) channelStageRecord(ctx context.Context, reply string, req *prox
 	}
 
 	if req.ChannelRecord.Name == "" {
-		req.ChannelRecord.Name = uuid.NewV1().String()
+		req.ChannelRecord.Name = rid.New(rid.Recording)
 	}
 
 	if req.Key.Dialog != "" {
@@ -263,7 +263,7 @@ func (s *Server) channelSilence(ctx context.Context, reply string, req *proxy.Re
 
 func (s *Server) channelSnoop(ctx context.Context, reply string, req *proxy.Request) {
 	if req.ChannelSnoop.SnoopID == "" {
-		req.ChannelSnoop.SnoopID = uuid.NewV1().String()
+		req.ChannelSnoop.SnoopID = rid.New(rid.Snoop)
 	}
 
 	if req.Key.Dialog != "" {
@@ -289,7 +289,7 @@ func (s *Server) channelStageSnoop(ctx context.Context, reply string, req *proxy
 	}
 
 	if req.ChannelSnoop.SnoopID == "" {
-		req.ChannelSnoop.SnoopID = uuid.NewV1().String()
+		req.ChannelSnoop.SnoopID = rid.New(rid.Snoop)
 	}
 
 	if req.Key.Dialog != "" {

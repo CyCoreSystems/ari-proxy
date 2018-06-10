@@ -3,7 +3,7 @@ package client
 import (
 	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/proxy"
-	uuid "github.com/satori/go.uuid"
+	"github.com/CyCoreSystems/ari/rid"
 )
 
 type bridge struct {
@@ -139,7 +139,7 @@ func (b *bridge) Record(key *ari.Key, name string, opts *ari.RecordingOptions) (
 		opts = &ari.RecordingOptions{}
 	}
 	if name == "" {
-		name = uuid.NewV1().String()
+		name = rid.New(rid.Recording)
 	}
 
 	k, err := b.c.createRequest(&proxy.Request{
@@ -161,7 +161,7 @@ func (b *bridge) StageRecord(key *ari.Key, name string, opts *ari.RecordingOptio
 		opts = &ari.RecordingOptions{}
 	}
 	if name == "" {
-		name = uuid.NewV1().String()
+		name = rid.New(rid.Recording)
 	}
 
 	k, err := b.c.getRequest(&proxy.Request{

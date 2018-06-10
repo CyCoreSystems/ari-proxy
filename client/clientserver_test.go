@@ -8,8 +8,8 @@ import (
 
 	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/server"
+	"github.com/CyCoreSystems/ari/rid"
 	"github.com/nats-io/nats"
-	uuid "github.com/satori/go.uuid"
 )
 
 type srv struct {
@@ -20,7 +20,7 @@ func (s *srv) Start(ctx context.Context, t *testing.T, mockClient ari.Client, nc
 	s.s = server.New()
 
 	// tests may run in parallel so we don't want two separate proxy servers to conflict.
-	s.s.NATSPrefix = uuid.NewV1().String() + "."
+	s.s.NATSPrefix = rid.New("") + "."
 
 	go func() {
 		if err := s.s.ListenOn(ctx, mockClient, nc); err != nil {

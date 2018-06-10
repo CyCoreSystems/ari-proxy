@@ -9,11 +9,11 @@ import (
 	"github.com/CyCoreSystems/ari-proxy/client/bus"
 	"github.com/CyCoreSystems/ari-proxy/client/cluster"
 	"github.com/CyCoreSystems/ari-proxy/proxy"
+	"github.com/CyCoreSystems/ari/rid"
 
 	"github.com/inconshreveable/log15"
 	"github.com/nats-io/nats"
 	"github.com/pkg/errors"
-	uuid "github.com/satori/go.uuid"
 )
 
 // ClosureGracePeriod is the amount of time to wait after the closure of the
@@ -523,7 +523,7 @@ func (c *Client) makeRequests(class string, req *proxy.Request) (responses []*pr
 
 	var responseCount int
 	expected := len(c.core.cluster.Matching(req.Key.Node, req.Key.App, c.core.clusterMaxAge))
-	reply := uuid.NewV1().String()
+	reply := rid.New("rp")
 	replyChan := make(chan *proxy.Response)
 	replySub, err := c.core.nc.Subscribe(reply, func(o *proxy.Response) {
 		responseCount++
@@ -570,7 +570,7 @@ func (c *Client) makeBroadcastRequestReturnFirstGoodResponse(class string, req *
 	}
 
 	expected := len(c.core.cluster.Matching(req.Key.Node, req.Key.App, c.core.clusterMaxAge))
-	reply := uuid.NewV1().String()
+	reply := rid.New("rp")
 	replyChan := make(chan *proxy.Response)
 
 	var responseCount int

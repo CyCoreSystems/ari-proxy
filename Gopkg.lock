@@ -3,9 +3,16 @@
 
 [[projects]]
   name = "github.com/CyCoreSystems/ari"
-  packages = [".","client/arimocks","client/native","ext/play","rid","stdbus"]
-  revision = "902b7bccacb25a5ee78ba8bd51bfa03b25386dc3"
-  version = "v4.7.0"
+  packages = [
+    ".",
+    "client/arimocks",
+    "client/native",
+    "ext/play",
+    "rid",
+    "stdbus"
+  ]
+  revision = "5f4b1e423a9f16430faa6ed765b7c3042826857a"
+  version = "v4.7.1"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -27,13 +34,30 @@
 
 [[projects]]
   name = "github.com/gogo/protobuf"
-  packages = ["gogoproto","proto","protoc-gen-gogo/descriptor","sortkeys","types"]
+  packages = [
+    "gogoproto",
+    "proto",
+    "protoc-gen-gogo/descriptor",
+    "sortkeys",
+    "types"
+  ]
   revision = "1adfc126b41513cc696b209667c8656ea7aac67c"
   version = "v1.0.0"
 
 [[projects]]
   name = "github.com/hashicorp/hcl"
-  packages = [".","hcl/ast","hcl/parser","hcl/printer","hcl/scanner","hcl/strconv","hcl/token","json/parser","json/scanner","json/token"]
+  packages = [
+    ".",
+    "hcl/ast",
+    "hcl/parser",
+    "hcl/printer",
+    "hcl/scanner",
+    "hcl/strconv",
+    "hcl/token",
+    "json/parser",
+    "json/scanner",
+    "json/token"
+  ]
   revision = "392dba7d905ed5d04a5794ba89f558b27e2ba1ca"
 
 [[projects]]
@@ -74,7 +98,10 @@
 
 [[projects]]
   name = "github.com/nats-io/go-nats"
-  packages = ["encoders/builtin","util"]
+  packages = [
+    "encoders/builtin",
+    "util"
+  ]
   revision = "b4479c874d87db74c2049a1b4abd55eb162c70fb"
 
 [[projects]]
@@ -114,7 +141,10 @@
 
 [[projects]]
   name = "github.com/spf13/afero"
-  packages = [".","mem"]
+  packages = [
+    ".",
+    "mem"
+  ]
   revision = "9be650865eab0c12963d8753212f4f9c66cdcf12"
 
 [[projects]]
@@ -154,7 +184,10 @@
 
 [[projects]]
   name = "github.com/stretchr/testify"
-  packages = ["assert","mock"]
+  packages = [
+    "assert",
+    "mock"
+  ]
   revision = "12b6f73e6084dad08a7c6e575284b177ecafbc71"
   version = "v1.2.1"
 
@@ -171,7 +204,14 @@
 
 [[projects]]
   name = "golang.org/x/text"
-  packages = ["internal/gen","internal/triegen","internal/ucd","transform","unicode/cldr","unicode/norm"]
+  packages = [
+    "internal/gen",
+    "internal/triegen",
+    "internal/ucd",
+    "transform",
+    "unicode/cldr",
+    "unicode/norm"
+  ]
   revision = "e56139fd9c5bc7244c76116c68e500765bb6db6b"
 
 [[projects]]
@@ -183,6 +223,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d223b2aba0e8f37688d7857edbb4b6ca7e1dd45d6f13dc4341e6dbbbc8c7661c"
+  inputs-digest = "99e68ddf6b601bb8d676634a37511f85267d7932f3515ca6c9d7d802e9e7190a"
   solver-name = "gps-cdcl"
   solver-version = 1

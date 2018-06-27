@@ -290,7 +290,7 @@ func (s *Server) pingHandler(m *nats.Msg) {
 // publish sends a message out over NATS, logging any error
 func (s *Server) publish(subject string, msg interface{}) {
 	if err := s.nats.Publish(subject, msg); err != nil {
-		s.Log.Warn("failed to publish NATS message", "subject", subject, "data", msg)
+		s.Log.Warn("failed to publish NATS message", "subject", subject, "data", msg, "error", err)
 	}
 }
 

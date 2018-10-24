@@ -1,6 +1,7 @@
 project_name: Asterisk ARI Proxy
 builds:
-   - env:
+   - binary: ari-proxy
+     env:
         - CGO_ENABLED=0
      goos:
         - windows
@@ -23,9 +24,8 @@ changelog:
        - '^test:'
 
 dockers:
-   - image: cycoresystems/ari-proxy
-     tag_templates:
-        - "{{ .Tag }}"
-        - "v{{ .Major }}"
-        - "v{{ .Major }}.{{ .Minor }}"
-        - latest
+   - image_templates:
+        - 'cycoresystems/ari-proxy:{{ .Tag }}'
+        - 'cycoresystems/ari-proxy:v{{ .Major }}'
+        - 'cycoresystems/ari-proxy:v{{ .Major }}.{{ .Minor }}'
+        - 'cycoresystems/ari-proxy:latest'

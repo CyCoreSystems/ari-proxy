@@ -368,6 +368,10 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		f = s.bridgeGet
 	case "BridgeList":
 		f = s.bridgeList
+	case "BridgeMOH":
+		f = s.bridgeMOH
+	case "BridgeStopMOH":
+		f = s.bridgeStopMOH
 	case "BridgePlay":
 		f = s.bridgePlay
 	case "BridgeStagePlay":

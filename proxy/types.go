@@ -109,6 +109,7 @@ type Request struct {
 
 	BridgeAddChannel    *BridgeAddChannel    `json:"bridge_add_channel,omitempty"`
 	BridgeCreate        *BridgeCreate        `json:"bridge_create,omitempty"`
+	BridgeMOH           *BridgeMOH           `json:"bridge_moh,omitempty"`
 	BridgePlay          *BridgePlay          `json:"bridge_play,omitempty"`
 	BridgeRecord        *BridgeRecord        `json:"bridge_record,omitempty"`
 	BridgeRemoveChannel *BridgeRemoveChannel `json:"bridge_remove_channel,omitempty"`
@@ -170,6 +171,12 @@ type BridgeCreate struct {
 
 	// Name is the name to assign to the bridge (optional)
 	Name string `json:"name,omitempty"`
+}
+
+// BridgeMOH is the request type for playing Music on Hold to a bridge
+type BridgeMOH struct {
+	// Class is the Music On Hold class to be played
+	Class string `json:"class"`
 }
 
 // BridgePlay is the request type for playing audio on the bridge

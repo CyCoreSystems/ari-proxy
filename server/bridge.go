@@ -113,6 +113,32 @@ func (s *Server) bridgeList(ctx context.Context, reply string, req *proxy.Reques
 	})
 }
 
+func (s *Server) bridgeMOH(ctx context.Context, reply string, req *proxy.Request) {
+
+	// bind dialog
+	if req.Key.Dialog != "" {
+		s.Dialog.Bind(req.Key.Dialog, "bridge", req.Key.ID)
+	}
+
+	s.sendError(
+		reply,
+		s.ari.Bridge().MOH(req.Key, req.BridgeMOH.Class),
+	)
+}
+
+func (s *Server) bridgeStopMOH(ctx context.Context, reply string, req *proxy.Request) {
+
+	// bind dialog
+	if req.Key.Dialog != "" {
+		s.Dialog.Bind(req.Key.Dialog, "bridge", req.Key.ID)
+	}
+
+	s.sendError(
+		reply,
+		s.ari.Bridge().StopMOH(req.Key),
+	)
+}
+
 func (s *Server) bridgePlay(ctx context.Context, reply string, req *proxy.Request) {
 
 	// bind dialog

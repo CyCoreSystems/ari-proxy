@@ -11,7 +11,7 @@ test:
 	go test ./...
 
 lint:
-	gometalinter --skip internal --vendor --deadline=60s ./...
+	golangci-lint run
 
 check: all lint test
 

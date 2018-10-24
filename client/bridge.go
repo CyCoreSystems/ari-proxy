@@ -100,6 +100,23 @@ func (b *bridge) Delete(key *ari.Key) error {
 	})
 }
 
+func (b *bridge) MOH(key *ari.Key, class string) error {
+	return b.c.commandRequest(&proxy.Request{
+		Kind: "BridgeMOH",
+		Key:  key,
+		BridgeMOH: &proxy.BridgeMOH{
+			Class: class,
+		},
+	})
+}
+
+func (b *bridge) StopMOH(key *ari.Key) error {
+	return b.c.commandRequest(&proxy.Request{
+		Kind: "BridgeStopMOH",
+		Key:  key,
+	})
+}
+
 func (b *bridge) Play(key *ari.Key, id string, uri string) (*ari.PlaybackHandle, error) {
 	k, err := b.c.createRequest(&proxy.Request{
 		Kind: "BridgePlay",

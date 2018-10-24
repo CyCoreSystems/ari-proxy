@@ -117,10 +117,11 @@ func TestModulesData(t *testing.T, s Server) {
 		if ret == nil {
 			t.Errorf("Expected module data to be non-nil")
 		} else {
-			failed := ret.Description != d.Description
-			failed = ret.Name != d.Name
-			if failed {
-				t.Errorf("Expected '%v', got '%v'", d, ret)
+			if ret.Description != d.Description {
+				t.Errorf("description mismatch: %v %v", ret.Description, d.Description)
+			}
+			if ret.Name != d.Name {
+				t.Errorf("name mismatch: expected '%v', got '%v'", d, ret)
 			}
 		}
 

@@ -3,10 +3,25 @@
 
 Proxy for the Asterisk REST interface (ARI).
 
-Version 1 of this system sought to maintain compatibility with the other ARI
-proxies.  Version 2 is written to address many shortcomings of the Version 1
-system and fundamentally alters the wire protocol.  End-user API, however,
-should be identical.
+The ARI proxy facilitates scaling of both applications and Asterisk,
+independently and with minimal coordination.  Each Asterisk instance and ARI
+application pair runs an `ari-proxy` server instance, which talks to a common
+NATS cluster.  Each client application talks to the same NATS cluster.  The
+clients automatically and continuously discover new Asterisk instances, so the
+only coordination needed is the common location of the NATS cluster.
+
+The ARI proxy allows for:
+  - Any number of applications running the ARI client
+  - Any number of `ari-proxy` services running on any number of Asterisk
+    instances
+  - Simple call control throughout the cluster, regardless of which Asterisk
+    instance is controlling the call
+  - Simple call distribution regardless of the number of potential application
+    services.  (New calls are automatically sent to a single recipient
+    application.)
+  - Simple call event reception by any number of application clients.  (No
+    single-app lockout)
+
 
 ## Proxy server
 

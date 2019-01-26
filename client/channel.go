@@ -31,10 +31,10 @@ func (c *channel) List(filter *ari.Key) ([]*ari.Key, error) {
 	})
 }
 
-func (c *channel) Originate(key *ari.Key, o ari.OriginateRequest) (*ari.ChannelHandle, error) {
+func (c *channel) Originate(referenceKey *ari.Key, o ari.OriginateRequest) (*ari.ChannelHandle, error) {
 	k, err := c.c.createRequest(&proxy.Request{
 		Kind: "ChannelOriginate",
-		Key:  key,
+		Key:  referenceKey,
 		ChannelOriginate: &proxy.ChannelOriginate{
 			OriginateRequest: o,
 		},
@@ -45,14 +45,15 @@ func (c *channel) Originate(key *ari.Key, o ari.OriginateRequest) (*ari.ChannelH
 	return ari.NewChannelHandle(k, c, nil), nil
 }
 
-func (c *channel) StageOriginate(key *ari.Key, o ari.OriginateRequest) (*ari.ChannelHandle, error) {
+func (c *channel) StageOriginate(referenceKey *ari.Key, o ari.OriginateRequest) (*ari.ChannelHandle, error) {
+
 	if o.ChannelID == "" {
 		o.ChannelID = rid.New(rid.Channel)
 	}
 
 	k, err := c.c.createRequest(&proxy.Request{
 		Kind: "ChannelStageOriginate",
-		Key:  key,
+		Key:  referenceKey,
 		ChannelOriginate: &proxy.ChannelOriginate{
 			OriginateRequest: o,
 		},
@@ -61,9 +62,7 @@ func (c *channel) StageOriginate(key *ari.Key, o ari.OriginateRequest) (*ari.Cha
 		return nil, err
 	}
 	return ari.NewChannelHandle(k.New(ari.ChannelKey, o.ChannelID), c, func(h *ari.ChannelHandle) error {
-		// Call the subsequent Originate with the original key ID (the source
-		// channel), so that Originator mapping will work
-		_, err := c.Originate(k.New(ari.ChannelKey, key.ID), o)
+		_, err := c.Originate(referenceKey, o)
 		return err
 	}), nil
 }

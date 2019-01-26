@@ -125,10 +125,17 @@ func (s *Server) channelOriginate(ctx context.Context, reply string, req *proxy.
 		orig.ChannelID = rid.New(rid.Channel)
 	}
 
-	if req.Key.Dialog != "" {
+	if req.Key != nil && req.Key.Dialog != "" {
 		s.Dialog.Bind(req.Key.Dialog, "channel", orig.ChannelID)
-		s.Dialog.Bind(req.Key.Dialog, "channel", orig.OtherChannelID)
-		s.Dialog.Bind(req.Key.Dialog, "channel", orig.Originator)
+		if orig.OtherChannelID != "" {
+			s.Dialog.Bind(req.Key.Dialog, "channel", orig.OtherChannelID)
+		}
+		if orig.Originator != "" {
+			s.Dialog.Bind(req.Key.Dialog, "channel", orig.Originator)
+		}
+		if req.Key.ID != orig.Originator {
+			s.Dialog.Bind(req.Key.Dialog, "channel", req.Key.ID)
+		}
 	}
 
 	h, err := s.ari.Channel().Originate(req.Key, orig)
@@ -143,18 +150,33 @@ func (s *Server) channelOriginate(ctx context.Context, reply string, req *proxy.
 }
 
 func (s *Server) channelStageOriginate(ctx context.Context, reply string, req *proxy.Request) {
-	h := s.ari.Channel().Get(req.Key)
+	orig := req.ChannelOriginate.OriginateRequest
 
-	if req.ChannelOriginate.OriginateRequest.ChannelID == "" {
-		req.ChannelOriginate.OriginateRequest.ChannelID = rid.New(rid.Channel)
+	if orig.ChannelID == "" {
+		orig.ChannelID = rid.New(rid.Channel)
 	}
 
-	if req.Key.Dialog != "" {
-		s.Dialog.Bind(req.Key.Dialog, "channel", req.Key.ID)
+	if req.Key != nil && req.Key.Dialog != "" {
+		s.Dialog.Bind(req.Key.Dialog, "channel", orig.ChannelID)
+		if orig.OtherChannelID != "" {
+			s.Dialog.Bind(req.Key.Dialog, "channel", orig.OtherChannelID)
+		}
+		if orig.Originator != "" {
+			s.Dialog.Bind(req.Key.Dialog, "channel", orig.Originator)
+		}
+		if req.Key.ID != orig.Originator {
+			s.Dialog.Bind(req.Key.Dialog, "channel", req.Key.ID)
+		}
+	}
+
+	h, err := s.ari.Channel().StageOriginate(req.Key, orig)
+	if err != nil {
+		s.sendError(reply, err)
+		return
 	}
 
 	s.publish(reply, &proxy.Response{
-		Key: h.Key().New(ari.ChannelKey, req.ChannelOriginate.OriginateRequest.ChannelID),
+		Key: h.Key(),
 	})
 }
 

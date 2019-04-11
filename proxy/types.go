@@ -160,6 +160,15 @@ type AsteriskVariableSet struct {
 type BridgeAddChannel struct {
 	// Channel is the channel ID to add to the bridge
 	Channel string `json:"channel"`
+
+	// AbsorbDTMF indicates that DTMF coming from this channel will not be passed through to the bridge
+	AbsorbDTMF bool `json:"absorbDTMF,omitempty"`
+
+	// Mute indicates that the channel should be muted, preventing audio from it passing through to the bridge
+	Mute bool `json:"mute,omitempty"`
+
+	// Role indicates the channel's role in the bridge
+	Role string `json:"role,omitempty"`
 }
 
 // BridgeCreate is the request type for creating a bridge

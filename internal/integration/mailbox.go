@@ -99,7 +99,7 @@ func TestMailboxUpdate(t *testing.T, s Server) {
 		failed := false
 		failed = failed || err == nil && expected != nil
 		failed = failed || err != nil && expected == nil
-		failed = failed || err != nil && expected != nil && err.Error() != expected.Error()
+		failed = failed || err != nil && expected != nil && err.Error() != expected.Error() // nolint
 		if failed {
 			t.Errorf("Expected mailbox %s(%s) to return '%v', got '%v'",
 				"Update", "mbox1", expected, err,

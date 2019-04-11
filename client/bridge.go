@@ -74,13 +74,25 @@ func (b *bridge) Data(key *ari.Key) (*ari.BridgeData, error) {
 }
 
 func (b *bridge) AddChannel(key *ari.Key, channelID string) error {
+	return b.AddChannelWithOptions(key, channelID, nil)
+}
+
+func (b *bridge) AddChannelWithOptions(key *ari.Key, channelID string, options *ari.BridgeAddChannelOptions) error {
+	if options == nil {
+		options = new(ari.BridgeAddChannelOptions)
+	}
+
 	return b.c.commandRequest(&proxy.Request{
 		Kind: "BridgeAddChannel",
 		Key:  key,
 		BridgeAddChannel: &proxy.BridgeAddChannel{
-			Channel: channelID,
+			Channel:    channelID,
+			AbsorbDTMF: options.AbsorbDTMF,
+			Mute:       options.Mute,
+			Role:       options.Role,
 		},
 	})
+
 }
 
 func (b *bridge) RemoveChannel(key *ari.Key, channelID string) error {

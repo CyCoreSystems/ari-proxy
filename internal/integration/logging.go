@@ -50,11 +50,11 @@ func TestLoggingList(t *testing.T, s Server) {
 		} else {
 			for idx := range ld {
 				failed := false
-				failed = failed || ld[idx].ID != expected[idx].ID
+				failed = failed || ld[idx].ID != expected[idx].ID // nolint
 
 				if failed {
 					t.Errorf("Expected item '%d' to be '%v', got '%v",
-						idx, expected[idx], ld[idx])
+						idx, expected[idx], ld[idx]) // nolint
 				}
 			}
 		}

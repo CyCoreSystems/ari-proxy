@@ -2,7 +2,7 @@
 
 
 [[projects]]
-  digest = "1:a00c0cd8fb85f1b35d3cddb7c1ee8d37ced4c36ca80a1f7759cab44bfe0da6d5"
+  digest = "1:300598806c714840c01f8632715e05ce293c053b137d430404fc0006e9b4b194"
   name = "github.com/CyCoreSystems/ari"
   packages = [
     ".",
@@ -12,8 +12,8 @@
     "stdbus",
   ]
   pruneopts = ""
-  revision = "0b99272cec6482252f0f578329fcc197cb54cee2"
-  version = "v4.8.3"
+  revision = "5f1efb0a2888aba239263c14e641761bea7e7fd1"
+  version = "v5.0.0-pre3"
 
 [[projects]]
   digest = "1:56c130d885a4aacae1dd9c7b71cfe39912c7ebc1ff7d2b46083c8812996dc43b"

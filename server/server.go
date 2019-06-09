@@ -284,7 +284,9 @@ func (s *Server) runEventHandler(ctx context.Context) {
 
 // pingHandler publishes the server's presence
 func (s *Server) pingHandler(m *nats.Msg) {
-	s.announce()
+	if s.ari.Connected() {
+		s.announce()
+	}
 }
 
 // publish sends a message out over NATS, logging any error
@@ -297,6 +299,10 @@ func (s *Server) publish(subject string, msg interface{}) {
 // newRequestHandler returns a context-wrapped nats.Handler to handle requests
 func (s *Server) newRequestHandler(ctx context.Context) func(subject string, reply string, req *proxy.Request) {
 	return func(subject string, reply string, req *proxy.Request) {
+		if !s.ari.Connected() {
+			s.sendError(reply, errors.New("ARI connection is down"))
+			return
+		}
 		go s.dispatchRequest(ctx, reply, req)
 	}
 }

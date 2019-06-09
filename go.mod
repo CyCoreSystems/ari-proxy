@@ -4,7 +4,7 @@ go 1.12
 
 require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
-	github.com/CyCoreSystems/ari v5.0.0-pre4+incompatible
+	github.com/CyCoreSystems/ari v5.0.0-pre5+incompatible
 	github.com/fsnotify/fsnotify v0.0.0-20170329110642-4da3e2cfbabc // indirect
 	github.com/golang/protobuf v1.3.1 // indirect
 	github.com/hashicorp/hcl v0.0.0-20170509225359-392dba7d905e // indirect
@@ -25,7 +25,7 @@ require (
 	github.com/spf13/jwalterweatherman v0.0.0-20170523133247-0efa5202c046 // indirect
 	github.com/spf13/pflag v1.0.0 // indirect
 	github.com/spf13/viper v1.0.2
-	github.com/stretchr/testify v1.2.1
+	github.com/stretchr/testify v1.3.0
 	golang.org/x/crypto v0.0.0-20190605123033-f99c8df09eb5 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/yaml.v2 v2.0.0-20170812160011-eb3733d160e7 // indirect

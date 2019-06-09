@@ -343,6 +343,20 @@ func (c *Client) ApplicationName() string {
 	return c.appName
 }
 
+// Connected indicates whether the client is connected through to at least one ARI websocket
+func (c *Client) Connected() bool {
+	if c.closed {
+		return false
+	}
+
+	// TODO: this is a surrogate indicator with low resolution... we should have
+	// something more proactive and concrete
+	if len(c.cluster.App(c.appName, proxy.AnnouncementInterval*2)) < 1 {
+		return false
+	}
+	return true
+}
+
 // Close shuts down the client
 func (c *Client) Close() {
 	if c.cancel != nil {

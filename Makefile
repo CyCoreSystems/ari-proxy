@@ -1,7 +1,18 @@
 
-all:
+all: dep check build test
+
+ci: check build test
+
+build:
 	go build ./...
 	go build
+
+check:
+	go mod verify
+	golangci-lint run
+
+dep:
+	go mod tidy
 
 docker: all
 	docker build -t cycoresystems/ari-proxy ./
@@ -10,12 +21,3 @@ docker: all
 test:
 	go test ./...
 
-lint:
-	golangci-lint run
-
-check: all lint test
-
-deps:
-	dep ensure
-
-ci: deps check

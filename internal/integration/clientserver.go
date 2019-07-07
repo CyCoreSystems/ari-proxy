@@ -9,7 +9,7 @@ import (
 	"sync"
 
 	"github.com/CyCoreSystems/ari"
-	"github.com/nats-io/nats"
+	"github.com/nats-io/nats.go"
 	"github.com/pkg/errors"
 )
 

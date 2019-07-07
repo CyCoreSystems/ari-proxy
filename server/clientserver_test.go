@@ -10,7 +10,7 @@ import (
 	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/client"
 	"github.com/CyCoreSystems/ari/rid"
-	"github.com/nats-io/nats"
+	"github.com/nats-io/nats.go"
 )
 
 type srv struct {

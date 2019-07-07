@@ -10,7 +10,7 @@ import (
 	"github.com/CyCoreSystems/ari/client/native"
 
 	"github.com/inconshreveable/log15"
-	"github.com/nats-io/nats"
+	"github.com/nats-io/nats.go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

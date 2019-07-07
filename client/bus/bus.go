@@ -7,7 +7,7 @@ import (
 	"github.com/CyCoreSystems/ari"
 	"github.com/inconshreveable/log15"
 
-	"github.com/nats-io/nats"
+	"github.com/nats-io/nats.go"
 )
 
 // EventChanBufferLength is the number of unhandled events which can be queued

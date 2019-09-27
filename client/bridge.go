@@ -92,7 +92,6 @@ func (b *bridge) AddChannelWithOptions(key *ari.Key, channelID string, options *
 			Role:       options.Role,
 		},
 	})
-
 }
 
 func (b *bridge) RemoveChannel(key *ari.Key, channelID string) error {
@@ -130,6 +129,9 @@ func (b *bridge) StopMOH(key *ari.Key) error {
 }
 
 func (b *bridge) Play(key *ari.Key, id string, uri string) (*ari.PlaybackHandle, error) {
+	if id == "" {
+		id = rid.New(rid.Playback)
+	}
 	k, err := b.c.createRequest(&proxy.Request{
 		Kind: "BridgePlay",
 		Key:  key,
@@ -145,6 +147,9 @@ func (b *bridge) Play(key *ari.Key, id string, uri string) (*ari.PlaybackHandle,
 }
 
 func (b *bridge) StagePlay(key *ari.Key, id string, uri string) (*ari.PlaybackHandle, error) {
+	if id == "" {
+		id = rid.New(rid.Playback)
+	}
 	k, err := b.c.getRequest(&proxy.Request{
 		Kind: "BridgeStagePlay",
 		Key:  key,

@@ -46,7 +46,6 @@ func (c *channel) Originate(referenceKey *ari.Key, o ari.OriginateRequest) (*ari
 }
 
 func (c *channel) StageOriginate(referenceKey *ari.Key, o ari.OriginateRequest) (*ari.ChannelHandle, error) {
-
 	if o.ChannelID == "" {
 		o.ChannelID = rid.New(rid.Channel)
 	}
@@ -273,6 +272,10 @@ func (c *channel) Dial(key *ari.Key, caller string, timeout time.Duration) error
 }
 
 func (c *channel) Play(key *ari.Key, playbackID string, mediaURI string) (*ari.PlaybackHandle, error) {
+	if playbackID == "" {
+		playbackID = rid.New(rid.Playback)
+	}
+
 	k, err := c.c.createRequest(&proxy.Request{
 		Kind: "ChannelPlay",
 		Key:  key,

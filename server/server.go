@@ -221,7 +221,7 @@ func (s *Server) listen(ctx context.Context) error {
 	go s.runEventHandler(ctx)
 
 	// TODO: run the dialog cleanup routine (remove bindings for entities which no longer exist)
-	//go s.runDialogCleaner(ctx)
+	// go s.runDialogCleaner(ctx)
 
 	// Close the readyChannel to indicate that we are operational
 	if s.readyCh != nil {
@@ -440,6 +440,10 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		f = s.channelSnoop
 	case "ChannelStageSnoop":
 		f = s.channelStageSnoop
+	case "ChannelExternalMedia":
+		f = s.channelExternalMedia
+	case "ChannelStageExternalMedia":
+		f = s.channelStageExternalMedia
 	case "ChannelStopHold":
 		f = s.channelStopHold
 	case "ChannelStopMOH":

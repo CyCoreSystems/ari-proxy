@@ -98,6 +98,10 @@ func TestChannelSnoop(t *testing.T) {
 	integration.TestChannelSnoop(t, &srv{})
 }
 
+func TestChannelExternalMedia(t *testing.T) {
+	integration.TestChannelExternalMedia(t, &srv{})
+}
+
 func TestChannelSendDTMF(t *testing.T) {
 	integration.TestChannelSendDTMF(t, &srv{})
 }

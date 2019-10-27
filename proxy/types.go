@@ -114,18 +114,19 @@ type Request struct {
 	BridgeRecord        *BridgeRecord        `json:"bridge_record,omitempty"`
 	BridgeRemoveChannel *BridgeRemoveChannel `json:"bridge_remove_channel,omitempty"`
 
-	ChannelCreate    *ChannelCreate    `json:"channel_create,omitempty"`
-	ChannelContinue  *ChannelContinue  `json:"channel_continue,omitempty"`
-	ChannelDial      *ChannelDial      `json:"channel_dial,omitempty"`
-	ChannelHangup    *ChannelHangup    `json:"channel_hangup,omitempty"`
-	ChannelMOH       *ChannelMOH       `json:"channel_moh,omitempty"`
-	ChannelMute      *ChannelMute      `json:"channel_mute,omitempty"`
-	ChannelOriginate *ChannelOriginate `json:"channel_originate,omitempty"`
-	ChannelPlay      *ChannelPlay      `json:"channel_play,omitempty"`
-	ChannelRecord    *ChannelRecord    `json:"channel_record,omitempty"`
-	ChannelSendDTMF  *ChannelSendDTMF  `json:"channel_send_dtmf,omitempty"`
-	ChannelSnoop     *ChannelSnoop     `json:"channel_snoop,omitempty"`
-	ChannelVariable  *ChannelVariable  `json:"channel_variable,omitempty"`
+	ChannelCreate        *ChannelCreate        `json:"channel_create,omitempty"`
+	ChannelContinue      *ChannelContinue      `json:"channel_continue,omitempty"`
+	ChannelDial          *ChannelDial          `json:"channel_dial,omitempty"`
+	ChannelHangup        *ChannelHangup        `json:"channel_hangup,omitempty"`
+	ChannelMOH           *ChannelMOH           `json:"channel_moh,omitempty"`
+	ChannelMute          *ChannelMute          `json:"channel_mute,omitempty"`
+	ChannelOriginate     *ChannelOriginate     `json:"channel_originate,omitempty"`
+	ChannelPlay          *ChannelPlay          `json:"channel_play,omitempty"`
+	ChannelRecord        *ChannelRecord        `json:"channel_record,omitempty"`
+	ChannelSendDTMF      *ChannelSendDTMF      `json:"channel_send_dtmf,omitempty"`
+	ChannelSnoop         *ChannelSnoop         `json:"channel_snoop,omitempty"`
+	ChannelExternalMedia *ChannelExternalMedia `json:"channel_external_media,omitempty"`
+	ChannelVariable      *ChannelVariable      `json:"channel_variable,omitempty"`
 
 	DeviceStateUpdate *DeviceStateUpdate `json:"device_state_update,omitempty"`
 
@@ -297,6 +298,11 @@ type ChannelSnoop struct {
 
 	// Options describe the parameters for the snoop session
 	Options *ari.SnoopOptions `json:"options,omitempty"`
+}
+
+// ChannelExternalMedia describes the request for an external media channel
+type ChannelExternalMedia struct {
+	Options ari.ExternalMediaOptions `json:"options"`
 }
 
 // ChannelVariable is the request type to read or modify a channel variable

@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 
 	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/proxy"
@@ -119,6 +120,10 @@ func (s *Server) channelMute(ctx context.Context, reply string, req *proxy.Reque
 }
 
 func (s *Server) channelOriginate(ctx context.Context, reply string, req *proxy.Request) {
+	if req.ChannelOriginate == nil {
+		s.sendError(reply, errors.New("OriginateRequest is mandatory"))
+		return
+	}
 	orig := req.ChannelOriginate.OriginateRequest
 
 	if orig.ChannelID == "" {
@@ -150,6 +155,10 @@ func (s *Server) channelOriginate(ctx context.Context, reply string, req *proxy.
 }
 
 func (s *Server) channelStageOriginate(ctx context.Context, reply string, req *proxy.Request) {
+	if req.ChannelOriginate == nil {
+		s.sendError(reply, errors.New("OriginateRequest is mandatory"))
+		return
+	}
 	orig := req.ChannelOriginate.OriginateRequest
 
 	if orig.ChannelID == "" {
@@ -304,6 +313,7 @@ func (s *Server) channelSnoop(ctx context.Context, reply string, req *proxy.Requ
 }
 
 func (s *Server) channelStageSnoop(ctx context.Context, reply string, req *proxy.Request) {
+	// Snoop requires a reference channel to exist
 	data, err := s.ari.Channel().Data(req.Key)
 	if err != nil || data == nil {
 		s.sendError(reply, err)
@@ -321,7 +331,58 @@ func (s *Server) channelStageSnoop(ctx context.Context, reply string, req *proxy
 	s.publish(reply, &proxy.Response{
 		Key: s.ari.Channel().Get(ari.NewKey(ari.ChannelKey, req.ChannelSnoop.SnoopID)).Key(),
 	})
+}
 
+func (s *Server) channelExternalMedia(ctx context.Context, reply string, req *proxy.Request) {
+	if req.ChannelExternalMedia == nil {
+		s.sendError(reply, errors.New("ExternalMediaOptions is required"))
+		return
+	}
+	opts := req.ChannelExternalMedia.Options
+
+	if opts.ChannelID == "" {
+		opts.ChannelID = rid.New(rid.Channel)
+	}
+
+	if req.Key != nil && req.Key.Dialog != "" {
+		s.Dialog.Bind(req.Key.Dialog, "channel", opts.ChannelID)
+	}
+
+	h, err := s.ari.Channel().ExternalMedia(req.Key, opts)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	s.publish(reply, &proxy.Response{
+		Key: h.Key(),
+	})
+}
+
+func (s *Server) channelStageExternalMedia(ctx context.Context, reply string, req *proxy.Request) {
+	if req.ChannelExternalMedia == nil {
+		s.sendError(reply, errors.New("ExternalMediaOptions is required"))
+		return
+	}
+	opts := req.ChannelExternalMedia.Options
+
+	if opts.ChannelID == "" {
+		opts.ChannelID = rid.New(rid.Channel)
+	}
+
+	if req.Key != nil && req.Key.Dialog != "" {
+		s.Dialog.Bind(req.Key.Dialog, "channel", opts.ChannelID)
+	}
+
+	h, err := s.ari.Channel().StageExternalMedia(req.Key, opts)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	s.publish(reply, &proxy.Response{
+		Key: h.Key(),
+	})
 }
 
 func (s *Server) channelStopHold(ctx context.Context, reply string, req *proxy.Request) {
@@ -341,7 +402,6 @@ func (s *Server) channelStopSilence(ctx context.Context, reply string, req *prox
 }
 
 func (s *Server) channelSubscribe(ctx context.Context, reply string, req *proxy.Request) {
-
 	// bind dialog
 	if req.Key.Dialog != "" {
 		s.Dialog.Bind(req.Key.Dialog, "channel", req.Key.ID)

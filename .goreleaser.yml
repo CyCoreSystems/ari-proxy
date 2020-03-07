@@ -1,7 +1,6 @@
 project_name: Asterisk ARI Proxy
 builds:
    - binary: ari-proxy
-     main: '{{ .Major }}'
      env:
         - CGO_ENABLED=0
      goos:

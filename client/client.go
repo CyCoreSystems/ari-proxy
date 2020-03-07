@@ -5,11 +5,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/client/bus"
 	"github.com/CyCoreSystems/ari-proxy/client/cluster"
 	"github.com/CyCoreSystems/ari-proxy/proxy"
-	"github.com/CyCoreSystems/ari/rid"
+	rid "github.com/CyCoreSystems/ari-rid"
+	"github.com/CyCoreSystems/ari/v5"
 
 	"github.com/inconshreveable/log15"
 	"github.com/nats-io/nats.go"
@@ -476,7 +476,6 @@ func (c *Client) getRequest(req *proxy.Request) (*ari.Key, error) {
 
 func (c *Client) dataRequest(req *proxy.Request) (*proxy.EntityData, error) {
 	resp, err := c.makeRequest("data", req)
-
 	if err != nil {
 		return nil, err
 	}

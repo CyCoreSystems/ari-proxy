@@ -3,7 +3,7 @@ package integration
 import (
 	"testing"
 
-	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari/v5"
 	"github.com/pkg/errors"
 	tmock "github.com/stretchr/testify/mock"
 )
@@ -18,7 +18,6 @@ func TestApplicationList(t *testing.T, s Server) {
 	})
 
 	runTest("nonEmptyList", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		h1 := ari.NewKey(ari.ApplicationKey, "1")
 		h2 := ari.NewKey(ari.ApplicationKey, "2")
 		m.Application.On("List", (*ari.Key)(nil)).Return([]*ari.Key{h1, h2}, nil)
@@ -37,7 +36,6 @@ func TestApplicationList(t *testing.T, s Server) {
 				t.Errorf("Expected item 1 to be '2', got %s", items[1].ID)
 			}
 		}
-
 	})
 }
 
@@ -77,7 +75,6 @@ func TestApplicationData(t *testing.T, s Server) {
 		m.Shutdown()
 
 		m.Application.AssertCalled(t, "Data", key)
-
 	})
 }
 
@@ -156,5 +153,4 @@ func TestApplicationGet(t *testing.T, s Server) {
 
 		m.Application.AssertCalled(t, "Data", key)
 	})
-
 }

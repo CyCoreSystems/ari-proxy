@@ -1,8 +1,8 @@
 package client
 
 import (
-	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/proxy"
+	"github.com/CyCoreSystems/ari/v5"
 )
 
 type liveRecording struct {
@@ -19,7 +19,6 @@ func (l *liveRecording) Get(key *ari.Key) *ari.LiveRecordingHandle {
 		return ari.NewLiveRecordingHandle(key, l, nil)
 	}
 	return ari.NewLiveRecordingHandle(k, l, nil)
-
 }
 
 func (l *liveRecording) Data(key *ari.Key) (*ari.LiveRecordingData, error) {

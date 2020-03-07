@@ -4,12 +4,12 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari/v5"
 )
 
 func TestLoggingList(t *testing.T, s Server) {
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		var expected = []*ari.Key{
+		expected := []*ari.Key{
 			ari.NewKey(ari.LoggingKey, "n1"),
 		}
 
@@ -66,7 +66,6 @@ func TestLoggingList(t *testing.T, s Server) {
 func TestLoggingCreate(t *testing.T, s Server) {
 	key := ari.NewKey(ari.LoggingKey, "n1")
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		m.Logging.On("Create", key, "l1").Return(ari.NewLogHandle(key, m.Logging), nil)
 
 		_, err := cl.Asterisk().Logging().Create(key, "l1")
@@ -78,7 +77,6 @@ func TestLoggingCreate(t *testing.T, s Server) {
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		m.Logging.On("Create", key, "l1").Return(nil, errors.New("error"))
 
 		_, err := cl.Asterisk().Logging().Create(key, "l1")
@@ -94,7 +92,6 @@ func TestLoggingDelete(t *testing.T, s Server) {
 	key := ari.NewKey(ari.LoggingKey, "n1")
 
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		m.Logging.On("Delete", key).Return(nil)
 
 		err := cl.Asterisk().Logging().Delete(key)
@@ -106,7 +103,6 @@ func TestLoggingDelete(t *testing.T, s Server) {
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		m.Logging.On("Delete", key).Return(errors.New("error"))
 
 		err := cl.Asterisk().Logging().Delete(key)
@@ -122,7 +118,6 @@ func TestLoggingRotate(t *testing.T, s Server) {
 	key := ari.NewKey(ari.LoggingKey, "n1")
 
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		m.Logging.On("Rotate", key).Return(nil)
 
 		err := cl.Asterisk().Logging().Rotate(key)
@@ -134,7 +129,6 @@ func TestLoggingRotate(t *testing.T, s Server) {
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		m.Logging.On("Rotate", key).Return(errors.New("error"))
 
 		err := cl.Asterisk().Logging().Rotate(key)

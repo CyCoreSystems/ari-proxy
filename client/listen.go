@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari/v5"
 	"github.com/nats-io/nats.go"
 	"github.com/pkg/errors"
 )

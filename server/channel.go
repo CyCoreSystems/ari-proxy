@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 
-	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/proxy"
-	"github.com/CyCoreSystems/ari/rid"
+	rid "github.com/CyCoreSystems/ari-rid"
+	"github.com/CyCoreSystems/ari/v5"
 )
 
 func (s *Server) channelAnswer(ctx context.Context, reply string, req *proxy.Request) {

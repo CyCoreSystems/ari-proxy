@@ -4,12 +4,11 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari/v5"
 )
 
 func TestEndpointList(t *testing.T, s Server) {
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		h1 := ari.NewEndpointKey("h1", "1")
 		h2 := ari.NewEndpointKey("h1", "2")
 
@@ -27,7 +26,6 @@ func TestEndpointList(t *testing.T, s Server) {
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		m.Endpoint.On("List", (*ari.Key)(nil)).Return([]*ari.Key{}, errors.New("error"))
 
 		list, err := cl.Endpoint().List(nil)
@@ -44,7 +42,6 @@ func TestEndpointList(t *testing.T, s Server) {
 
 func TestEndpointListByTech(t *testing.T, s Server) {
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		h1 := ari.NewEndpointKey("h1", "1")
 		h2 := ari.NewEndpointKey("h1", "2")
 
@@ -62,7 +59,6 @@ func TestEndpointListByTech(t *testing.T, s Server) {
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		m.Endpoint.On("ListByTech", "tech", &ari.Key{Kind: "", ID: "", Node: "", Dialog: "", App: ""}).Return([]*ari.Key{}, errors.New("error"))
 
 		list, err := cl.Endpoint().ListByTech("tech", nil)
@@ -79,7 +75,6 @@ func TestEndpointListByTech(t *testing.T, s Server) {
 
 func TestEndpointData(t *testing.T, s Server) {
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		var expected ari.EndpointData
 		expected.State = "st1"
 		expected.Technology = "tech1"
@@ -109,7 +104,6 @@ func TestEndpointData(t *testing.T, s Server) {
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		var expected ari.EndpointData
 		expected.State = "st1"
 		expected.Technology = "tech1"

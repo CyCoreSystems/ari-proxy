@@ -3,13 +3,12 @@ package integration
 import (
 	"testing"
 
-	"github.com/CyCoreSystems/ari"
-	"github.com/CyCoreSystems/ari/client/arimocks"
+	"github.com/CyCoreSystems/ari/v5"
+	"github.com/CyCoreSystems/ari/v5/client/arimocks"
 	"github.com/pkg/errors"
 )
 
 func TestAsteriskInfo(t *testing.T, s Server) {
-
 	runTest("noFilter", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		var ai ari.AsteriskInfo
 		ai.SystemInfo.EntityID = "1"
@@ -46,11 +45,9 @@ func TestAsteriskInfo(t *testing.T, s Server) {
 
 		m.Asterisk.AssertCalled(t, "Info", ari.NodeKey("asdf", "1"))
 	})
-
 }
 
 func TestAsteriskVariablesGet(t *testing.T, s Server) {
-
 	key := ari.NewKey(ari.VariableKey, "s")
 
 	runTest("simple", t, s, func(t *testing.T, m *mock, cl ari.Client) {
@@ -76,7 +73,7 @@ func TestAsteriskVariablesGet(t *testing.T, s Server) {
 	})
 
 	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		var expected = errors.New("unknown error")
+		expected := errors.New("unknown error")
 
 		mv := arimocks.AsteriskVariables{}
 		mv.On("Get", key).Return("", expected)

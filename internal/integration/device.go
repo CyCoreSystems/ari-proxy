@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari/v5"
 )
 
 func TestDeviceData(t *testing.T, s Server) {
@@ -96,7 +96,6 @@ func TestDeviceUpdate(t *testing.T, s Server) {
 
 func TestDeviceList(t *testing.T, s Server) {
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		h1 := ari.NewKey(ari.DeviceStateKey, "h1")
 		h2 := ari.NewKey(ari.DeviceStateKey, "h2")
 
@@ -114,7 +113,6 @@ func TestDeviceList(t *testing.T, s Server) {
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		m.DeviceState.On("List", (*ari.Key)(nil)).Return([]*ari.Key{}, errors.New("error"))
 
 		list, err := cl.DeviceState().List(nil)

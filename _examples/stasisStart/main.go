@@ -1,14 +1,13 @@
 package main
 
 import (
+	"context"
 	"net/http"
 	"sync"
 
-	"golang.org/x/net/context"
-
-	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/client"
-	"github.com/CyCoreSystems/ari/client/native"
+	"github.com/CyCoreSystems/ari/v5"
+	"github.com/CyCoreSystems/ari/v5/client/native"
 
 	"github.com/inconshreveable/log15"
 )
@@ -124,7 +123,6 @@ func channelHandler(h *ari.ChannelHandle, startEvent *ari.StasisStart) {
 				log.Info("New Channel State", "state", v.Channel.State)
 			}
 		}
-
 	}()
 
 	h.Answer()

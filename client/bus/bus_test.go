@@ -6,7 +6,7 @@ import (
 
 	"github.com/inconshreveable/log15"
 
-	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari/v5"
 )
 
 func TestMatchEvent(t *testing.T) {

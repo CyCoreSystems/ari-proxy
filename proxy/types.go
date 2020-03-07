@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari/v5"
 )
 
 // AnnouncementInterval is the amount of time to wait between periodic service availability announcements
@@ -113,6 +113,7 @@ type Request struct {
 	BridgePlay          *BridgePlay          `json:"bridge_play,omitempty"`
 	BridgeRecord        *BridgeRecord        `json:"bridge_record,omitempty"`
 	BridgeRemoveChannel *BridgeRemoveChannel `json:"bridge_remove_channel,omitempty"`
+	BridgeVideoSource   *BridgeVideoSource   `json:"bridge_video_source,omitempty"`
 
 	ChannelCreate        *ChannelCreate        `json:"channel_create,omitempty"`
 	ChannelContinue      *ChannelContinue      `json:"channel_continue,omitempty"`
@@ -210,6 +211,12 @@ type BridgeRecord struct {
 // BridgeRemoveChannel is the request for removing a channel on the bridge
 type BridgeRemoveChannel struct {
 	// Channel is the name of the channel to remove
+	Channel string `json:"channel"`
+}
+
+// BridgeVideoSource describes the details of a request to set the video source of a bridge explicitly
+type BridgeVideoSource struct {
+	// Channel is the name of the channel to use as the explicit video source
 	Channel string `json:"channel"`
 }
 

@@ -4,18 +4,17 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/CyCoreSystems/ari"
-	"github.com/CyCoreSystems/ari/client/arimocks"
+	"github.com/CyCoreSystems/ari/v5"
+	"github.com/CyCoreSystems/ari/v5/client/arimocks"
 	tmock "github.com/stretchr/testify/mock"
 )
 
 var _ = tmock.Anything
 
 func TestConfigData(t *testing.T, s Server) {
-	var key = ari.NewKey("config", ari.ConfigID("c1", "o1", "id1"))
+	key := ari.NewKey("config", ari.ConfigID("c1", "o1", "id1"))
 
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		var expected ari.ConfigData
 		expected.Class = "c1"
 		expected.Key = key
@@ -57,7 +56,6 @@ func TestConfigData(t *testing.T, s Server) {
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		cfg := arimocks.Config{}
 		m.Asterisk.On("Config").Return(&cfg)
 		cfg.On("Data", key).Return(nil, errors.New("error"))
@@ -76,10 +74,9 @@ func TestConfigData(t *testing.T, s Server) {
 }
 
 func TestConfigDelete(t *testing.T, s Server) {
-	var key = ari.NewKey("config", ari.ConfigID("c1", "o1", "id1"))
+	key := ari.NewKey("config", ari.ConfigID("c1", "o1", "id1"))
 
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		cfg := arimocks.Config{}
 		m.Asterisk.On("Config").Return(&cfg)
 		cfg.On("Delete", key).Return(nil)
@@ -94,7 +91,6 @@ func TestConfigDelete(t *testing.T, s Server) {
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		cfg := arimocks.Config{}
 		m.Asterisk.On("Config").Return(&cfg)
 		cfg.On("Delete", key).Return(errors.New("error"))
@@ -110,8 +106,7 @@ func TestConfigDelete(t *testing.T, s Server) {
 }
 
 func TestConfigUpdate(t *testing.T, s Server) {
-
-	var key = ari.NewKey("config", ari.ConfigID("c1", "o1", "id1"))
+	key := ari.NewKey("config", ari.ConfigID("c1", "o1", "id1"))
 
 	tuples := []ari.ConfigTuple{
 		ari.ConfigTuple{
@@ -125,7 +120,6 @@ func TestConfigUpdate(t *testing.T, s Server) {
 	}
 
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		cfg := arimocks.Config{}
 		m.Asterisk.On("Config").Return(&cfg)
 		cfg.On("Update", key, tuples).Return(nil)
@@ -140,7 +134,6 @@ func TestConfigUpdate(t *testing.T, s Server) {
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		cfg := arimocks.Config{}
 		m.Asterisk.On("Config").Return(&cfg)
 		cfg.On("Update", key, tuples).Return(errors.New("error"))

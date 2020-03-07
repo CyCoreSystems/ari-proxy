@@ -4,13 +4,12 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari/v5"
 )
 
 func TestModulesLoad(t *testing.T, s Server) {
 	key := ari.NewKey(ari.ModuleKey, "m1")
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		m.Modules.On("Load", key).Return(nil)
 
 		if err := cl.Asterisk().Modules().Load(key); err != nil {
@@ -23,7 +22,6 @@ func TestModulesLoad(t *testing.T, s Server) {
 		m.Modules.AssertCalled(t, "Load", key)
 	})
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		m.Modules.On("Load", key).Return(errors.New("error"))
 
 		if err := cl.Asterisk().Modules().Load(key); err == nil {
@@ -41,7 +39,6 @@ func TestModulesUnload(t *testing.T, s Server) {
 	key := ari.NewKey(ari.ModuleKey, "m1")
 
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		m.Modules.On("Unload", key).Return(nil)
 
 		if err := cl.Asterisk().Modules().Unload(key); err != nil {
@@ -54,7 +51,6 @@ func TestModulesUnload(t *testing.T, s Server) {
 		m.Modules.AssertCalled(t, "Unload", key)
 	})
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		m.Modules.On("Unload", key).Return(errors.New("error"))
 
 		if err := cl.Asterisk().Modules().Unload(key); err == nil {
@@ -72,7 +68,6 @@ func TestModulesReload(t *testing.T, s Server) {
 	key := ari.NewKey(ari.ModuleKey, "m1")
 
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		m.Modules.On("Reload", key).Return(nil)
 
 		if err := cl.Asterisk().Modules().Reload(key); err != nil {
@@ -85,7 +80,6 @@ func TestModulesReload(t *testing.T, s Server) {
 		m.Modules.AssertCalled(t, "Reload", key)
 	})
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		m.Modules.On("Reload", key).Return(errors.New("error"))
 
 		if err := cl.Asterisk().Modules().Reload(key); err == nil {
@@ -103,7 +97,6 @@ func TestModulesData(t *testing.T, s Server) {
 	key := ari.NewKey(ari.ModuleKey, "m1")
 
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		var d ari.ModuleData
 		d.Description = "Desc"
 		d.Name = "name"
@@ -131,7 +124,6 @@ func TestModulesData(t *testing.T, s Server) {
 		m.Modules.AssertCalled(t, "Data", key)
 	})
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		m.Modules.On("Data", key).Return(nil, errors.New("error"))
 
 		_, err := cl.Asterisk().Modules().Data(key)

@@ -1,6 +1,6 @@
 package session
 
-import "github.com/CyCoreSystems/ari"
+import "github.com/CyCoreSystems/ari/v5"
 
 // Transport defines how the commands and events are sent.
 type Transport interface {

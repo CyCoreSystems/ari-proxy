@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari/v5"
 )
 
 func TestMailboxList(t *testing.T, s Server) {
@@ -25,9 +25,8 @@ func TestMailboxList(t *testing.T, s Server) {
 	})
 
 	runTest("nonEmpty", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
-		var h1 = ari.NewKey(ari.MailboxKey, "h1")
-		var h2 = ari.NewKey(ari.MailboxKey, "h2")
+		h1 := ari.NewKey(ari.MailboxKey, "h1")
+		h2 := ari.NewKey(ari.MailboxKey, "h2")
 
 		m.Mailbox.On("List", (*ari.Key)(nil)).Return([]*ari.Key{h1, h2}, nil)
 
@@ -77,7 +76,7 @@ func testMailboxCommand(t *testing.T, m *mock, name string, id *ari.Key, expecte
 }
 
 func TestMailboxDelete(t *testing.T, s Server) {
-	var key = ari.NewKey(ari.MailboxKey, "mbox1")
+	key := ari.NewKey(ari.MailboxKey, "mbox1")
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		testMailboxCommand(t, m, "Delete", key, nil, cl.Mailbox().Delete)
 	})
@@ -87,7 +86,7 @@ func TestMailboxDelete(t *testing.T, s Server) {
 }
 
 func TestMailboxUpdate(t *testing.T, s Server) {
-	var key = ari.NewKey(ari.MailboxKey, "mbox1")
+	key := ari.NewKey(ari.MailboxKey, "mbox1")
 
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		var expected error
@@ -110,7 +109,7 @@ func TestMailboxUpdate(t *testing.T, s Server) {
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		var expected = errors.New("error")
+		expected := errors.New("error")
 
 		m.Mailbox.On("Update", key, 1, 1).Return(expected)
 
@@ -131,10 +130,9 @@ func TestMailboxUpdate(t *testing.T, s Server) {
 }
 
 func TestMailboxData(t *testing.T, s Server) {
-	var key = ari.NewKey(ari.MailboxKey, "mbox1")
+	key := ari.NewKey(ari.MailboxKey, "mbox1")
 
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		var expected ari.MailboxData
 		expected.Name = "mbox1"
 		expected.NewMessages = 2
@@ -161,7 +159,7 @@ func TestMailboxData(t *testing.T, s Server) {
 	})
 
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		var expected = errors.New("error")
+		expected := errors.New("error")
 
 		m.Mailbox.On("Data", key).Return(nil, expected)
 

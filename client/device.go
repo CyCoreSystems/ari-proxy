@@ -1,8 +1,8 @@
 package client
 
 import (
-	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/proxy"
+	"github.com/CyCoreSystems/ari/v5"
 )
 
 type deviceState struct {

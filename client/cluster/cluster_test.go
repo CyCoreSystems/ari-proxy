@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/CyCoreSystems/ari/rid"
+	rid "github.com/CyCoreSystems/ari-rid"
 )
 
 func TestHash(t *testing.T) {
@@ -106,5 +106,4 @@ func TestPurge(t *testing.T) {
 	if len(list) != 2 {
 		t.Errorf("Incorrect number of cluster members: %d != 2", len(list))
 	}
-
 }

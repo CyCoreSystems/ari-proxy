@@ -1,16 +1,15 @@
 package main
 
 import (
+	"context"
 	"sync"
-
-	"golang.org/x/net/context"
 
 	"github.com/inconshreveable/log15"
 
-	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/client"
-	"github.com/CyCoreSystems/ari/ext/play"
-	"github.com/CyCoreSystems/ari/rid"
+	rid "github.com/CyCoreSystems/ari-rid"
+	"github.com/CyCoreSystems/ari/v5"
+	"github.com/CyCoreSystems/ari/v5/ext/play"
 	"github.com/pkg/errors"
 )
 
@@ -51,7 +50,7 @@ func appStart(ctx context.Context, cl ari.Client) func(*ari.ChannelHandle, *ari.
 
 		if err := h.Answer(); err != nil {
 			log.Error("failed to answer call", "error", err)
-			//return
+			// return
 		}
 
 		if err := ensureBridge(ctx, cl, h.Key()); err != nil {

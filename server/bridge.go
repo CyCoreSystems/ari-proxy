@@ -3,9 +3,9 @@ package server
 import (
 	"context"
 
-	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/proxy"
-	"github.com/CyCoreSystems/ari/rid"
+	rid "github.com/CyCoreSystems/ari-rid"
+	"github.com/CyCoreSystems/ari/v5"
 )
 
 func (s *Server) bridgeAddChannel(ctx context.Context, reply string, req *proxy.Request) {
@@ -27,7 +27,6 @@ func (s *Server) bridgeAddChannel(ctx context.Context, reply string, req *proxy.
 }
 
 func (s *Server) bridgeCreate(ctx context.Context, reply string, req *proxy.Request) {
-
 	// bind dialog
 	if req.Key.Dialog != "" {
 		s.Dialog.Bind(req.Key.Dialog, "bridge", req.Key.ID)
@@ -114,7 +113,6 @@ func (s *Server) bridgeList(ctx context.Context, reply string, req *proxy.Reques
 }
 
 func (s *Server) bridgeMOH(ctx context.Context, reply string, req *proxy.Request) {
-
 	// bind dialog
 	if req.Key.Dialog != "" {
 		s.Dialog.Bind(req.Key.Dialog, "bridge", req.Key.ID)
@@ -127,7 +125,6 @@ func (s *Server) bridgeMOH(ctx context.Context, reply string, req *proxy.Request
 }
 
 func (s *Server) bridgeStopMOH(ctx context.Context, reply string, req *proxy.Request) {
-
 	// bind dialog
 	if req.Key.Dialog != "" {
 		s.Dialog.Bind(req.Key.Dialog, "bridge", req.Key.ID)
@@ -140,7 +137,6 @@ func (s *Server) bridgeStopMOH(ctx context.Context, reply string, req *proxy.Req
 }
 
 func (s *Server) bridgePlay(ctx context.Context, reply string, req *proxy.Request) {
-
 	// bind dialog
 	if req.Key.Dialog != "" {
 		s.Dialog.Bind(req.Key.Dialog, "bridge", req.Key.ID)
@@ -246,7 +242,6 @@ func (s *Server) bridgeRemoveChannel(ctx context.Context, reply string, req *pro
 }
 
 func (s *Server) bridgeSubscribe(ctx context.Context, reply string, req *proxy.Request) {
-
 	// bind dialog
 	if req.Key.Dialog != "" {
 		s.Dialog.Bind(req.Key.Dialog, "bridge", req.Key.ID)
@@ -257,5 +252,36 @@ func (s *Server) bridgeSubscribe(ctx context.Context, reply string, req *proxy.R
 
 func (s *Server) bridgeUnsubscribe(ctx context.Context, reply string, req *proxy.Request) {
 	// no-op for now; may want to eventually optimize away the dialog subscription
+	s.sendError(reply, nil)
+}
+
+func (s *Server) bridgeVideoSource(ctx context.Context, reply string, req *proxy.Request) {
+	// bind dialog
+	if req.Key.Dialog != "" {
+		s.Dialog.Bind(req.Key.Dialog, "bridge", req.Key.ID)
+		s.Dialog.Bind(req.Key.Dialog, "channel", req.VideoSource.Channel)
+	}
+
+	err := s.ari.Bridge().VideoSource(req.Key, req.VideoSource.Channel)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+
+	s.sendError(reply, nil)
+}
+
+func (s *Server) bridgeVideoSourceDelete(ctx context.Context, reply string, req *proxy.Request) {
+	// bind dialog
+	if req.Key.Dialog != "" {
+		s.Dialog.Bind(req.Key.Dialog, "bridge", req.Key.ID)
+	}
+
+	err := s.ari.Bridge().VideoSourceDelete(req.Key)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+
 	s.sendError(reply, nil)
 }

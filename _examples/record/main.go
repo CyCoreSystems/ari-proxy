@@ -1,13 +1,13 @@
 package main
 
 import (
-	"golang.org/x/net/context"
+	"context"
 
 	"github.com/inconshreveable/log15"
 
-	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/client"
-	"github.com/CyCoreSystems/ari/ext/record"
+	"github.com/CyCoreSystems/ari/v5"
+	"github.com/CyCoreSystems/ari/v5/ext/record"
 )
 
 var ariApp = "test"
@@ -49,7 +49,7 @@ func appStart(ctx context.Context) func(*ari.ChannelHandle, *ari.StasisStart) {
 
 		if err := h.Answer(); err != nil {
 			log.Error("failed to answer call", "error", err)
-			//return
+			// return
 		}
 
 		res, err := record.Record(ctx, h,

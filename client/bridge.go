@@ -1,9 +1,9 @@
 package client
 
 import (
-	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/proxy"
-	"github.com/CyCoreSystems/ari/rid"
+	rid "github.com/CyCoreSystems/ari-rid"
+	"github.com/CyCoreSystems/ari/v5"
 )
 
 type bridge struct {
@@ -230,4 +230,21 @@ func (b *bridge) Subscribe(key *ari.Key, n ...string) ari.Subscription {
 	}
 
 	return b.c.Bus().Subscribe(key, n...)
+}
+
+func (b *bridge) VideoSource(key *ari.Key, channelID string) error {
+	return b.c.commandRequest(&proxy.Request{
+		Kind: "BridgeVideoSource",
+		Key:  key,
+		BridgeVideoSource: &proxy.BridgeVideoSource{
+			Channel: channelID,
+		},
+	})
+}
+
+func (b *bridge) VideoSourceDelete(key *ari.Key) error {
+	return b.c.commandRequest(&proxy.Request{
+		Kind: "BridgeVideoSourceDelete",
+		Key:  key,
+	})
 }

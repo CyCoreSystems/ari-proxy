@@ -3,12 +3,11 @@ package integration
 import (
 	"testing"
 
-	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari/v5"
 	"github.com/pkg/errors"
 )
 
 func TestBridgeCreate(t *testing.T, s Server) {
-
 	key := ari.NewKey(ari.BridgeKey, "bridgeID")
 
 	runTest("simple", t, s, func(t *testing.T, m *mock, cl ari.Client) {
@@ -33,7 +32,7 @@ func TestBridgeCreate(t *testing.T, s Server) {
 	})
 
 	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		var expected = errors.New("unknown error")
+		expected := errors.New("unknown error")
 
 		m.Bridge.On("Create", key, "bridgeType", "bridgeName").Return(nil, expected)
 
@@ -53,10 +52,9 @@ func TestBridgeCreate(t *testing.T, s Server) {
 
 func TestBridgeList(t *testing.T, s Server) {
 	runTest("simple", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		var handles []*ari.Key
-		var h1 = ari.NewKey(ari.BridgeKey, "h1")
-		var h2 = ari.NewKey(ari.BridgeKey, "h2")
+		h1 := ari.NewKey(ari.BridgeKey, "h1")
+		h2 := ari.NewKey(ari.BridgeKey, "h2")
 
 		handles = append(handles, h1)
 		handles = append(handles, h2)
@@ -77,7 +75,7 @@ func TestBridgeList(t *testing.T, s Server) {
 	})
 
 	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		var expected = errors.New("unknown error")
+		expected := errors.New("unknown error")
 
 		m.Bridge.On("List", (*ari.Key)(nil)).Return([]*ari.Key{}, expected)
 
@@ -96,7 +94,7 @@ func TestBridgeList(t *testing.T, s Server) {
 }
 
 func TestBridgeData(t *testing.T, s Server) {
-	var key = ari.NewKey(ari.BridgeKey, "bridge1")
+	key := ari.NewKey(ari.BridgeKey, "bridge1")
 
 	runTest("simple", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		bd := &ari.BridgeData{
@@ -120,7 +118,6 @@ func TestBridgeData(t *testing.T, s Server) {
 	})
 
 	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		m.Bridge.On("Data", key).Return(nil, errors.New("Error getting data"))
 
 		ret, err := cl.Bridge().Data(key)
@@ -138,7 +135,7 @@ func TestBridgeData(t *testing.T, s Server) {
 }
 
 func TestBridgeAddChannel(t *testing.T, s Server) {
-	var key = ari.NewKey(ari.BridgeKey, "bridge1")
+	key := ari.NewKey(ari.BridgeKey, "bridge1")
 
 	runTest("simple", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		m.Bridge.On("AddChannel", key, "channel1").Return(nil)
@@ -154,7 +151,6 @@ func TestBridgeAddChannel(t *testing.T, s Server) {
 	})
 
 	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		m.Bridge.On("AddChannel", key, "channel1").Return(errors.New("unknown error"))
 
 		err := cl.Bridge().AddChannel(key, "channel1")
@@ -169,7 +165,7 @@ func TestBridgeAddChannel(t *testing.T, s Server) {
 }
 
 func TestBridgeRemoveChannel(t *testing.T, s Server) {
-	var key = ari.NewKey(ari.BridgeKey, "bridge1")
+	key := ari.NewKey(ari.BridgeKey, "bridge1")
 
 	runTest("simple", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		m.Bridge.On("RemoveChannel", key, "channel1").Return(nil)
@@ -185,7 +181,6 @@ func TestBridgeRemoveChannel(t *testing.T, s Server) {
 	})
 
 	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		m.Bridge.On("RemoveChannel", key, "channel1").Return(errors.New("unknown error"))
 
 		err := cl.Bridge().RemoveChannel(key, "channel1")
@@ -200,7 +195,7 @@ func TestBridgeRemoveChannel(t *testing.T, s Server) {
 }
 
 func TestBridgeDelete(t *testing.T, s Server) {
-	var key = ari.NewKey(ari.BridgeKey, "bridge1")
+	key := ari.NewKey(ari.BridgeKey, "bridge1")
 
 	runTest("simple", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		m.Bridge.On("Delete", key).Return(nil)
@@ -216,7 +211,6 @@ func TestBridgeDelete(t *testing.T, s Server) {
 	})
 
 	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		m.Bridge.On("Delete", key).Return(errors.New("unknown error"))
 
 		err := cl.Bridge().Delete(key)
@@ -231,11 +225,10 @@ func TestBridgeDelete(t *testing.T, s Server) {
 }
 
 func TestBridgePlay(t *testing.T, s Server) {
-	var key = ari.NewKey(ari.BridgeKey, "bridge1")
+	key := ari.NewKey(ari.BridgeKey, "bridge1")
 
 	runTest("simple", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
-		var ph = ari.NewPlaybackHandle(ari.NewKey(ari.PlaybackKey, "playback1"), m.Playback, nil)
+		ph := ari.NewPlaybackHandle(ari.NewKey(ari.PlaybackKey, "playback1"), m.Playback, nil)
 
 		m.Bridge.On("Play", key, "playback1", "mediaURI").Return(ph, nil)
 
@@ -253,7 +246,6 @@ func TestBridgePlay(t *testing.T, s Server) {
 	})
 
 	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		m.Bridge.On("Play", key, "playback1", "mediaURI").Return(nil, errors.New("unknown error"))
 
 		ret, err := cl.Bridge().Play(key, "playback1", "mediaURI")
@@ -271,13 +263,12 @@ func TestBridgePlay(t *testing.T, s Server) {
 }
 
 func TestBridgeRecord(t *testing.T, s Server) {
-	var key = ari.NewKey(ari.BridgeKey, "bridge1")
+	key := ari.NewKey(ari.BridgeKey, "bridge1")
 
 	runTest("customOpts", t, s, func(t *testing.T, m *mock, cl ari.Client) {
+		opts := &ari.RecordingOptions{Format: "", MaxDuration: 0, MaxSilence: 0, Exists: "", Beep: false, Terminate: "#"}
 
-		var opts = &ari.RecordingOptions{Format: "", MaxDuration: 0, MaxSilence: 0, Exists: "", Beep: false, Terminate: "#"}
-
-		var lrh = ari.NewLiveRecordingHandle(ari.NewKey(ari.LiveRecordingKey, "recording1"), m.LiveRecording, nil)
+		lrh := ari.NewLiveRecordingHandle(ari.NewKey(ari.LiveRecordingKey, "recording1"), m.LiveRecording, nil)
 
 		bd := &ari.BridgeData{
 			ID:         "bridge1",
@@ -301,10 +292,9 @@ func TestBridgeRecord(t *testing.T, s Server) {
 	})
 
 	runTest("nilOpts", t, s, func(t *testing.T, m *mock, cl ari.Client) {
+		opts := &ari.RecordingOptions{}
 
-		var opts = &ari.RecordingOptions{}
-
-		var lrh = ari.NewLiveRecordingHandle(ari.NewKey(ari.LiveRecordingKey, "recording1"), m.LiveRecording, nil)
+		lrh := ari.NewLiveRecordingHandle(ari.NewKey(ari.LiveRecordingKey, "recording1"), m.LiveRecording, nil)
 
 		bd := &ari.BridgeData{
 			ID:         "bridge1",
@@ -328,7 +318,6 @@ func TestBridgeRecord(t *testing.T, s Server) {
 	})
 
 	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		bd := &ari.BridgeData{
 			ID:         "bridge1",
 			Class:      "class1",
@@ -336,7 +325,7 @@ func TestBridgeRecord(t *testing.T, s Server) {
 		}
 		m.Bridge.On("Data", key).Return(bd, nil)
 
-		var opts = &ari.RecordingOptions{}
+		opts := &ari.RecordingOptions{}
 		m.Bridge.On("Record", key, "recording1", opts).Return(nil, errors.New("unknown error"))
 
 		ret, err := cl.Bridge().Record(key, "recording1", opts)

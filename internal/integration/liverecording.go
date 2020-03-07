@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari/v5"
 )
 
 func TestLiveRecordingData(t *testing.T, s Server) {
@@ -49,7 +49,6 @@ func TestLiveRecordingData(t *testing.T, s Server) {
 		m.LiveRecording.AssertCalled(t, "Data", key)
 	})
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		key := ari.NewKey(ari.LiveRecordingKey, "lr1")
 
 		m.LiveRecording.On("Data", key).Return(nil, errors.New("err"))

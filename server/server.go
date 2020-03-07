@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari-proxy/proxy"
 	"github.com/CyCoreSystems/ari-proxy/server/dialog"
-	"github.com/CyCoreSystems/ari/client/native"
+	"github.com/CyCoreSystems/ari/v5"
+	"github.com/CyCoreSystems/ari/v5/client/native"
 
 	"github.com/inconshreveable/log15"
 	"github.com/nats-io/nats.go"

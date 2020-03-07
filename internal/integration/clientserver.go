@@ -8,7 +8,7 @@ import (
 
 	"sync"
 
-	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari/v5"
 	"github.com/nats-io/nats.go"
 	"github.com/pkg/errors"
 )
@@ -44,7 +44,6 @@ func runTest(desc string, t *testing.T, s Server, fn testHandler) {
 	}()
 
 	t.Run(desc, func(t *testing.T) {
-
 		// setup mocking
 		m := standardMock()
 
@@ -89,7 +88,6 @@ func runTest(desc string, t *testing.T, s Server, fn testHandler) {
 				fmt.Fprintf(os.Stderr, "Timeouts: %d\n", timeout)
 			}
 		}
-
 	})
 }
 

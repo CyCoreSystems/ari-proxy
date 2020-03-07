@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari/v5"
 )
 
 func TestSoundData(t *testing.T, s Server) {
@@ -33,7 +33,6 @@ func TestSoundData(t *testing.T, s Server) {
 		m.Sound.AssertCalled(t, "Data", key)
 	})
 	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		m.Sound.On("Data", key).Return(nil, errors.New("error"))
 
 		_, err := cl.Sound().Data(key)
@@ -48,7 +47,6 @@ func TestSoundData(t *testing.T, s Server) {
 }
 
 func TestSoundList(t *testing.T, s Server) {
-
 	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
 		sh1 := ari.NewKey(ari.SoundKey, "sh1")
 		sh2 := ari.NewKey(ari.SoundKey, "sh2")

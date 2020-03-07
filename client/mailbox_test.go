@@ -3,7 +3,7 @@ package client
 import (
 	"testing"
 
-	"github.com/CyCoreSystems/ari-proxy/internal/integration"
+	"github.com/CyCoreSystems/ari-proxy/v5/internal/integration"
 )
 
 func TestMailboxList(t *testing.T) {

@@ -3,7 +3,7 @@ package server
 import (
 	"testing"
 
-	"github.com/CyCoreSystems/ari-proxy/internal/integration"
+	"github.com/CyCoreSystems/ari-proxy/v5/internal/integration"
 )
 
 func TestSoundData(t *testing.T) {

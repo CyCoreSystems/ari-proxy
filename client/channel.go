@@ -3,7 +3,7 @@ package client
 import (
 	"time"
 
-	"github.com/CyCoreSystems/ari-proxy/proxy"
+	"github.com/CyCoreSystems/ari-proxy/v5/proxy"
 	rid "github.com/CyCoreSystems/ari-rid"
 	"github.com/CyCoreSystems/ari/v5"
 )

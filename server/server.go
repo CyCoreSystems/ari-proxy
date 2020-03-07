@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/CyCoreSystems/ari-proxy/proxy"
-	"github.com/CyCoreSystems/ari-proxy/server/dialog"
+	"github.com/CyCoreSystems/ari-proxy/v5/proxy"
+	"github.com/CyCoreSystems/ari-proxy/v5/server/dialog"
 	"github.com/CyCoreSystems/ari/v5"
 	"github.com/CyCoreSystems/ari/v5/client/native"
 
@@ -392,6 +392,10 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		f = s.bridgeSubscribe
 	case "BridgeUnsubscribe":
 		f = s.bridgeUnsubscribe
+	case "BridgeVideoSource":
+		f = s.bridgeVideoSource
+	case "BridgeVideoSourceDelete":
+		f = s.bridgeVideoSourceDelete
 	case "ChannelAnswer":
 		f = s.channelAnswer
 	case "ChannelBusy":

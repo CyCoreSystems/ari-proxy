@@ -6,7 +6,7 @@ import (
 
 	"github.com/inconshreveable/log15"
 
-	"github.com/CyCoreSystems/ari-proxy/client"
+	"github.com/CyCoreSystems/ari-proxy/v5/client"
 	rid "github.com/CyCoreSystems/ari-rid"
 	"github.com/CyCoreSystems/ari/v5"
 	"github.com/CyCoreSystems/ari/v5/ext/play"

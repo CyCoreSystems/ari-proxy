@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 
-	"github.com/CyCoreSystems/ari-proxy/proxy"
+	"github.com/CyCoreSystems/ari-proxy/v5/proxy"
 	rid "github.com/CyCoreSystems/ari-rid"
 	"github.com/CyCoreSystems/ari/v5"
 )
@@ -259,10 +259,10 @@ func (s *Server) bridgeVideoSource(ctx context.Context, reply string, req *proxy
 	// bind dialog
 	if req.Key.Dialog != "" {
 		s.Dialog.Bind(req.Key.Dialog, "bridge", req.Key.ID)
-		s.Dialog.Bind(req.Key.Dialog, "channel", req.VideoSource.Channel)
+		s.Dialog.Bind(req.Key.Dialog, "channel", req.BridgeVideoSource.Channel)
 	}
 
-	err := s.ari.Bridge().VideoSource(req.Key, req.VideoSource.Channel)
+	err := s.ari.Bridge().VideoSource(req.Key, req.BridgeVideoSource.Channel)
 	if err != nil {
 		s.sendError(reply, err)
 		return

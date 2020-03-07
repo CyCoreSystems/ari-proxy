@@ -2,8 +2,8 @@ github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/CyCoreSystems/ari-rid v0.1.0 h1:QSn7/1Jc0b3Se/LIaMa9taGxC9n/zyBlCEw9Conrdrk=
 github.com/CyCoreSystems/ari-rid v0.1.0/go.mod h1:vFD6moqOBGXaUM28Yck9X16+5cj+NbFmiyCvpUYuKr4=
-github.com/CyCoreSystems/ari/v5 v5.0.1 h1:TfJOwETj6MumVBJPnZJoYqLtfUAo7W8FKnnssMlQ8PM=
-github.com/CyCoreSystems/ari/v5 v5.0.1/go.mod h1:5fdxhNmHG+sUJkeIgPfMafi7d7Ec1B8QpPSCFvDDVc0=
+github.com/CyCoreSystems/ari/v5 v5.0.3 h1:WF0J0lA4uSgV5Sk9t3V0vtRh6NPonYeRoHTJVXMMMzE=
+github.com/CyCoreSystems/ari/v5 v5.0.3/go.mod h1:5fdxhNmHG+sUJkeIgPfMafi7d7Ec1B8QpPSCFvDDVc0=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=

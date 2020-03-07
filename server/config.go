@@ -3,11 +3,10 @@ package server
 import (
 	"context"
 
-	"github.com/CyCoreSystems/ari-proxy/proxy"
+	"github.com/CyCoreSystems/ari-proxy/v5/proxy"
 )
 
 func (s *Server) asteriskConfigData(ctx context.Context, reply string, req *proxy.Request) {
-
 	data, err := s.ari.Asterisk().Config().Data(req.Key)
 	if err != nil {
 		s.sendError(reply, err)

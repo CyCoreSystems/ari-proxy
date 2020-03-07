@@ -55,20 +55,10 @@ You may need to explicitly install dependencies for this to work
 
 ## Client library
 
-`ari-proxy` uses semantic versioning and [dep](https://github.com/golang/dep).
-To use it in your own Go package, simply reference the
-`github.com/CyCoreSystems/ari-proxy/client` package, and your dependency management
-tool should be able to manage it.
-
-For manual dependency management:
-
-```
-  go get github.com/CyCoreSystems/ari-proxy
-  cd $GOPATH/github.com/CyCoreSystems/ari-proxy
-  dep ensure
-```
-
-`master` should be the latest stable, so a simple `go get` is required:
+`ari-proxy` uses semantic versioning and standard Go modules.  To use it in your
+own Go package, simply reference the
+`github.com/CyCoreSystems/ari-proxy/client/v5` package, and your dependency
+management tool should be able to manage it.
 
 ### Usage
 
@@ -76,8 +66,8 @@ Connecting the client to NATS is simple:
 
 ```go
 import (
-   "github.com/CyCoreSystems/ari"
-   "github.com/CyCoreSystems/ari-proxy/client"
+   "github.com/CyCoreSystems/ari/v5"
+   "github.com/CyCoreSystems/ari-proxy/v5/client"
 )
 
 func connect(ctx context.Context, appName string) (ari.Client,error) {

@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 
-	"github.com/CyCoreSystems/ari-proxy/proxy"
+	"github.com/CyCoreSystems/ari-proxy/v5/proxy"
 )
 
 func (s *Server) playbackControl(ctx context.Context, reply string, req *proxy.Request) {
@@ -42,7 +42,6 @@ func (s *Server) playbackStop(ctx context.Context, reply string, req *proxy.Requ
 }
 
 func (s *Server) playbackSubscribe(ctx context.Context, reply string, req *proxy.Request) {
-
 	// bind dialog
 	if req.Key.Dialog != "" {
 		s.Dialog.Bind(req.Key.Dialog, "playback", req.Key.ID)

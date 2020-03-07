@@ -1,7 +1,7 @@
 package client
 
 import (
-	"github.com/CyCoreSystems/ari-proxy/proxy"
+	"github.com/CyCoreSystems/ari-proxy/v5/proxy"
 	"github.com/CyCoreSystems/ari/v5"
 )
 

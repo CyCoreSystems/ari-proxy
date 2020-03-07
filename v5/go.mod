@@ -5,7 +5,7 @@ go 1.13
 require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/CyCoreSystems/ari-rid v0.1.0
-	github.com/CyCoreSystems/ari/v5 v5.0.1
+	github.com/CyCoreSystems/ari/v5 v5.0.2
 	github.com/fsnotify/fsnotify v0.0.0-20170329110642-4da3e2cfbabc // indirect
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/hashicorp/hcl v0.0.0-20170509225359-392dba7d905e // indirect

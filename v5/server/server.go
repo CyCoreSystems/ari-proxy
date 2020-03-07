@@ -392,6 +392,10 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		f = s.bridgeSubscribe
 	case "BridgeUnsubscribe":
 		f = s.bridgeUnsubscribe
+	case "BridgeVideoSource":
+		f = s.bridgeVideoSource
+	case "BridgeVideoSourceDelete":
+		f = s.bridgeVideoSourceDelete
 	case "ChannelAnswer":
 		f = s.channelAnswer
 	case "ChannelBusy":

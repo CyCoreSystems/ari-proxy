@@ -8,8 +8,8 @@ import (
 	"github.com/CyCoreSystems/ari-proxy/v5/client/bus"
 	"github.com/CyCoreSystems/ari-proxy/v5/client/cluster"
 	"github.com/CyCoreSystems/ari-proxy/v5/proxy"
-	rid "github.com/CyCoreSystems/ari-rid"
 	"github.com/CyCoreSystems/ari/v5"
+	"github.com/CyCoreSystems/ari/v5/rid"
 
 	"github.com/inconshreveable/log15"
 	"github.com/nats-io/nats.go"

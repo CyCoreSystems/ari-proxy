@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/CyCoreSystems/ari-proxy/v5/server"
-	rid "github.com/CyCoreSystems/ari-rid"
 	"github.com/CyCoreSystems/ari/v5"
+	"github.com/CyCoreSystems/ari/v5/rid"
 	"github.com/nats-io/nats.go"
 )
 

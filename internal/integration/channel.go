@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	rid "github.com/CyCoreSystems/ari-rid"
 	"github.com/CyCoreSystems/ari/v5"
+	"github.com/CyCoreSystems/ari/v5/rid"
 	tmock "github.com/stretchr/testify/mock"
 )
 

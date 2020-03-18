@@ -44,6 +44,9 @@ var ErrNil = errors.New("Nil")
 // family of derived clients.  It manages stateful elements such as the bus,
 // the NATS connection, and the cluster membership
 type core struct {
+	// bus is the core ari-proxy bus, which handles NATS subscription binding
+	bus *bus.Bus
+
 	// cluster describes the cluster of ARI proxies
 	cluster *cluster.Cluster
 
@@ -226,14 +229,17 @@ func New(ctx context.Context, opts ...OptionFunc) (*Client, error) {
 		opt(c)
 	}
 
+	// Create the core bus
+	c.core.bus = bus.New(c.core.prefix, c.core.nc, c.core.log)
+
+	// Extract a SubBus from that core bus
+	c.bus = c.core.bus.SubBus()
+
 	// Start the core, if it is not already started
 	err := c.core.Start()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start core")
 	}
-
-	// Create the bus
-	c.bus = bus.New(c.core.prefix, c.core.nc, c.core.log)
 
 	// Call Close whenever the context is closed
 	go func() {
@@ -262,7 +268,7 @@ func (c *Client) New(ctx context.Context) *Client {
 		appName: c.appName,
 		cancel:  cancel,
 		core:    c.core,
-		bus:     bus.New(c.core.prefix, c.core.nc, c.core.log),
+		bus:     c.core.bus.SubBus(),
 	}
 }
 

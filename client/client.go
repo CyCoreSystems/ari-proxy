@@ -229,14 +229,14 @@ func New(ctx context.Context, opts ...OptionFunc) (*Client, error) {
 		opt(c)
 	}
 
-	// Create the core bus
-	c.core.bus = bus.New(c.core.prefix, c.core.nc, c.core.log)
-
 	// Start the core, if it is not already started
 	err := c.core.Start()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start core")
 	}
+
+	// Create the core bus
+	c.core.bus = bus.New(c.core.prefix, c.core.nc, c.core.log)
 
 	// Extract a SubBus from that core bus (NOTE: must come after core is started so that NATS connection exists)
 	c.bus = c.core.bus.SubBus()

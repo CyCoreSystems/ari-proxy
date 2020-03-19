@@ -164,6 +164,7 @@ func (b *Bus) Subscribe(key *ari.Key, n ...string) ari.Subscription {
 	if !ok {
 		w, err = newBusWrapper(subject, b.nc, b.log)
 		if err != nil {
+			b.mu.Unlock()
 			b.log.Error("failed to create bus wrapper", "key", key, "error", err)
 			return nil
 		}

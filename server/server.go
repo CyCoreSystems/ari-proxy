@@ -228,8 +228,52 @@ func (s *Server) listen(ctx context.Context) error {
 		close(s.readyCh)
 	}
 
-	// Wait for context closure to exit
-	<-ctx.Done()
+	ticker := time.NewTicker(time.Second * 10)
+	defer ticker.Stop()	
+	for {
+		select {
+		// Wait for context closure to exit
+		case <-ctx.Done():
+			break
+		case <-ticker.C:
+			info, err := s.ari.Asterisk().Info(nil)
+			if err != nil {
+				s.Log.Error("failed to get info from Asterisk", "error", err)
+				continue
+			}
+			if s.AsteriskID != info.SystemInfo.EntityID {
+				s.Log.Warn("system entitiy id changed", "old", s.AsteriskID, "new", info.SystemInfo.EntityID)
+				s.AsteriskID = info.SystemInfo.EntityID
+				// Unsubscribe from subject with old entity id
+				idGet.Unsubscribe()
+				idData.Unsubscribe()
+				idCommand.Unsubscribe()
+				idCreate.Unsubscribe()
+
+				// Subscribe to new subjects
+				idGet, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "get", s.Application, s.AsteriskID), requestHandler)
+				if err != nil {
+					return errors.Wrap(err, "failed to create get-id subscription")
+				}
+				defer wg.Add(idGet.Unsubscribe)()
+				idData, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "data", s.Application, s.AsteriskID), requestHandler)
+				if err != nil {
+					return errors.Wrap(err, "failed to create data-id subscription")
+				}
+				defer wg.Add(idData.Unsubscribe)()
+				idCommand, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "command", s.Application, s.AsteriskID), requestHandler)
+				if err != nil {
+					return errors.Wrap(err, "failed to create command-id subscription")
+				}
+				defer wg.Add(idCommand.Unsubscribe)()
+				idCreate, err := s.nats.QueueSubscribe(proxy.Subject(s.NATSPrefix, "create", s.Application, s.AsteriskID), "ariproxy", requestHandler)
+				if err != nil {
+					return errors.Wrap(err, "failed to create create-id subscription")
+				}
+				defer wg.Add(idCreate.Unsubscribe)()
+			}
+		}
+	}
 	return ctx.Err()
 }
 

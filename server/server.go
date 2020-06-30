@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"time"
+	"os"
 
 	"github.com/CyCoreSystems/ari-proxy/v5/proxy"
 	"github.com/CyCoreSystems/ari-proxy/v5/server/dialog"
@@ -220,6 +221,9 @@ func (s *Server) listen(ctx context.Context) error {
 	// Run the event handler
 	go s.runEventHandler(ctx)
 
+	// Run the entity check handler
+	go s.runEntityChecker(ctx)
+
 	// TODO: run the dialog cleanup routine (remove bindings for entities which no longer exist)
 	// go s.runDialogCleaner(ctx)
 
@@ -231,6 +235,30 @@ func (s *Server) listen(ctx context.Context) error {
 	// Wait for context closure to exit
 	<-ctx.Done()
 	return ctx.Err()
+}
+
+// runEntityChecker runs the periodic check againt Asterisk entity id
+func (s *Server) runEntityChecker(ctx context.Context) {
+	ticker := time.NewTicker(proxy.EntityCheckInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			info, err := s.ari.Asterisk().Info(nil)
+			if err != nil {
+				s.Log.Error("failed to get info from Asterisk", "error", err)
+				continue
+			}
+			if s.AsteriskID != info.SystemInfo.EntityID {
+				s.Log.Warn("system entitiy id changed", "old", s.AsteriskID, "new", info.SystemInfo.EntityID)
+				// We need to exit with non-zero to make sure systemd restarts when service defined with Restart=on-failure
+				os.Exit(1)
+			}
+		}
+	}
 }
 
 // runAnnouncer runs the periodic discovery announcer

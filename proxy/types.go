@@ -10,6 +10,7 @@ import (
 
 // AnnouncementInterval is the amount of time to wait between periodic service availability announcements
 var AnnouncementInterval = time.Minute
+var EntityCheckInterval = time.Second * 10
 
 // Announcement describes the structure of an ARI proxy's announcement of availability on the network.  These are sent periodically and upon request (by a Ping).
 type Announcement struct {

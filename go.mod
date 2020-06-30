@@ -1,10 +1,10 @@
 module github.com/CyCoreSystems/ari-proxy/v5
 
-go 1.13
+go 1.14
 
 require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
-	github.com/CyCoreSystems/ari/v5 v5.0.7
+	github.com/CyCoreSystems/ari/v5 v5.0.8
 	github.com/fsnotify/fsnotify v0.0.0-20170329110642-4da3e2cfbabc // indirect
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/hashicorp/hcl v0.0.0-20170509225359-392dba7d905e // indirect

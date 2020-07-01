@@ -37,7 +37,7 @@ type subscription struct {
 	b      *busWrapper     // reference to the event bus
 	events []string // list of events to listen for
 
-	mu     sync.Mutex
+	mu     sync.RWMutex
 	closed bool           // channel closure protection flag
 	C      chan ari.Event // channel for sending events to the subscriber
 }
@@ -84,10 +84,14 @@ func (w *busWrapper) receive(o *nats.Msg) {
 
 				for _, topic := range s.events {
 					if topic == e.GetType() || topic == ari.Events.All {
-						select {
-						case s.C <- e:
-						default: // never block
+						s.mu.RLock()
+						if !s.closed {
+							select {
+							case s.C <- e:
+							default: // never block
+							}
 						}
+						s.mu.RUnlock()
 					}
 				}
 			}
@@ -106,9 +110,6 @@ func (w *busWrapper) Subscribe(key *ari.Key, eTypes ...string) ari.Subscription 
 		C:      make(chan ari.Event, subscriptionEventBufferSize),
 	}
 	w.add(s)
-	for k,v := range w.subs {
-		fmt.Println(k,v)
-	}
 
 	return s
 }

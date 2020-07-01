@@ -180,7 +180,9 @@ func (s *subscription) Cancel() {
 	// Close the subscription's deliver channel
 	if s.C != nil {
 		close(s.C)
+		s.C = nil
 	}
+	s = nil
 }
 
 // Bus provides an ari.Bus interface to NATS

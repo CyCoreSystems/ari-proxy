@@ -97,13 +97,24 @@ func (b *subBus) Close() {
 	// TODO: Ultimately, we will need to derive a way to check to see if the parent bus is then unused, in which case, the NATS subscription(s) should then be closed.
 }
 
+func (b *subBus) Cancel(s ari.Subscription) {
+	for i, si := range b.subs {
+		if s == si {
+			b.subs[i] = b.subs[len(b.subs)-1] // replace the current with the end
+			b.subs[len(b.subs)-1] = nil       // remove the end
+			b.subs = b.subs[:len(b.subs)-1]   // lop off the end
+			break
+		}
+	}
+}
+
 func (b *subBus) Send(e ari.Event) {
 	b.bus.Send(e)
 }
 
 func (b *subBus) Subscribe(key *ari.Key, eTypes ...string) ari.Subscription {
 	sub := b.bus.Subscribe(key, eTypes...)
-
+	sub.SetCallback(b.Cancel)
 	b.subs = append(b.subs, sub)
 
 	return sub

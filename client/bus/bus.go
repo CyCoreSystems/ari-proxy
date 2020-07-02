@@ -85,6 +85,7 @@ func New(prefix string, nc *nats.EncodedConn, log log15.Logger) *Bus {
 type subBus struct {
 	bus  ari.Bus
 	subs []ari.Subscription
+	mu sync.Mutex
 }
 
 func (b *subBus) Close() {
@@ -97,7 +98,9 @@ func (b *subBus) Close() {
 	// TODO: Ultimately, we will need to derive a way to check to see if the parent bus is then unused, in which case, the NATS subscription(s) should then be closed.
 }
 
+// Used as callback from stdbus
 func (b *subBus) Cancel(s ari.Subscription) {
+	b.mu.Lock()
 	for i, si := range b.subs {
 		if s == si {
 			b.subs[i] = b.subs[len(b.subs)-1] // replace the current with the end
@@ -106,6 +109,7 @@ func (b *subBus) Cancel(s ari.Subscription) {
 			break
 		}
 	}
+	b.mu.Unlock()
 }
 
 func (b *subBus) Send(e ari.Event) {
@@ -115,7 +119,9 @@ func (b *subBus) Send(e ari.Event) {
 func (b *subBus) Subscribe(key *ari.Key, eTypes ...string) ari.Subscription {
 	sub := b.bus.Subscribe(key, eTypes...)
 	sub.SetCallback(b.Cancel)
+	b.mu.Lock()
 	b.subs = append(b.subs, sub)
+	b.mu.Unlock()
 
 	return sub
 }

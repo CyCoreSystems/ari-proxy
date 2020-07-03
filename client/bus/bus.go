@@ -99,7 +99,7 @@ func (b *subBus) Close() {
 }
 
 // Used as callback from stdbus
-func (b *subBus) Cancel(s ari.Subscription) {
+func (b *subBus) Cancel(s interface{}) {
 	b.mu.Lock()
 	for i, si := range b.subs {
 		if s == si {
@@ -118,7 +118,7 @@ func (b *subBus) Send(e ari.Event) {
 
 func (b *subBus) Subscribe(key *ari.Key, eTypes ...string) ari.Subscription {
 	sub := b.bus.Subscribe(key, eTypes...)
-	sub.SetCallback(b.Cancel)
+	sub.AddCancelCallback(b.Cancel)
 	b.mu.Lock()
 	b.subs = append(b.subs, sub)
 	b.mu.Unlock()

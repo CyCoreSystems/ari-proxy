@@ -73,6 +73,13 @@ func (s *Server) Listen(ctx context.Context, ariOpts *native.Options, natsURI st
 
 	// Connect to NATS
 	nc, err := nats.Connect(natsURI)
+	reconnectionAttempts := 5
+	for err == nats.ErrNoServers && reconnectionAttempts > 0 {
+		s.Log.Info("retrying to connect to NATS server", "attempts", reconnectionAttempts)
+		time.Sleep(5 * time.Second)
+        	nc, err = nats.Connect(natsURI)
+                reconnectionAttempts -= 1
+	}
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to NATS")
 	}

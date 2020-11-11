@@ -16,6 +16,14 @@ import (
 	"github.com/pkg/errors"
 )
 
+// DefaultReconnectionAttemts is the default number of reconnection attempts
+// It implements a hard coded fault tolerance for a starting NATS cluster
+const DefaultNATSReconnectionAttemts = 5
+
+// DefaultNATSReconnectionWait is the default wating time between each reconnection
+// attempt
+const DefaultNATSReconnectionWait = 5 * time.Second
+
 // Server describes the asterisk-facing ARI proxy server
 type Server struct {
 	// Application is the name of the ARI application of this server
@@ -73,6 +81,13 @@ func (s *Server) Listen(ctx context.Context, ariOpts *native.Options, natsURI st
 
 	// Connect to NATS
 	nc, err := nats.Connect(natsURI)
+	reconnectionAttempts := DefaultNATSReconnectionAttemts
+	for err == nats.ErrNoServers && reconnectionAttempts > 0 {
+		s.Log.Info("retrying to connect to NATS server", "attempts", reconnectionAttempts)
+		time.Sleep(DefaultNATSReconnectionWait)
+        	nc, err = nats.Connect(natsURI)
+                reconnectionAttempts -= 1
+	}
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to NATS")
 	}

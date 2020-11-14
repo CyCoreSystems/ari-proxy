@@ -43,15 +43,11 @@ However, it does need to know how to connect to both Asterisk and NATS.
 
 Binary releases are available on the [releases page](https://github.com/CyCoreSystems/ari-proxy/releases).
 
-You can also install the server manually.  It is not (yet) go-gettable, but we
-use [dep](https://github.com/golang/dep) for dependency management.
+You can also install the server manually:
 
 ```
-   dep ensure
-   go install
+   go install github.com/CyCoreSystems/ari-proxy/v5
 ```
-
-You may need to explicitly install dependencies for this to work
 
 ## Client library
 

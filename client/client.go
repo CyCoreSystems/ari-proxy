@@ -11,10 +11,10 @@ import (
 	"github.com/CyCoreSystems/ari-proxy/v5/proxy"
 	"github.com/CyCoreSystems/ari/v5"
 	"github.com/CyCoreSystems/ari/v5/rid"
+	"github.com/rotisserie/eris"
 
 	"github.com/inconshreveable/log15"
 	"github.com/nats-io/nats.go"
-	"github.com/pkg/errors"
 )
 
 // ClosureGracePeriod is the amount of time to wait after the closure of the
@@ -39,7 +39,7 @@ const DefaultInputBufferLength = 100
 var DefaultClusterMaxAge = 5 * time.Minute
 
 // ErrNil indicates that the request returned an empty response
-var ErrNil = errors.New("Nil")
+var ErrNil = eris.New("Nil")
 
 // core is the core, functional piece of a Client which is the same across the
 // family of derived clients.  It manages stateful elements such as the bus,
@@ -146,14 +146,14 @@ func (c *core) Start() error {
 		n, err := nats.Connect(c.uri)
 		if err != nil {
 			c.close()
-			return errors.Wrap(err, "failed to connect to NATS")
+			return eris.Wrap(err, "failed to connect to NATS")
 		}
 
 		c.nc, err = nats.NewEncodedConn(n, nats.JSON_ENCODER)
 		if err != nil {
 			n.Close() // need this here because nc is not yet bound to the core
 			c.close()
-			return errors.Wrap(err, "failed to encode NATS connection")
+			return eris.Wrap(err, "failed to encode NATS connection")
 		}
 
 		c.closeNATSOnClose = true
@@ -166,7 +166,7 @@ func (c *core) Start() error {
 	err := c.maintainCluster()
 	if err != nil {
 		c.close()
-		return errors.Wrap(err, "failed to start cluster maintenance")
+		return eris.Wrap(err, "failed to start cluster maintenance")
 	}
 
 	return nil
@@ -177,7 +177,7 @@ func (c *core) maintainCluster() (err error) {
 		c.cluster.Update(o.Node, o.Application)
 	})
 	if err != nil {
-		return errors.Wrap(err, "failed to listen to proxy announcements")
+		return eris.Wrap(err, "failed to listen to proxy announcements")
 	}
 
 	// Send an initial ping for proxy announcements
@@ -230,7 +230,7 @@ func New(ctx context.Context, opts ...OptionFunc) (*Client, error) {
 	// Start the core, if it is not already started
 	err := c.core.Start()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to start core")
+		return nil, eris.Wrap(err, "failed to start core")
 	}
 
 	// Create the bus
@@ -529,7 +529,7 @@ func (c *Client) makeRequest(class string, req *proxy.Request) (*proxy.Response,
 
 func (c *Client) makeRequests(class string, req *proxy.Request) (responses []*proxy.Response, err error) {
 	if req == nil {
-		return nil, errors.New("empty request")
+		return nil, eris.New("empty request")
 	}
 	if req.Key == nil {
 		req.Key = ari.NewKey("", "")
@@ -549,14 +549,14 @@ func (c *Client) makeRequests(class string, req *proxy.Request) (responses []*pr
 		}
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to subscribe to data responses")
+		return nil, eris.Wrap(err, "failed to subscribe to data responses")
 	}
 	defer replySub.Unsubscribe() // nolint: errcheck
 
 	// Make an all-call for the entity data
 	err = c.core.nc.PublishRequest(c.subject(class, req), reply, req)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to make request for data")
+		return nil, eris.Wrap(err, "failed to make request for data")
 	}
 
 	// Wait for replies
@@ -607,7 +607,7 @@ func (f *limitedResponseForwarder) Forward(o *proxy.Response) {
 // TODO: simplify
 func (c *Client) makeBroadcastRequestReturnFirstGoodResponse(class string, req *proxy.Request) (*proxy.Response, error) {
 	if req == nil {
-		return nil, errors.New("empty request")
+		return nil, eris.New("empty request")
 	}
 
 	if req.Key == nil {
@@ -623,13 +623,13 @@ func (c *Client) makeBroadcastRequestReturnFirstGoodResponse(class string, req *
 
 	replySub, err := c.core.nc.Subscribe(reply, rf.Forward)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to subscribe to data responses")
+		return nil, eris.Wrap(err, "failed to subscribe to data responses")
 	}
 	defer replySub.Unsubscribe() // nolint: errcheck
 
 	// Make an all-call for the entity data
 	if err = c.core.nc.PublishRequest(c.subject(class, req), reply, req); err != nil {
-		return nil, errors.Wrap(err, "failed to make request for data")
+		return nil, eris.Wrap(err, "failed to make request for data")
 	}
 
 	// Wait for replies
@@ -638,14 +638,14 @@ func (c *Client) makeBroadcastRequestReturnFirstGoodResponse(class string, req *
 		case <-time.After(c.requestTimeout):
 			// Return the last error if we got one; otherwise, return a timeout error
 			if err == nil {
-				err = errors.New("timeout")
+				err = eris.New("timeout")
 			}
 
 			return nil, err
 		case resp, more := <-rf.fwdChan:
 			if !more {
 				if err == nil {
-					err = errors.New("no data")
+					err = eris.New("no data")
 				}
 
 				return nil, err

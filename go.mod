@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
-	github.com/CyCoreSystems/ari/v5 v5.0.8
+	github.com/CyCoreSystems/ari/v5 v5.1.2
 	github.com/fsnotify/fsnotify v0.0.0-20170329110642-4da3e2cfbabc // indirect
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/hashicorp/hcl v0.0.0-20170509225359-392dba7d905e // indirect
@@ -16,7 +16,7 @@ require (
 	github.com/nats-io/nats-server/v2 v2.0.0 // indirect
 	github.com/nats-io/nats.go v1.8.1
 	github.com/pelletier/go-toml v0.0.0-20170817000623-4692b8f9babf // indirect
-	github.com/pkg/errors v0.8.1
+	github.com/rotisserie/eris v0.4.1
 	github.com/spf13/afero v0.0.0-20170217164146-9be650865eab // indirect
 	github.com/spf13/cast v1.1.0 // indirect
 	github.com/spf13/cobra v0.0.2

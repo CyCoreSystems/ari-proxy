@@ -6,7 +6,7 @@ import (
 
 	"github.com/CyCoreSystems/ari/v5"
 	"github.com/nats-io/nats.go"
-	"github.com/pkg/errors"
+	"github.com/rotisserie/eris"
 )
 
 // ListenQueue is the queue group to use for distributing StasisStart events to Listeners.
@@ -22,7 +22,7 @@ var ListenQueue = "ARIProxyStasisStartDistributorQueue"
 func Listen(ctx context.Context, ac ari.Client, h func(*ari.ChannelHandle, *ari.StasisStart)) error {
 	c, ok := ac.(*Client)
 	if !ok {
-		return errors.New("ARI Client must be a proxy client")
+		return eris.New("ARI Client must be a proxy client")
 	}
 
 	subj := fmt.Sprintf("%sevent.%s.>", c.core.prefix, c.ApplicationName())
@@ -30,7 +30,7 @@ func Listen(ctx context.Context, ac ari.Client, h func(*ari.ChannelHandle, *ari.
 	c.log.Debug("listening for events", "subject", subj)
 	sub, err := c.nc.QueueSubscribe(subj, ListenQueue, listenProcessor(ac, h))
 	if err != nil {
-		return errors.Wrap(err, "failed to subscribe to events")
+		return eris.Wrap(err, "failed to subscribe to events")
 	}
 	defer sub.Unsubscribe() // nolint: errcheck
 

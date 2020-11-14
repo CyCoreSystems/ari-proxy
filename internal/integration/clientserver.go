@@ -10,17 +10,17 @@ import (
 
 	"github.com/CyCoreSystems/ari/v5"
 	"github.com/nats-io/nats.go"
-	"github.com/pkg/errors"
+	"github.com/rotisserie/eris"
 )
 
 func natsConnect() (*nats.EncodedConn, error) {
 	c, err := nats.Connect(nats.DefaultURL)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to connect to NATS")
+		return nil, eris.Wrap(err, "failed to connect to NATS")
 	}
 	nc, err := nats.NewEncodedConn(c, nats.JSON_ENCODER)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to encode NATS connection")
+		return nil, eris.Wrap(err, "failed to encode NATS connection")
 	}
 	return nc, err
 }

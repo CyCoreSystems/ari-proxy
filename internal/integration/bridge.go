@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/CyCoreSystems/ari/v5"
-	"github.com/pkg/errors"
+	"github.com/rotisserie/eris"
 )
 
 func TestBridgeCreate(t *testing.T, s Server) {
@@ -32,12 +32,12 @@ func TestBridgeCreate(t *testing.T, s Server) {
 	})
 
 	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		expected := errors.New("unknown error")
+		expected := eris.New("unknown error")
 
 		m.Bridge.On("Create", key, "bridgeType", "bridgeName").Return(nil, expected)
 
 		ret, err := cl.Bridge().Create(key, "bridgeType", "bridgeName")
-		if err == nil || errors.Cause(err).Error() != expected.Error() {
+		if err == nil || eris.Cause(err).Error() != expected.Error() {
 			t.Errorf("Expected error '%v', got '%v'", expected, err)
 		}
 		if ret != nil {
@@ -75,12 +75,12 @@ func TestBridgeList(t *testing.T, s Server) {
 	})
 
 	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		expected := errors.New("unknown error")
+		expected := eris.New("unknown error")
 
 		m.Bridge.On("List", (*ari.Key)(nil)).Return([]*ari.Key{}, expected)
 
 		ret, err := cl.Bridge().List(nil)
-		if err == nil || errors.Cause(err).Error() != expected.Error() {
+		if err == nil || eris.Cause(err).Error() != expected.Error() {
 			t.Errorf("Expected error '%v', got '%v'", expected, err)
 		}
 		if len(ret) != 0 {
@@ -118,7 +118,7 @@ func TestBridgeData(t *testing.T, s Server) {
 	})
 
 	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		m.Bridge.On("Data", key).Return(nil, errors.New("Error getting data"))
+		m.Bridge.On("Data", key).Return(nil, eris.New("Error getting data"))
 
 		ret, err := cl.Bridge().Data(key)
 		if err == nil {
@@ -151,7 +151,7 @@ func TestBridgeAddChannel(t *testing.T, s Server) {
 	})
 
 	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		m.Bridge.On("AddChannel", key, "channel1").Return(errors.New("unknown error"))
+		m.Bridge.On("AddChannel", key, "channel1").Return(eris.New("unknown error"))
 
 		err := cl.Bridge().AddChannel(key, "channel1")
 		if err == nil {
@@ -181,7 +181,7 @@ func TestBridgeRemoveChannel(t *testing.T, s Server) {
 	})
 
 	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		m.Bridge.On("RemoveChannel", key, "channel1").Return(errors.New("unknown error"))
+		m.Bridge.On("RemoveChannel", key, "channel1").Return(eris.New("unknown error"))
 
 		err := cl.Bridge().RemoveChannel(key, "channel1")
 		if err == nil {
@@ -211,7 +211,7 @@ func TestBridgeDelete(t *testing.T, s Server) {
 	})
 
 	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		m.Bridge.On("Delete", key).Return(errors.New("unknown error"))
+		m.Bridge.On("Delete", key).Return(eris.New("unknown error"))
 
 		err := cl.Bridge().Delete(key)
 		if err == nil {
@@ -246,7 +246,7 @@ func TestBridgePlay(t *testing.T, s Server) {
 	})
 
 	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		m.Bridge.On("Play", key, "playback1", "mediaURI").Return(nil, errors.New("unknown error"))
+		m.Bridge.On("Play", key, "playback1", "mediaURI").Return(nil, eris.New("unknown error"))
 
 		ret, err := cl.Bridge().Play(key, "playback1", "mediaURI")
 		if err == nil {
@@ -326,7 +326,7 @@ func TestBridgeRecord(t *testing.T, s Server) {
 		m.Bridge.On("Data", key).Return(bd, nil)
 
 		opts := &ari.RecordingOptions{}
-		m.Bridge.On("Record", key, "recording1", opts).Return(nil, errors.New("unknown error"))
+		m.Bridge.On("Record", key, "recording1", opts).Return(nil, eris.New("unknown error"))
 
 		ret, err := cl.Bridge().Record(key, "recording1", opts)
 		if err == nil {

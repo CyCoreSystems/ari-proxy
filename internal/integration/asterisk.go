@@ -5,7 +5,7 @@ import (
 
 	"github.com/CyCoreSystems/ari/v5"
 	"github.com/CyCoreSystems/ari/v5/client/arimocks"
-	"github.com/pkg/errors"
+	"github.com/rotisserie/eris"
 )
 
 func TestAsteriskInfo(t *testing.T, s Server) {
@@ -29,12 +29,12 @@ func TestAsteriskInfo(t *testing.T, s Server) {
 	})
 
 	runTest("noFilterError", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		expected := errors.New("unknown error")
+		expected := eris.New("unknown error")
 
 		m.Asterisk.On("Info", ari.NodeKey("asdf", "1")).Return(nil, expected)
 
 		ret, err := cl.Asterisk().Info(ari.NodeKey("asdf", "1"))
-		if err == nil || errors.Cause(err).Error() != expected.Error() {
+		if err == nil || eris.Cause(err).Error() != expected.Error() {
 			t.Errorf("Expected error '%v', got '%v'", expected, err)
 		}
 		if ret != nil {
@@ -73,7 +73,7 @@ func TestAsteriskVariablesGet(t *testing.T, s Server) {
 	})
 
 	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		expected := errors.New("unknown error")
+		expected := eris.New("unknown error")
 
 		mv := arimocks.AsteriskVariables{}
 		mv.On("Get", key).Return("", expected)
@@ -81,7 +81,7 @@ func TestAsteriskVariablesGet(t *testing.T, s Server) {
 		m.Asterisk.On("Variables").Return(&mv)
 
 		ret, err := cl.Asterisk().Variables().Get(key)
-		if err == nil || errors.Cause(err).Error() != expected.Error() {
+		if err == nil || eris.Cause(err).Error() != expected.Error() {
 			t.Errorf("Expected error '%v', got '%v'", expected, err)
 		}
 		if ret != "" {
@@ -123,7 +123,7 @@ func TestAsteriskVariablesSet(t *testing.T, s Server) {
 
 		mv := arimocks.AsteriskVariables{}
 		m.Asterisk.On("Variables").Return(&mv)
-		mv.On("Set", key, "hello").Return(errors.New("error"))
+		mv.On("Set", key, "hello").Return(eris.New("error"))
 
 		err := cl.Asterisk().Variables().Set(key, "hello")
 		if err == nil {

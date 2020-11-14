@@ -3,17 +3,17 @@ package server
 import (
 	"context"
 	"fmt"
-	"time"
 	"os"
+	"time"
 
 	"github.com/CyCoreSystems/ari-proxy/v5/proxy"
 	"github.com/CyCoreSystems/ari-proxy/v5/server/dialog"
 	"github.com/CyCoreSystems/ari/v5"
 	"github.com/CyCoreSystems/ari/v5/client/native"
+	"github.com/rotisserie/eris"
 
 	"github.com/inconshreveable/log15"
 	"github.com/nats-io/nats.go"
-	"github.com/pkg/errors"
 )
 
 // DefaultReconnectionAttemts is the default number of reconnection attempts
@@ -75,7 +75,7 @@ func (s *Server) Listen(ctx context.Context, ariOpts *native.Options, natsURI st
 	// Connect to ARI
 	s.ari, err = native.Connect(ariOpts)
 	if err != nil {
-		return errors.Wrap(err, "failed to connect to ARI")
+		return eris.Wrap(err, "failed to connect to ARI")
 	}
 	defer s.ari.Close()
 
@@ -89,11 +89,11 @@ func (s *Server) Listen(ctx context.Context, ariOpts *native.Options, natsURI st
                 reconnectionAttempts -= 1
 	}
 	if err != nil {
-		return errors.Wrap(err, "failed to connect to NATS")
+		return eris.Wrap(err, "failed to connect to NATS")
 	}
 	s.nats, err = nats.NewEncodedConn(nc, nats.JSON_ENCODER)
 	if err != nil {
-		return errors.Wrap(err, "failed to encode NATS connection")
+		return eris.Wrap(err, "failed to encode NATS connection")
 	}
 	defer s.nats.Close()
 
@@ -136,12 +136,12 @@ func (s *Server) listen(ctx context.Context) error {
 
 	ret, err := s.ari.Asterisk().Info(nil)
 	if err != nil {
-		return errors.Wrap(err, "failed to get Asterisk ID")
+		return eris.Wrap(err, "failed to get Asterisk ID")
 	}
 
 	s.AsteriskID = ret.SystemInfo.EntityID
 	if s.AsteriskID == "" {
-		return errors.New("empty Asterisk ID")
+		return eris.New("empty Asterisk ID")
 	}
 
 	// Store the ARI application name for top-level access
@@ -154,7 +154,7 @@ func (s *Server) listen(ctx context.Context) error {
 	// ping handler
 	pingSub, err := s.nats.Subscribe(proxy.PingSubject(s.NATSPrefix), s.pingHandler)
 	if err != nil {
-		return errors.Wrap(err, "failed to subscribe to pings")
+		return eris.Wrap(err, "failed to subscribe to pings")
 	}
 	defer wg.Add(pingSub.Unsubscribe)
 
@@ -164,69 +164,69 @@ func (s *Server) listen(ctx context.Context) error {
 	// get handlers
 	allGet, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "get", "", ""), requestHandler)
 	if err != nil {
-		return errors.Wrap(err, "failed to create get-all subscription")
+		return eris.Wrap(err, "failed to create get-all subscription")
 	}
 	defer wg.Add(allGet.Unsubscribe)()
 
 	appGet, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "get", s.Application, ""), requestHandler)
 	if err != nil {
-		return errors.Wrap(err, "failed to create get-app subscription")
+		return eris.Wrap(err, "failed to create get-app subscription")
 	}
 	defer wg.Add(appGet.Unsubscribe)()
 	idGet, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "get", s.Application, s.AsteriskID), requestHandler)
 	if err != nil {
-		return errors.Wrap(err, "failed to create get-id subscription")
+		return eris.Wrap(err, "failed to create get-id subscription")
 	}
 	defer wg.Add(idGet.Unsubscribe)()
 
 	// data handlers
 	allData, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "data", "", ""), requestHandler)
 	if err != nil {
-		return errors.Wrap(err, "failed to create data-all subscription")
+		return eris.Wrap(err, "failed to create data-all subscription")
 	}
 	defer wg.Add(allData.Unsubscribe)()
 	appData, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "data", s.Application, ""), requestHandler)
 	if err != nil {
-		return errors.Wrap(err, "failed to create data-app subscription")
+		return eris.Wrap(err, "failed to create data-app subscription")
 	}
 	defer wg.Add(appData.Unsubscribe)()
 	idData, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "data", s.Application, s.AsteriskID), requestHandler)
 	if err != nil {
-		return errors.Wrap(err, "failed to create data-id subscription")
+		return eris.Wrap(err, "failed to create data-id subscription")
 	}
 	defer wg.Add(idData.Unsubscribe)()
 
 	// command handlers
 	allCommand, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "command", "", ""), requestHandler)
 	if err != nil {
-		return errors.Wrap(err, "failed to create command-all subscription")
+		return eris.Wrap(err, "failed to create command-all subscription")
 	}
 	defer wg.Add(allCommand.Unsubscribe)()
 	appCommand, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "command", s.Application, ""), requestHandler)
 	if err != nil {
-		return errors.Wrap(err, "failed to create command-app subscription")
+		return eris.Wrap(err, "failed to create command-app subscription")
 	}
 	defer wg.Add(appCommand.Unsubscribe)()
 	idCommand, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "command", s.Application, s.AsteriskID), requestHandler)
 	if err != nil {
-		return errors.Wrap(err, "failed to create command-id subscription")
+		return eris.Wrap(err, "failed to create command-id subscription")
 	}
 	defer wg.Add(idCommand.Unsubscribe)()
 
 	// create handlers
 	allCreate, err := s.nats.QueueSubscribe(proxy.Subject(s.NATSPrefix, "create", "", ""), "ariproxy", requestHandler)
 	if err != nil {
-		return errors.Wrap(err, "failed to create create-all subscription")
+		return eris.Wrap(err, "failed to create create-all subscription")
 	}
 	defer wg.Add(allCreate.Unsubscribe)()
 	appCreate, err := s.nats.QueueSubscribe(proxy.Subject(s.NATSPrefix, "create", s.Application, ""), "ariproxy", requestHandler)
 	if err != nil {
-		return errors.Wrap(err, "failed to create create-app subscription")
+		return eris.Wrap(err, "failed to create create-app subscription")
 	}
 	defer wg.Add(appCreate.Unsubscribe)()
 	idCreate, err := s.nats.QueueSubscribe(proxy.Subject(s.NATSPrefix, "create", s.Application, s.AsteriskID), "ariproxy", requestHandler)
 	if err != nil {
-		return errors.Wrap(err, "failed to create create-id subscription")
+		return eris.Wrap(err, "failed to create create-id subscription")
 	}
 	defer wg.Add(idCreate.Unsubscribe)()
 
@@ -343,7 +343,7 @@ func (s *Server) publish(subject string, msg interface{}) {
 func (s *Server) newRequestHandler(ctx context.Context) func(subject string, reply string, req *proxy.Request) {
 	return func(subject string, reply string, req *proxy.Request) {
 		if !s.ari.Connected() {
-			s.sendError(reply, errors.New("ARI connection is down"))
+			s.sendError(reply, eris.New("ARI connection is down"))
 			return
 		}
 		go s.dispatchRequest(ctx, reply, req)
@@ -579,7 +579,7 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		f = s.soundList
 	default:
 		f = func(ctx context.Context, reply string, req *proxy.Request) {
-			s.sendError(reply, errors.New("Not implemented"))
+			s.sendError(reply, eris.New("Not implemented"))
 		}
 	}
 

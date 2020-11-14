@@ -5,12 +5,12 @@ import (
 	"sync"
 
 	"github.com/inconshreveable/log15"
+	"github.com/rotisserie/eris"
 
 	"github.com/CyCoreSystems/ari-proxy/v5/client"
 	"github.com/CyCoreSystems/ari/v5"
 	"github.com/CyCoreSystems/ari/v5/ext/play"
 	"github.com/CyCoreSystems/ari/v5/rid"
-	"github.com/pkg/errors"
 )
 
 var ariApp = "test"
@@ -82,7 +82,7 @@ func ensureBridge(ctx context.Context, cl ari.Client, src *ari.Key) (err error) 
 	bridge, err = cl.Bridge().Create(key, "mixing", key.ID)
 	if err != nil {
 		bridge = nil
-		return errors.Wrap(err, "failed to create bridge")
+		return eris.Wrap(err, "failed to create bridge")
 	}
 
 	wg := new(sync.WaitGroup)

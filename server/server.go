@@ -475,6 +475,8 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		f = s.channelStagePlay
 	case "ChannelRecord":
 		f = s.channelRecord
+	case "ChannelRedirect":
+		f = s.channelRedirect
 	case "ChannelStageRecord":
 		f = s.channelStageRecord
 	case "ChannelRing":

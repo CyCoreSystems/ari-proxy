@@ -94,6 +94,10 @@ func TestChannelRecord(t *testing.T) {
 	integration.TestChannelRecord(t, &srv{})
 }
 
+func TestChannelRedirect(t *testing.T) {
+	integration.TestChannelRedirect(t, &srv{})
+}
+
 func TestChannelSnoop(t *testing.T) {
 	integration.TestChannelSnoop(t, &srv{})
 }

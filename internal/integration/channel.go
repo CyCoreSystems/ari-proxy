@@ -501,6 +501,36 @@ func TestChannelContinue(t *testing.T, s Server) {
 	})
 }
 
+func TestChannelRedirect(t *testing.T, s Server) {
+	key := ari.NewKey(ari.ChannelKey, "c1")
+
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
+		m.Channel.On("Redirect", key, "edpt1").Return(nil)
+
+		err := cl.Channel().Redirect(key, "edpt1")
+		if err != nil {
+			t.Errorf("Unexpected error in remote Redirect call: %s", err)
+		}
+
+		m.Shutdown()
+
+		m.Channel.AssertCalled(t, "Redirect", key, "edpt1")
+	})
+
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
+		m.Channel.On("Redirect", key, "edpt1").Return(errors.New("error"))
+
+		err := cl.Channel().Redirect(key, "edpt1")
+		if err == nil {
+			t.Errorf("Expected error in remote Redirect call")
+		}
+
+		m.Shutdown()
+
+		m.Channel.AssertCalled(t, "Redirect", key, "edpt1")
+	})
+}
+
 func TestChannelDial(t *testing.T, s Server) {
 	key := ari.NewKey(ari.ChannelKey, "c1")
 

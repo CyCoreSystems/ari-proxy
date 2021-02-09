@@ -106,6 +106,16 @@ func (c *channel) Continue(key *ari.Key, context string, extension string, prior
 	})
 }
 
+func (c *channel) Redirect(key *ari.Key, endpoint string) error {
+	return c.c.commandRequest(&proxy.Request{
+		Kind: "ChannelRedirect",
+		Key:  key,
+		ChannelRedirect: &proxy.ChannelRedirect{
+			Endpoint: endpoint,
+		},
+	})
+}
+
 func (c *channel) Busy(key *ari.Key) error {
 	return c.c.commandRequest(&proxy.Request{
 		Kind: "ChannelBusy",

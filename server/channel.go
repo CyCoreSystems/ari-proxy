@@ -259,6 +259,10 @@ func (s *Server) channelRecord(ctx context.Context, reply string, req *proxy.Req
 	})
 }
 
+func (s *Server) channelRedirect(ctx context.Context, reply string, req *proxy.Request) {
+	s.sendError(reply, s.ari.Channel().Redirect(req.Key, req.ChannelRedirect.Endpoint))
+}
+
 func (s *Server) channelStageRecord(ctx context.Context, reply string, req *proxy.Request) {
 	data, err := s.ari.Channel().Data(req.Key)
 	if err != nil || data == nil {

@@ -10,6 +10,7 @@ import (
 
 // AnnouncementInterval is the amount of time to wait between periodic service availability announcements
 var AnnouncementInterval = time.Minute
+
 // EntityCheckInterval is the interval between checks against Asterisk entity ID
 var EntityCheckInterval = time.Second * 10
 
@@ -126,6 +127,7 @@ type Request struct {
 	ChannelOriginate     *ChannelOriginate     `json:"channel_originate,omitempty"`
 	ChannelPlay          *ChannelPlay          `json:"channel_play,omitempty"`
 	ChannelRecord        *ChannelRecord        `json:"channel_record,omitempty"`
+	ChannelRedirect      *ChannelRedirect      `json:"channel_redirect,omitempty"`
 	ChannelSendDTMF      *ChannelSendDTMF      `json:"channel_send_dtmf,omitempty"`
 	ChannelSnoop         *ChannelSnoop         `json:"channel_snoop,omitempty"`
 	ChannelExternalMedia *ChannelExternalMedia `json:"channel_external_media,omitempty"`
@@ -289,6 +291,12 @@ type ChannelRecord struct {
 
 	// Options is the list of recording Options
 	Options *ari.RecordingOptions `json:"options,omitempty"`
+}
+
+// ChannelRedirect describes a request to redirect a channel
+type ChannelRedirect struct {
+	// Endpoint is the endpoint to redirect the channel to
+	Endpoint string `json:"endpoint"`
 }
 
 // ChannelSendDTMF is the request for sending a DTMF event to a channel

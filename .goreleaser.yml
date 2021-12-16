@@ -32,6 +32,7 @@ dockers:
         - 'cycoresystems/ari-proxy:v{{ .Major }}.{{ .Minor }}-amd64'
         - 'cycoresystems/ari-proxy:latest-amd64'
      use: buildx
+     goarch: amd64
      dockerfile: Dockerfile.goreleaser
      build_flag_templates:
         - "--platform=linux/amd64"
@@ -41,6 +42,7 @@ dockers:
         - 'cycoresystems/ari-proxy:v{{ .Major }}.{{ .Minor }}-arm64v8'
         - 'cycoresystems/ari-proxy:latest-arm64v8'
      use: buildx
+     goarch: arm64
      dockerfile: Dockerfile.goreleaser
      build_flag_templates:
         - "--platform=linux/arm64/v8"

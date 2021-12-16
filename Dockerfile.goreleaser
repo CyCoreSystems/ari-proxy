@@ -1,0 +1,3 @@
+FROM gcr.io/distroless/base
+COPY ari-proxy /go/bin/ari-proxy
+ENTRYPOINT ["/go/bin/ari-proxy"]

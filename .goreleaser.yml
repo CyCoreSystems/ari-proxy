@@ -61,8 +61,8 @@ docker_manifests:
       - cycoresystems/ari-proxy:{{ .Tag }}-arm64v8
   - name_template: 'ghcr.io/cycoresystems/ari-proxy:{{ .Tag }}'
     image_templates:
-      - ghcr.io/cycoresystems/ari-proxy:v{{ .Tag }}-amd64
-      - ghcr.io/cycoresystems/ari-proxy:v{{ .Tag }}-arm64v8
+      - ghcr.io/cycoresystems/ari-proxy:{{ .Tag }}-amd64
+      - ghcr.io/cycoresystems/ari-proxy:{{ .Tag }}-arm64v8
   - name_template: 'cycoresystems/ari-proxy:v{{ .Major }}'
     image_templates:
       - cycoresystems/ari-proxy:v{{ .Major }}-amd64

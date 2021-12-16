@@ -1,3 +1,4 @@
+FROM golang:alpine AS builder
 RUN apk add --no-cache git
 WORKDIR $GOPATH/src/github.com/CyCoreSystems/ari-proxy
 COPY . .

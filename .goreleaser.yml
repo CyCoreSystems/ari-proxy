@@ -58,32 +58,32 @@ docker_manifests:
   - name_template: 'cycoresystems/ari-proxy:{{ .Tag }}'
     image_templates:
       - cycoresystems/ari-proxy:{{ .Tag }}-amd64
-      - cycoresystems/ari-proxy:{{ .Tag }}-arm64
+      - cycoresystems/ari-proxy:{{ .Tag }}-arm64v8
   - name_template: 'ghcr.io/cycoresystems/ari-proxy:{{ .Tag }}'
     image_templates:
       - ghcr.io/cycoresystems/ari-proxy:{{ .Tag }}-amd64
-      - ghcr.io/cycoresystems/ari-proxy:{{ .Tag }}-arm64
+      - ghcr.io/cycoresystems/ari-proxy:{{ .Tag }}-arm64v8
   - name_template: 'cycoresystems/ari-proxy:{{ .Major }}'
     image_templates:
       - cycoresystems/ari-proxy:{{ .Major }}-amd64
-      - cycoresystems/ari-proxy:{{ .Major }}-arm64
+      - cycoresystems/ari-proxy:{{ .Major }}-arm64v8
   - name_template: 'ghcr.io/cycoresystems/ari-proxy:{{ .Major }}'
     image_templates:
       - ghcr.io/cycoresystems/ari-proxy:{{ .Major }}-amd64
-      - ghcr.io/cycoresystems/ari-proxy:{{ .Major }}-arm64
+      - ghcr.io/cycoresystems/ari-proxy:{{ .Major }}-arm64v8
   - name_template: 'cycoresystems/ari-proxy:{{ .Major }}.{{ .Minor }}'
     image_templates:
       - cycoresystems/ari-proxy:{{ .Major }}.{{ .Minor }}-amd64
-      - cycoresystems/ari-proxy:{{ .Major }}.{{ .Minor }}-arm64
+      - cycoresystems/ari-proxy:{{ .Major }}.{{ .Minor }}-arm64v8
   - name_template: 'ghcr.io/cycoresystems/ari-proxy:{{ .Major }}.{{ .Minor }}'
     image_templates:
       - ghcr.io/cycoresystems/ari-proxy:{{ .Major }}.{{ .Minor }}-amd64
-      - ghcr.io/cycoresystems/ari-proxy:{{ .Major }}.{{ .Minor }}-arm64
+      - ghcr.io/cycoresystems/ari-proxy:{{ .Major }}.{{ .Minor }}-arm64v8
   - name_template: 'cycoresystems/ari-proxy:latest'
     image_templates:
       - cycoresystems/ari-proxy:latest-amd64
-      - cycoresystems/ari-proxy:latest-arm64
+      - cycoresystems/ari-proxy:latest-arm64v8
   - name_template: 'ghcr.io/cycoresystems/ari-proxy:latest'
     image_templates:
       - ghcr.io/cycoresystems/ari-proxy:latest-amd64
-      - ghcr.io/cycoresystems/ari-proxy:latest-arm64
+      - ghcr.io/cycoresystems/ari-proxy:latest-arm64v8

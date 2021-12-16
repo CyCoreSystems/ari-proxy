@@ -9,6 +9,7 @@ builds:
         - linux
      goarch:
         - amd64
+        - arm64
 
 archives:
    - id: ari-proxy
@@ -26,7 +27,35 @@ changelog:
 
 dockers:
    - image_templates:
-        - 'cycoresystems/ari-proxy:{{ .Tag }}'
-        - 'cycoresystems/ari-proxy:v{{ .Major }}'
-        - 'cycoresystems/ari-proxy:v{{ .Major }}.{{ .Minor }}'
-        - 'cycoresystems/ari-proxy:latest'
+        - 'cycoresystems/ari-proxy:{{ .Tag }}-amd64'
+        - 'cycoresystems/ari-proxy:v{{ .Major }}-amd64'
+        - 'cycoresystems/ari-proxy:v{{ .Major }}.{{ .Minor }}-amd64'
+        - 'cycoresystems/ari-proxy:latest-amd64'
+     use: buildx
+     build_flag_templates:
+        - "--platform=linux/amd64"
+   - image_templates:
+        - 'cycoresystems/ari-proxy:{{ .Tag }}-arm64v8'
+        - 'cycoresystems/ari-proxy:v{{ .Major }}-arm64v8'
+        - 'cycoresystems/ari-proxy:v{{ .Major }}.{{ .Minor }}-arm64v8'
+        - 'cycoresystems/ari-proxy:latest-arm64v8'
+     use: buildx
+     build_flag_templates:
+        - "--platform=linux/arm64/v8"
+docker_manifests:
+  - name_template: 'cycoresystems/ari-proxy:{{ .Tag }}'
+    image_templates:
+      - cycoresystems/ari-proxy:{{ .Tag }}-amd64
+      - cycoresystems/ari-proxy:{{ .Tag }}-arm64
+  - name_template: 'cycoresystems/ari-proxy:{{ .Major }}'
+    image_templates:
+      - cycoresystems/ari-proxy:{{ .Major }}-amd64
+      - cycoresystems/ari-proxy:{{ .Major }}-arm64
+  - name_template: 'cycoresystems/ari-proxy:{{ .Major }}.{{ .Minor }}'
+    image_templates:
+      - cycoresystems/ari-proxy:{{ .Major }}.{{ .Minor }}-amd64
+      - cycoresystems/ari-proxy:{{ .Major }}.{{ .Minor }}-arm64
+  - name_template: 'cycoresystems/ari-proxy:latest'
+    image_templates:
+      - cycoresystems/ari-proxy:latest-amd64
+      - cycoresystems/ari-proxy:latest-arm64

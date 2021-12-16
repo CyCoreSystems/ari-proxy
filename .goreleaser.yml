@@ -61,24 +61,24 @@ docker_manifests:
       - cycoresystems/ari-proxy:{{ .Tag }}-arm64v8
   - name_template: 'ghcr.io/cycoresystems/ari-proxy:{{ .Tag }}'
     image_templates:
-      - ghcr.io/cycoresystems/ari-proxy:{{ .Tag }}-amd64
-      - ghcr.io/cycoresystems/ari-proxy:{{ .Tag }}-arm64v8
-  - name_template: 'cycoresystems/ari-proxy:{{ .Major }}'
+      - ghcr.io/cycoresystems/ari-proxy:v{{ .Tag }}-amd64
+      - ghcr.io/cycoresystems/ari-proxy:v{{ .Tag }}-arm64v8
+  - name_template: 'cycoresystems/ari-proxy:v{{ .Major }}'
     image_templates:
-      - cycoresystems/ari-proxy:{{ .Major }}-amd64
-      - cycoresystems/ari-proxy:{{ .Major }}-arm64v8
-  - name_template: 'ghcr.io/cycoresystems/ari-proxy:{{ .Major }}'
+      - cycoresystems/ari-proxy:v{{ .Major }}-amd64
+      - cycoresystems/ari-proxy:v{{ .Major }}-arm64v8
+  - name_template: 'ghcr.io/cycoresystems/ari-proxy:v{{ .Major }}'
     image_templates:
-      - ghcr.io/cycoresystems/ari-proxy:{{ .Major }}-amd64
-      - ghcr.io/cycoresystems/ari-proxy:{{ .Major }}-arm64v8
-  - name_template: 'cycoresystems/ari-proxy:{{ .Major }}.{{ .Minor }}'
+      - ghcr.io/cycoresystems/ari-proxy:v{{ .Major }}-amd64
+      - ghcr.io/cycoresystems/ari-proxy:v{{ .Major }}-arm64v8
+  - name_template: 'cycoresystems/ari-proxy:v{{ .Major }}.{{ .Minor }}'
     image_templates:
-      - cycoresystems/ari-proxy:{{ .Major }}.{{ .Minor }}-amd64
-      - cycoresystems/ari-proxy:{{ .Major }}.{{ .Minor }}-arm64v8
-  - name_template: 'ghcr.io/cycoresystems/ari-proxy:{{ .Major }}.{{ .Minor }}'
+      - cycoresystems/ari-proxy:v{{ .Major }}.{{ .Minor }}-amd64
+      - cycoresystems/ari-proxy:v{{ .Major }}.{{ .Minor }}-arm64v8
+  - name_template: 'ghcr.io/cycoresystems/ari-proxy:v{{ .Major }}.{{ .Minor }}'
     image_templates:
-      - ghcr.io/cycoresystems/ari-proxy:{{ .Major }}.{{ .Minor }}-amd64
-      - ghcr.io/cycoresystems/ari-proxy:{{ .Major }}.{{ .Minor }}-arm64v8
+      - ghcr.io/cycoresystems/ari-proxy:v{{ .Major }}.{{ .Minor }}-amd64
+      - ghcr.io/cycoresystems/ari-proxy:v{{ .Major }}.{{ .Minor }}-arm64v8
   - name_template: 'cycoresystems/ari-proxy:latest'
     image_templates:
       - cycoresystems/ari-proxy:latest-amd64

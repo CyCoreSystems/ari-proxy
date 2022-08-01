@@ -6,7 +6,7 @@ import "github.com/CyCoreSystems/ari-proxy/v5/session"
 // response object or error.
 type Reply func(interface{}, error)
 
-// A Handler2 is a function which provides a session-aware request-response for nats
+// A Handler2 is a function which provides a session-aware request-response for messagebus
 type Handler2 func(msg *session.Message, reply Reply)
 
 // Handler is left for compat

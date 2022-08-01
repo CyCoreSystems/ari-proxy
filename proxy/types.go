@@ -10,6 +10,7 @@ import (
 
 // AnnouncementInterval is the amount of time to wait between periodic service availability announcements
 var AnnouncementInterval = time.Minute
+
 // EntityCheckInterval is the interval between checks against Asterisk entity ID
 var EntityCheckInterval = time.Second * 10
 
@@ -22,12 +23,12 @@ type Announcement struct {
 	Application string `json:"application"`
 }
 
-// AnnouncementSubject returns the NATS subject
+// AnnouncementSubject returns the MessageBus subject
 func AnnouncementSubject(prefix string) string {
 	return fmt.Sprintf("%sannounce", prefix)
 }
 
-// PingSubject returns the NATS subject for a cluster-wide proxy ping for presence
+// PingSubject returns the MessageBus subject for a cluster-wide proxy ping for presence
 func PingSubject(prefix string) string {
 	return fmt.Sprintf("%sping", prefix)
 }

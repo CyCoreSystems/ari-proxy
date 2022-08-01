@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/CyCoreSystems/ari-proxy/v5/messagebus"
 	"github.com/CyCoreSystems/ari/v5"
-	"github.com/nats-io/nats.go"
 	"github.com/rotisserie/eris"
 )
 
@@ -16,7 +16,7 @@ var ListenQueue = "ARIProxyStasisStartDistributorQueue"
 // matching events will be sent down the returned StasisStart channel.  The
 // context which is passed to Listen can be used to stop the Listen execution.
 //
-// Importantly, the StasisStart events are listened in a NATS Queue, which
+// Importantly, the StasisStart events are listened in a NATS/RabbitMQ Queue, which
 // means that this may be used to deliver new calls to only a single handler
 // out of a set of 1 or more handlers in a cluster.
 func Listen(ctx context.Context, ac ari.Client, h func(*ari.ChannelHandle, *ari.StasisStart)) error {
@@ -25,10 +25,15 @@ func Listen(ctx context.Context, ac ari.Client, h func(*ari.ChannelHandle, *ari.
 		return eris.New("ARI Client must be a proxy client")
 	}
 
-	subj := fmt.Sprintf("%sevent.%s.>", c.core.prefix, c.ApplicationName())
+	subj := fmt.Sprintf(
+		"%sevent.%s.%s",
+		c.core.prefix,
+		c.ApplicationName(),
+		c.mbus.GetWildcardString(messagebus.WildcardZeroOrMoreWords),
+	)
 
 	c.log.Debug("listening for events", "subject", subj)
-	sub, err := c.nc.QueueSubscribe(subj, ListenQueue, listenProcessor(ac, h))
+	sub, err := c.mbus.SubscribeEvent(subj, ListenQueue, listenProcessor(ac, h))
 	if err != nil {
 		return eris.Wrap(err, "failed to subscribe to events")
 	}
@@ -39,9 +44,9 @@ func Listen(ctx context.Context, ac ari.Client, h func(*ari.ChannelHandle, *ari.
 	return nil
 }
 
-func listenProcessor(ac ari.Client, h func(*ari.ChannelHandle, *ari.StasisStart)) func(*nats.Msg) {
-	return func(m *nats.Msg) {
-		e, err := ari.DecodeEvent(m.Data)
+func listenProcessor(ac ari.Client, h func(*ari.ChannelHandle, *ari.StasisStart)) func([]byte) {
+	return func(data []byte) {
+		e, err := ari.DecodeEvent(data)
 		if err != nil {
 			Logger.Error("failed to decode event", "error", err)
 			return

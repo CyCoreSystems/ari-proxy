@@ -1,2 +1,2 @@
-// Package client provides an ari.Client implementation for a NATS-based ARI proxy cluster
+// Package client provides an ari.Client implementation for a NATS/RabbitMQ-based ARI proxy cluster
 package client

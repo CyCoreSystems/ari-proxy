@@ -20,7 +20,7 @@ type srv struct {
 func (s *srv) Start(ctx context.Context, t *testing.T, mockClient ari.Client, nc *nats.EncodedConn, completeCh chan struct{}) (ari.Client, error) {
 	s.s = New()
 	// tests may run in parallel so we don't want two separate proxy servers to conflict.
-	s.s.NATSPrefix = rid.New("") + "."
+	s.s.MBPrefix = rid.New("") + "."
 	s.s.Application = "asdf"
 
 	go func() {
@@ -38,7 +38,7 @@ func (s *srv) Start(ctx context.Context, t *testing.T, mockClient ari.Client, nc
 		return nil, errors.New("Timeout waiting for server ready")
 	}
 
-	cl, err := client.New(ctx, client.WithTimeoutRetries(4), client.WithPrefix(s.s.NATSPrefix), client.WithApplication("asdf"))
+	cl, err := client.New(ctx, client.WithTimeoutRetries(4), client.WithPrefix(s.s.MBPrefix), client.WithApplication("asdf"))
 	if err != nil {
 		return nil, err
 	}

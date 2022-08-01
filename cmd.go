@@ -22,8 +22,8 @@ var Log log15.Logger
 var RootCmd = &cobra.Command{
 	Use:   "ari-proxy",
 	Short: "Proxy for the Asterisk REST interface.",
-	Long: `ari-proxy is a proxy for working the Asterisk daemon over NATS.
-	ARI commands are exposed over NATS for operation.`,
+	Long: `ari-proxy is a proxy for working the Asterisk daemon over NATS/RabbitMQ.
+	ARI commands are exposed over NATS/RabbitMQ for operation.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
@@ -62,14 +62,15 @@ func init() {
 	p.StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ari-proxy.yaml)")
 	p.BoolP("verbose", "v", false, "Enable verbose logging")
 
-	p.String("nats.url", nats.DefaultURL, "URL for connecting to the NATS cluster")
+	p.String("nats.url", nats.DefaultURL, "URL for connecting to the NATS cluster") //backward compatibility
+	p.String("messagebus.url", nats.DefaultURL, "URL for connecting to the Message Bus cluster")
 	p.String("ari.application", "", "ARI Stasis Application")
 	p.String("ari.username", "", "Username for connecting to ARI")
 	p.String("ari.password", "", "Password for connecting to ARI")
 	p.String("ari.http_url", "http://localhost:8088/ari", "HTTP Base URL for connecting to ARI")
 	p.String("ari.websocket_url", "ws://localhost:8088/ari/events", "Websocket URL for connecting to ARI")
 
-	for _, n := range []string{"verbose", "nats.url", "ari.application", "ari.username", "ari.password", "ari.http_url", "ari.websocket_url"} {
+	for _, n := range []string{"verbose", "nats.url", "messagebus.url", "ari.application", "ari.username", "ari.password", "ari.http_url", "ari.websocket_url"} {
 		err := viper.BindPFlag(n, p.Lookup(n))
 		if err != nil {
 			panic("failed to bind flag " + n)
@@ -98,9 +99,12 @@ func readConfig() {
 }
 
 func runServer(ctx context.Context, log log15.Logger) error {
-	natsURL := viper.GetString("nats.url")
+	messagebusURL := viper.GetString("messagebus.url")
+	if messagebusURL == "" {
+		messagebusURL = viper.GetString("nats.url") //backward compatibility
+	}
 	if os.Getenv("NATS_SERVICE_HOST") != "" {
-		natsURL = "nats://" + os.Getenv("NATS_SERVICE_HOST") + ":" + os.Getenv("NATS_SERVICE_PORT_CLIENT")
+		messagebusURL = "nats://" + os.Getenv("NATS_SERVICE_HOST") + ":" + os.Getenv("NATS_SERVICE_PORT_CLIENT")
 	}
 
 	srv := server.New()
@@ -113,5 +117,5 @@ func runServer(ctx context.Context, log log15.Logger) error {
 		Password:     viper.GetString("ari.password"),
 		URL:          viper.GetString("ari.http_url"),
 		WebsocketURL: viper.GetString("ari.websocket_url"),
-	}, natsURL)
+	}, messagebusURL)
 }

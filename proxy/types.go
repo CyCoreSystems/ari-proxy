@@ -10,6 +10,7 @@ import (
 
 // AnnouncementInterval is the amount of time to wait between periodic service availability announcements
 var AnnouncementInterval = time.Minute
+
 // EntityCheckInterval is the interval between checks against Asterisk entity ID
 var EntityCheckInterval = time.Second * 10
 
@@ -127,6 +128,7 @@ type Request struct {
 	ChannelPlay          *ChannelPlay          `json:"channel_play,omitempty"`
 	ChannelRecord        *ChannelRecord        `json:"channel_record,omitempty"`
 	ChannelSendDTMF      *ChannelSendDTMF      `json:"channel_send_dtmf,omitempty"`
+	ChannelUserevent     *ChannelUserevent     `json:"channel_user_event,omitempty"`
 	ChannelSnoop         *ChannelSnoop         `json:"channel_snoop,omitempty"`
 	ChannelExternalMedia *ChannelExternalMedia `json:"channel_external_media,omitempty"`
 	ChannelVariable      *ChannelVariable      `json:"channel_variable,omitempty"`
@@ -372,4 +374,9 @@ type AsteriskConfig struct {
 type AsteriskLoggingChannel struct {
 	// Levels is the set of logging levels for this logging channel (comma-separated string)
 	Levels string `json:"config"`
+}
+
+// ChannelUserevent - "User-generated event with additional user-defined fields in the object."
+type ChannelUserevent struct {
+	UserEvent ari.ChannelUserevent
 }

@@ -431,3 +431,7 @@ func (s *Server) channelVariableGet(ctx context.Context, reply string, req *prox
 func (s *Server) channelVariableSet(ctx context.Context, reply string, req *proxy.Request) {
 	s.sendError(reply, s.ari.Channel().SetVariable(req.Key, req.ChannelVariable.Name, req.ChannelVariable.Value))
 }
+
+func (s *Server) channelUserEvent(ctx context.Context, reply string, req *proxy.Request) {
+	s.sendError(reply, s.ari.Channel().UserEvent(req.Key, &req.ChannelUserevent.UserEvent))
+}

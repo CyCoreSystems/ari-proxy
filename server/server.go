@@ -85,8 +85,8 @@ func (s *Server) Listen(ctx context.Context, ariOpts *native.Options, natsURI st
 	for err == nats.ErrNoServers && reconnectionAttempts > 0 {
 		s.Log.Info("retrying to connect to NATS server", "attempts", reconnectionAttempts)
 		time.Sleep(DefaultNATSReconnectionWait)
-        	nc, err = nats.Connect(natsURI)
-                reconnectionAttempts -= 1
+		nc, err = nats.Connect(natsURI)
+		reconnectionAttempts -= 1
 	}
 	if err != nil {
 		return eris.Wrap(err, "failed to connect to NATS")
@@ -577,6 +577,8 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		f = s.soundData
 	case "SoundList":
 		f = s.soundList
+	case "ChannelUserEvent":
+		f = s.channelUserEvent
 	default:
 		f = func(ctx context.Context, reply string, req *proxy.Request) {
 			s.sendError(reply, eris.New("Not implemented"))

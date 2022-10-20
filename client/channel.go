@@ -430,3 +430,13 @@ func (c *channel) SetVariable(key *ari.Key, name, value string) error {
 		},
 	})
 }
+
+func (c *channel) UserEvent(key *ari.Key, ue *ari.ChannelUserevent) error {
+	return c.c.commandRequest(&proxy.Request{
+		Kind: "ChannelUserEvent",
+		Key:  key,
+		ChannelUserevent: &proxy.ChannelUserevent{
+			UserEvent: *ue,
+		},
+	})
+}

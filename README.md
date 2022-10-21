@@ -6,9 +6,9 @@ Proxy for the Asterisk REST interface (ARI).
 The ARI proxy facilitates scaling of both applications and Asterisk,
 independently and with minimal coordination.  Each Asterisk instance and ARI
 application pair runs an `ari-proxy` server instance, which talks to a common
-NATS/RabbitMQ cluster.  Each client application talks to the same NATS cluster.  The
+NATS or RabbitMQ cluster.  Each client application talks to the same message bus.  The
 clients automatically and continuously discover new Asterisk instances, so the
-only coordination needed is the common location of the NATS/RabbitMQ cluster.
+only coordination needed is the common location of the message bus.
 
 The ARI proxy allows for:
   - Any number of applications running the ARI client
@@ -22,13 +22,17 @@ The ARI proxy allows for:
   - Simple call event reception by any number of application clients.  (No
     single-app lockout)
 
+Supported message buses:
+  - [NATS](https://nats.io)
+  - [RabbitMQ](https://rabbitmq.com)
 
 ## Proxy server
 
 
 Docker images are kept up to date with releases and are tagged accordingly.  The
 `ari-proxy` does not expose any services, so no ports need to be opened for it.
-However, it does need to know how to connect to both Asterisk and NATS/RabbitMQ.
+However, it does need to know how to connect to both Asterisk and the message
+bus.
 
 ```
    docker run \
@@ -92,7 +96,7 @@ func connect(ctx context.Context, appName string) (ari.Client,error) {
 
 Configuration of the client can also be done with environment variables.
 `ARI_APPLICATION` can be used to set the ARI application name, and `MESSAGEBUS_URL`
-can be used to set the NATS/RabbitMQ URL.  Doing so allows you to get a client connection
+can be used to set the message bus URL.  Doing so allows you to get a client connection
 simply with `client.New(ctx)`.
 
 Once an `ari.Client` is obtained, the client functions exactly as the native
@@ -113,14 +117,14 @@ open subscriptions on the client.
 
 Layers of clients can be used efficiently with different contexts using the
 `New(context.Context)` function of each client instance.  Subtended clients will
-be closed with their parents, use a common internal NATS/RabbitMQ connection, and can be
+be closed with their parents, use a common internal message bus connection, and can be
 severally closed by their individual contexts.  This makes managing many active
 channels easy and efficient.
 
 ### Lifecycle
 
 There are two levels of client in use.  The first is a connection, which is a
-long-lived network connection to the NATS/RabbitMQ cluster.  In general, the end user
+long-lived network connection to the message bus.  In general, the end user
 should not close this connection.  However, it is available, if necessary, as
 `DefaultConn` and offers a `Close()` function for itself.
 
@@ -143,7 +147,7 @@ of where the client is located.  These pieces of information are handled
 transparently and internally by the ARI proxy and the ARI proxy client to route
 commands and events where they should be sent.
 
-### NATS/RabbitMQ protocol details
+### Message bus protocol details
 
 The protocol details described below are only necessary to know if you do not use the
 provided client and/or server.  By using both components in this repository, the
@@ -151,7 +155,7 @@ protocol details below are transparently handled for you.
 
 #### Subject structure
 
-The NATS/RabbitMQ subject prefix defaults to `ari.`, and all messages used by this proxy
+The message bus subject prefix defaults to `ari.`, and all messages used by this proxy
 will be prefixed by that term.
 
 Next is added one of four resource classifications:
@@ -181,10 +185,10 @@ ARI application command subject.  In fact, each ARI proxy listens to each of the
 three levels.  A request to `ari.command` will result in all ARI proxies
 responding.)
 
-This setup allows for a variable generalization in the listeners by using NATS/RabbitMQ
+This setup allows for a variable generalization in the listeners by using
+message bus
 wildcard subscriptions.  For instance, if you want to receive all events for the
-"test" application regardless from which Asterisk machine they come, you would
-subscribe to:
+"test" application regardless from which Asterisk machine they come, you would subscribe to:
 
 `ari.event.test.>` //NATS
 `ari.event.test.#` //RabbitMQ
@@ -196,14 +200,14 @@ specifies a Dialog ID in its metadata, the ARI proxy will further classify
 events related to that dialog.  Relationships are defined by the entity type on
 which the Dialog-infused command operates.
 
-Dialog-related events are published on their own NATS/RabbitMQ subject tree,
+Dialog-related events are published on their own message bus subject tree,
 `dialogevent`.  Thus dialogs abstract ARI application and Asterisk ID.  An event
 for dialog "testme123" would be published to:
 
 `ari.dialogevent.testme123`
 
 Keep in mind that regardless of dialog associations, all events are _also_
-published to their appropriate canonical NATS/RabbitMQ subjects.  Dialogs are intended as
+published to their appropriate canonical message bus subjects.  Dialogs are intended as
 a mechanism to:
 
   - reduce client message traffic load

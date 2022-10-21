@@ -334,7 +334,7 @@ func (r *RabbitmqBus) SubscribeCreateRequest(topic string, queue string, callbac
 				var data proxy.Request
 				err = json.Unmarshal(msg.Body, &data)
 				if err != nil {
-					r.Log.Error("Error unmarshall data", "topic", topic, "error", err)
+					r.Log.Error("Error unmarshal data", "topic", topic, "error", err)
 					continue
 				}
 				callback(topic, msg.ReplyTo, &data)
@@ -436,7 +436,7 @@ func (r *RabbitmqBus) Request(topic string, req *proxy.Request) (*proxy.Response
 		nil,                     // args
 	)
 	if err != nil {
-		return nil, eris.Wrap(err, "Error consumming channel")
+		return nil, eris.Wrap(err, "error consuming channel")
 	}
 	defer channel.Cancel(consumerID, false) // nolint: errcheck
 
@@ -463,7 +463,7 @@ func (r *RabbitmqBus) Request(topic string, req *proxy.Request) (*proxy.Response
 	}
 
 	if err != nil {
-		return nil, eris.Wrap(err, "Failed to publish message")
+		return nil, eris.Wrap(err, "failed to publish message")
 	}
 
 	msg := <-msgs
@@ -502,7 +502,7 @@ func (r *RabbitmqBus) MultipleRequest(topic string, req *proxy.Request, expected
 		nil,                     // args
 	)
 	if err != nil {
-		return nil, eris.Wrap(err, "Error consumming channel")
+		return nil, eris.Wrap(err, "error consuming channel")
 	}
 	defer channel.Cancel(consumerID, false) // nolint: errcheck
 
@@ -528,7 +528,7 @@ func (r *RabbitmqBus) MultipleRequest(topic string, req *proxy.Request, expected
 		}
 	}
 	if err != nil {
-		return nil, eris.Wrap(err, "Failed to publish message")
+		return nil, eris.Wrap(err, "failed to publish message")
 	}
 
 	timer := time.NewTimer(r.Config.RequestTimeout)
@@ -581,7 +581,7 @@ func (r *RabbitmqBus) MultipleRequestReturnFirstGoodResponse(topic string, req *
 		nil,                     // args
 	)
 	if err != nil {
-		return nil, eris.Wrap(err, "Error consumming channel")
+		return nil, eris.Wrap(err, "error consumming channel")
 	}
 	defer channel.Cancel(consumerID, false) // nolint: errcheck
 
@@ -607,7 +607,7 @@ func (r *RabbitmqBus) MultipleRequestReturnFirstGoodResponse(topic string, req *
 		}
 	}
 	if err != nil {
-		return nil, eris.Wrap(err, "Failed to publish message")
+		return nil, eris.Wrap(err, "failed to publish message")
 	}
 
 	timer := time.NewTimer(r.Config.RequestTimeout)

@@ -559,6 +559,8 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		f = s.soundData
 	case "SoundList":
 		f = s.soundList
+	case "ChannelUserEvent":
+		f = s.channelUserEvent
 	default:
 		f = func(ctx context.Context, reply string, req *proxy.Request) {
 			s.sendError(reply, eris.New("Not implemented"))

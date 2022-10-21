@@ -23,12 +23,12 @@ type Announcement struct {
 	Application string `json:"application"`
 }
 
-// AnnouncementSubject returns the NATS subject
+// AnnouncementSubject returns the MessageBus subject
 func AnnouncementSubject(prefix string) string {
 	return fmt.Sprintf("%sannounce", prefix)
 }
 
-// PingSubject returns the NATS subject for a cluster-wide proxy ping for presence
+// PingSubject returns the MessageBus subject for a cluster-wide proxy ping for presence
 func PingSubject(prefix string) string {
 	return fmt.Sprintf("%sping", prefix)
 }

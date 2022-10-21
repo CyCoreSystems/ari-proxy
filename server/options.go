@@ -8,7 +8,7 @@ import (
 
 // Options are the group of options for the ari-proxy server
 type Options struct {
-	//TODO: include nats options
+	//TODO: include nats/rabbitmq options
 
 	URL string
 

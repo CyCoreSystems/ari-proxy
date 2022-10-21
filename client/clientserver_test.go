@@ -20,7 +20,7 @@ func (s *srv) Start(ctx context.Context, t *testing.T, mockClient ari.Client, nc
 	s.s = server.New()
 
 	// tests may run in parallel so we don't want two separate proxy servers to conflict.
-	s.s.NATSPrefix = rid.New("") + "."
+	s.s.MBPrefix = rid.New("") + "."
 
 	go func() {
 		if err := s.s.ListenOn(ctx, mockClient, nc); err != nil {
@@ -37,7 +37,7 @@ func (s *srv) Start(ctx context.Context, t *testing.T, mockClient ari.Client, nc
 		return nil, errors.New("Timeout waiting for server ready")
 	}
 
-	cl, err := New(ctx, WithTimeoutRetries(4), WithPrefix(s.s.NATSPrefix), WithApplication("asdf"))
+	cl, err := New(ctx, WithTimeoutRetries(4), WithPrefix(s.s.MBPrefix), WithApplication("asdf"))
 	if err != nil {
 		return nil, err
 	}

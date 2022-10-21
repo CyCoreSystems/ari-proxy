@@ -2,27 +2,21 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"time"
 
+	"github.com/CyCoreSystems/ari-proxy/v5/messagebus"
 	"github.com/CyCoreSystems/ari-proxy/v5/proxy"
 	"github.com/CyCoreSystems/ari-proxy/v5/server/dialog"
 	"github.com/CyCoreSystems/ari/v5"
 	"github.com/CyCoreSystems/ari/v5/client/native"
+	"github.com/nats-io/nats.go"
 	"github.com/rotisserie/eris"
 
 	"github.com/inconshreveable/log15"
-	"github.com/nats-io/nats.go"
 )
-
-// DefaultReconnectionAttemts is the default number of reconnection attempts
-// It implements a hard coded fault tolerance for a starting NATS cluster
-const DefaultNATSReconnectionAttemts = 5
-
-// DefaultNATSReconnectionWait is the default wating time between each reconnection
-// attempt
-const DefaultNATSReconnectionWait = 5 * time.Second
 
 // Server describes the asterisk-facing ARI proxy server
 type Server struct {
@@ -33,14 +27,11 @@ type Server struct {
 	// to which this server is connected.
 	AsteriskID string
 
-	// NATSPrefix is the string which should be prepended to all NATS subjects, sending and receiving.  It defaults to "ari.".
-	NATSPrefix string
+	// MBPrefix is the string which should be prepended to all MessageBus subjects, sending and receiving.  It defaults to "ari.".
+	MBPrefix string
 
 	// ari is the native Asterisk ARI client by which this proxy is directly connected
 	ari ari.Client
-
-	// nats is the JSON-encoded NATS connection
-	nats *nats.EncodedConn
 
 	// Dialog is the dialog manager
 	Dialog dialog.Manager
@@ -52,6 +43,8 @@ type Server struct {
 
 	// Log is the log15.Logger for the service.  You may replace or call SetHandler() on this at any time to change the logging of the service.
 	Log log15.Logger
+
+	mbus messagebus.Server
 }
 
 // New returns a new Server
@@ -60,15 +53,15 @@ func New() *Server {
 	log.SetHandler(log15.DiscardHandler())
 
 	return &Server{
-		NATSPrefix: "ari.",
-		readyCh:    make(chan struct{}),
-		Dialog:     dialog.NewMemManager(),
-		Log:        log,
+		MBPrefix: "ari.",
+		readyCh:  make(chan struct{}),
+		Dialog:   dialog.NewMemManager(),
+		Log:      log,
 	}
 }
 
-// Listen runs the given server, listening to ARI and NATS, as specified
-func (s *Server) Listen(ctx context.Context, ariOpts *native.Options, natsURI string) (err error) {
+// Listen runs the given server, listening to ARI and MessageBus, as specified
+func (s *Server) Listen(ctx context.Context, ariOpts *native.Options, messagebusURL string) (err error) {
 	ctx, cancel := context.WithCancel(ctx)
 	s.cancel = cancel
 
@@ -79,23 +72,28 @@ func (s *Server) Listen(ctx context.Context, ariOpts *native.Options, natsURI st
 	}
 	defer s.ari.Close()
 
-	// Connect to NATS
-	nc, err := nats.Connect(natsURI)
-	reconnectionAttempts := DefaultNATSReconnectionAttemts
-	for err == nats.ErrNoServers && reconnectionAttempts > 0 {
-		s.Log.Info("retrying to connect to NATS server", "attempts", reconnectionAttempts)
-		time.Sleep(DefaultNATSReconnectionWait)
-		nc, err = nats.Connect(natsURI)
-		reconnectionAttempts -= 1
+	mbtype := messagebus.GetType(messagebusURL)
+	switch mbtype {
+	case messagebus.TypeRabbitmq:
+		s.mbus = &messagebus.RabbitmqBus{
+			Config: messagebus.Config{URL: messagebusURL},
+			Log:    s.Log,
+		}
+	case messagebus.TypeNats:
+		s.mbus = &messagebus.NatsBus{
+			Config: messagebus.Config{URL: messagebusURL},
+			Log:    s.Log,
+		}
+	default:
+		return errors.New("Unkwnon url for MessageBus: " + messagebusURL)
 	}
+
+	// Connect to MessageBus
+	err = s.mbus.Connect()
 	if err != nil {
-		return eris.Wrap(err, "failed to connect to NATS")
+		return eris.Wrap(err, "failed to connect to MessageBus")
 	}
-	s.nats, err = nats.NewEncodedConn(nc, nats.JSON_ENCODER)
-	if err != nil {
-		return eris.Wrap(err, "failed to encode NATS connection")
-	}
-	defer s.nats.Close()
+	defer s.mbus.Close()
 
 	return s.listen(ctx)
 }
@@ -106,7 +104,10 @@ func (s *Server) ListenOn(ctx context.Context, a ari.Client, n *nats.EncodedConn
 	s.cancel = cancel
 
 	s.ari = a
-	s.nats = n
+	s.mbus = messagebus.NewNatsBus(
+		messagebus.Config{},
+		messagebus.WithNatsConn(n),
+	)
 
 	return s.listen(ctx)
 }
@@ -148,83 +149,50 @@ func (s *Server) listen(ctx context.Context) error {
 	s.Application = s.ari.ApplicationName()
 
 	//
-	// Listen on the initial NATS subjects
+	// Listen on the initial MessageBus subjects
 	//
 
 	// ping handler
-	pingSub, err := s.nats.Subscribe(proxy.PingSubject(s.NATSPrefix), s.pingHandler)
+	testPingSub, err := s.mbus.SubscribePing(proxy.PingSubject(s.MBPrefix), s.pingHandler)
 	if err != nil {
 		return eris.Wrap(err, "failed to subscribe to pings")
 	}
-	defer wg.Add(pingSub.Unsubscribe)
+	defer wg.Add(testPingSub.Unsubscribe)
 
 	// get a contextualized request handler
 	requestHandler := s.newRequestHandler(ctx)
 
-	// get handlers
-	allGet, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "get", "", ""), requestHandler)
-	if err != nil {
-		return eris.Wrap(err, "failed to create get-all subscription")
+	subjects := []string{
+		proxy.Subject(s.MBPrefix, "get", "", ""),
+		proxy.Subject(s.MBPrefix, "get", s.Application, ""),
+		proxy.Subject(s.MBPrefix, "get", s.Application, s.AsteriskID),
+		proxy.Subject(s.MBPrefix, "data", "", ""),
+		proxy.Subject(s.MBPrefix, "data", s.Application, ""),
+		proxy.Subject(s.MBPrefix, "data", s.Application, s.AsteriskID),
+		proxy.Subject(s.MBPrefix, "command", "", ""),
+		proxy.Subject(s.MBPrefix, "command", s.Application, ""),
+		proxy.Subject(s.MBPrefix, "command", s.Application, s.AsteriskID),
 	}
-	defer wg.Add(allGet.Unsubscribe)()
-
-	appGet, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "get", s.Application, ""), requestHandler)
+	// get / data / command handlers
+	requestsSub, err := s.mbus.SubscribeRequests(subjects, requestHandler)
 	if err != nil {
-		return eris.Wrap(err, "failed to create get-app subscription")
+		s.Log.Error("%v", err)
+		return eris.Wrap(err, "failed to create requests subscription")
 	}
-	defer wg.Add(appGet.Unsubscribe)()
-	idGet, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "get", s.Application, s.AsteriskID), requestHandler)
-	if err != nil {
-		return eris.Wrap(err, "failed to create get-id subscription")
-	}
-	defer wg.Add(idGet.Unsubscribe)()
-
-	// data handlers
-	allData, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "data", "", ""), requestHandler)
-	if err != nil {
-		return eris.Wrap(err, "failed to create data-all subscription")
-	}
-	defer wg.Add(allData.Unsubscribe)()
-	appData, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "data", s.Application, ""), requestHandler)
-	if err != nil {
-		return eris.Wrap(err, "failed to create data-app subscription")
-	}
-	defer wg.Add(appData.Unsubscribe)()
-	idData, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "data", s.Application, s.AsteriskID), requestHandler)
-	if err != nil {
-		return eris.Wrap(err, "failed to create data-id subscription")
-	}
-	defer wg.Add(idData.Unsubscribe)()
-
-	// command handlers
-	allCommand, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "command", "", ""), requestHandler)
-	if err != nil {
-		return eris.Wrap(err, "failed to create command-all subscription")
-	}
-	defer wg.Add(allCommand.Unsubscribe)()
-	appCommand, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "command", s.Application, ""), requestHandler)
-	if err != nil {
-		return eris.Wrap(err, "failed to create command-app subscription")
-	}
-	defer wg.Add(appCommand.Unsubscribe)()
-	idCommand, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "command", s.Application, s.AsteriskID), requestHandler)
-	if err != nil {
-		return eris.Wrap(err, "failed to create command-id subscription")
-	}
-	defer wg.Add(idCommand.Unsubscribe)()
+	defer wg.Add(requestsSub.Unsubscribe)()
 
 	// create handlers
-	allCreate, err := s.nats.QueueSubscribe(proxy.Subject(s.NATSPrefix, "create", "", ""), "ariproxy", requestHandler)
+	allCreate, err := s.mbus.SubscribeCreateRequest(proxy.Subject(s.MBPrefix, "create", "", ""), "ariproxy", requestHandler)
 	if err != nil {
 		return eris.Wrap(err, "failed to create create-all subscription")
 	}
 	defer wg.Add(allCreate.Unsubscribe)()
-	appCreate, err := s.nats.QueueSubscribe(proxy.Subject(s.NATSPrefix, "create", s.Application, ""), "ariproxy", requestHandler)
+	appCreate, err := s.mbus.SubscribeCreateRequest(proxy.Subject(s.MBPrefix, "create", s.Application, ""), "ariproxy", requestHandler)
 	if err != nil {
 		return eris.Wrap(err, "failed to create create-app subscription")
 	}
 	defer wg.Add(appCreate.Unsubscribe)()
-	idCreate, err := s.nats.QueueSubscribe(proxy.Subject(s.NATSPrefix, "create", s.Application, s.AsteriskID), "ariproxy", requestHandler)
+	idCreate, err := s.mbus.SubscribeCreateRequest(proxy.Subject(s.MBPrefix, "create", s.Application, s.AsteriskID), "ariproxy", requestHandler)
 	if err != nil {
 		return eris.Wrap(err, "failed to create create-id subscription")
 	}
@@ -293,7 +261,7 @@ func (s *Server) runAnnouncer(ctx context.Context) {
 
 // announce publishes the presence of this server to the cluster
 func (s *Server) announce() {
-	s.publish(proxy.AnnouncementSubject(s.NATSPrefix), &proxy.Announcement{
+	s.publishAnnounce(proxy.AnnouncementSubject(s.MBPrefix), &proxy.Announcement{
 		Node:        s.AsteriskID,
 		Application: s.Application,
 	})
@@ -313,33 +281,47 @@ func (s *Server) runEventHandler(ctx context.Context) {
 			s.Log.Debug("event received", "kind", e.GetType())
 
 			// Publish event to canonical destination
-			s.publish(fmt.Sprintf("%sevent.%s.%s", s.NATSPrefix, s.Application, s.AsteriskID), e)
+			s.publishEvent(fmt.Sprintf("%sevent.%s.%s", s.MBPrefix, s.Application, s.AsteriskID), e)
 
 			// Publish event to any associated dialogs
 			for _, d := range s.dialogsForEvent(e) {
 				de := e
 				de.SetDialog(d)
-				s.publish(fmt.Sprintf("%sdialogevent.%s", s.NATSPrefix, d), de)
+				s.publishEvent(fmt.Sprintf("%sdialogevent.%s", s.MBPrefix, d), de)
 			}
 		}
 	}
 }
 
 // pingHandler publishes the server's presence
-func (s *Server) pingHandler(m *nats.Msg) {
+func (s *Server) pingHandler() {
 	if s.ari.Connected() {
 		s.announce()
 	}
 }
 
-// publish sends a message out over NATS, logging any error
-func (s *Server) publish(subject string, msg interface{}) {
-	if err := s.nats.Publish(subject, msg); err != nil {
-		s.Log.Warn("failed to publish NATS message", "subject", subject, "data", msg, "error", err)
+// publish sends a message out over MessageBus, logging any error
+func (s *Server) publish(subject string, msg *proxy.Response) {
+	if err := s.mbus.PublishResponse(subject, msg); err != nil {
+		s.Log.Warn("failed to publish MessageBus message", "subject", subject, "data", msg, "error", err)
 	}
 }
 
-// newRequestHandler returns a context-wrapped nats.Handler to handle requests
+// publishAnnounce sends a message out over MessageBus, logging any error
+func (s *Server) publishAnnounce(subject string, msg *proxy.Announcement) {
+	if err := s.mbus.PublishAnnounce(subject, msg); err != nil {
+		s.Log.Warn("failed to publish MessageBus message", "subject", subject, "data", msg, "error", err)
+	}
+}
+
+// publishEvent sends a message out over MessageBus, logging any error
+func (s *Server) publishEvent(subject string, msg ari.Event) {
+	if err := s.mbus.PublishEvent(subject, msg); err != nil {
+		s.Log.Warn("failed to publish MessageBus message", "subject", subject, "data", msg, "error", err)
+	}
+}
+
+// newRequestHandler returns a context-wrapped Handler to handle requests
 func (s *Server) newRequestHandler(ctx context.Context) func(subject string, reply string, req *proxy.Request) {
 	return func(subject string, reply string, req *proxy.Request) {
 		if !s.ari.Connected() {

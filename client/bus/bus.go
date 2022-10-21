@@ -4,37 +4,40 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/CyCoreSystems/ari-proxy/v5/messagebus"
 	"github.com/CyCoreSystems/ari/v5"
 	"github.com/inconshreveable/log15"
-
-	"github.com/nats-io/nats.go"
 )
 
 // EventChanBufferLength is the number of unhandled events which can be queued
 // to the event channel buffer before further events are lost.
 var EventChanBufferLength = 10
 
-// Bus provides an ari.Bus interface to NATS
+// Bus provides an ari.Bus interface to MessageBus
 type Bus struct {
 	prefix string
 
 	log log15.Logger
 
-	nc *nats.EncodedConn
+	mbus messagebus.Client
 }
 
 // New returns a new Bus
-func New(prefix string, nc *nats.EncodedConn, log log15.Logger) *Bus {
+func New(prefix string, m messagebus.Client, log log15.Logger) *Bus {
 	return &Bus{
 		prefix: prefix,
 		log:    log,
-		nc:     nc,
+		mbus:   m,
 	}
 }
 
 func (b *Bus) subjectFromKey(key *ari.Key) string {
 	if key == nil {
-		return fmt.Sprintf("%sevent.>", b.prefix)
+		return fmt.Sprintf(
+			"%sevent.%s",
+			b.prefix,
+			b.mbus.GetWildcardString(messagebus.WildcardZeroOrMoreWords),
+		)
 	}
 
 	if key.Dialog != "" {
@@ -43,23 +46,23 @@ func (b *Bus) subjectFromKey(key *ari.Key) string {
 
 	subj := fmt.Sprintf("%sevent.", b.prefix)
 	if key.App == "" {
-		return subj + ">"
+		return subj + b.mbus.GetWildcardString(messagebus.WildcardZeroOrMoreWords)
 	}
 	subj += key.App + "."
 
 	if key.Node == "" {
-		return subj + ">"
+		return subj + b.mbus.GetWildcardString(messagebus.WildcardZeroOrMoreWords)
 	}
 	return subj + key.Node
 }
 
-// Subscription represents an ari.Subscription over NATS
+// Subscription represents an ari.Subscription over MessageBus
 type Subscription struct {
 	key *ari.Key
 
 	log log15.Logger
 
-	subscription *nats.Subscription
+	subscription messagebus.Subscription
 
 	eventChan chan ari.Event
 
@@ -91,11 +94,18 @@ func (b *Bus) Subscribe(key *ari.Key, n ...string) ari.Subscription {
 		events:    n,
 	}
 
-	s.subscription, err = b.nc.Subscribe(b.subjectFromKey(key), func(m *nats.Msg) {
-		s.receive(m)
-	})
+	var app string
+	if key != nil {
+		app = key.App
+	}
+
+	s.subscription, err = b.mbus.SubscribeEvent(
+		b.subjectFromKey(key),
+		app,
+		s.receive,
+	)
 	if err != nil {
-		b.log.Error("failed to subscribe to NATS", "error", err)
+		b.log.Error("failed to subscribe to MessageBus", "error", err)
 		return nil
 	}
 	return s
@@ -115,7 +125,7 @@ func (s *Subscription) Cancel() {
 	if s.subscription != nil {
 		err := s.subscription.Unsubscribe()
 		if err != nil {
-			s.log.Error("failed unsubscribe from NATS", "error", err)
+			s.log.Error("failed unsubscribe from MessageBus", "error", err)
 		}
 	}
 
@@ -127,8 +137,8 @@ func (s *Subscription) Cancel() {
 	s.mu.Unlock()
 }
 
-func (s *Subscription) receive(o *nats.Msg) {
-	e, err := ari.DecodeEvent(o.Data)
+func (s *Subscription) receive(data []byte) {
+	e, err := ari.DecodeEvent(data)
 	if err != nil {
 		s.log.Error("failed to convert received message to ari.Event", "error", err)
 		return

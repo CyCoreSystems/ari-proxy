@@ -2,15 +2,16 @@ package client
 
 import (
 	"context"
+	"errors"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/CyCoreSystems/ari-proxy/v5/client/bus"
 	"github.com/CyCoreSystems/ari-proxy/v5/client/cluster"
+	"github.com/CyCoreSystems/ari-proxy/v5/messagebus"
 	"github.com/CyCoreSystems/ari-proxy/v5/proxy"
 	"github.com/CyCoreSystems/ari/v5"
-	"github.com/CyCoreSystems/ari/v5/rid"
+	"github.com/rabbitmq/amqp091-go"
 	"github.com/rotisserie/eris"
 
 	"github.com/inconshreveable/log15"
@@ -27,11 +28,11 @@ import (
 // immediately.
 var ClosureGracePeriod = 10 * time.Second
 
-// DefaultRequestTimeout is the default timeout for a NATS request.  (Note: Answer() takes longer than 250ms on average)
+// DefaultRequestTimeout is the default timeout for a MessageBus request.  (Note: Answer() takes longer than 250ms on average)
 var DefaultRequestTimeout = 500 * time.Millisecond
 
 // DefaultInputBufferLength is the default size of the event buffer for events
-// coming in from NATS
+// coming in from MessageBus
 const DefaultInputBufferLength = 100
 
 // DefaultClusterMaxAge is the default maximum age for cluster members to be
@@ -43,7 +44,7 @@ var ErrNil = eris.New("Nil")
 
 // core is the core, functional piece of a Client which is the same across the
 // family of derived clients.  It manages stateful elements such as the bus,
-// the NATS connection, and the cluster membership
+// the MessageBus connection, and the cluster membership
 type core struct {
 	// cluster describes the cluster of ARI proxies
 	cluster *cluster.Cluster
@@ -51,16 +52,16 @@ type core struct {
 	// clusterMaxAge is the maximum age of cluster members to include in queries
 	clusterMaxAge time.Duration
 
-	// inputBufferLength is the size of the buffer for events coming in from NATS
+	// inputBufferLength is the size of the buffer for events coming in from MessageBus
 	inputBufferLength int
 
 	log log15.Logger
 
-	// nc provides the nats.EncodedConn over which messages will be transceived.
-	// One of NATS or NATSURI must be specified.
-	nc *nats.EncodedConn
+	// Message Bus over which messages will be transceived
+	// One of mbus or uri must be specified.
+	mbus messagebus.Client
 
-	// prefix is the prefix to use on all NATS subjects.  It defaults to "ari.".
+	// prefix is the prefix to use on all MessageBus subjects.  It defaults to "ari.".
 	prefix string
 
 	// refCounter is the reference counter for derived clients.  When there are
@@ -70,19 +71,16 @@ type core struct {
 	// requestTimeout is the timeout duration of a request
 	requestTimeout time.Duration
 
-	// timeoutRetries is the amount of times to retry on nats timeout
+	// timeoutRetries is the amount of times to retry on message bus timeout
 	timeoutRetries int
 
-	// countTimeouts tracks how many timeouts the client has received, for metrics.
-	countTimeouts int64 // nolint: structcheck
-
-	// uri provies the URI to which a NATS connection should be established. One
-	// of NATS or NATSURI must be specified. This option may also be supplied by
-	// the `NATS_URI` environment variable.
+	// uri provies the URI to which a Message Bus connection should be established. One
+	// of mbus or uri must be specified. This option may also be supplied by
+	// the `MESSAGEBUS_URL` environment variable.
 	uri string
 
-	// annSub is the NATS subscription to proxy announcements
-	annSub *nats.Subscription
+	// annSub is the subscription to proxy announcements
+	annSub messagebus.Subscription
 
 	// closeChan is the signal channel responsible for shutting down core
 	// services.  When it is closed, all core services should exit.
@@ -91,9 +89,9 @@ type core struct {
 	// closed indicates the core has been closed
 	closed bool
 
-	// closeNATSOnClose indicates that the NATS connection should be closed when
+	// closeMBusOnClose indicates that the Message Bus connection should be closed when
 	// the ari.Client is closed
-	closeNATSOnClose bool
+	closeMBusOnClose bool
 
 	// started indicates whether this core has been started; a started core will
 	// no-op core.start()
@@ -120,13 +118,11 @@ func (c *core) close() {
 	if c.annSub != nil {
 		err := c.annSub.Unsubscribe()
 		if err != nil {
-			c.log.Debug("failed to unsubscribe from NATS proxy announcements", "error", err)
+			c.log.Debug("failed to unsubscribe from proxy announcements", "error", err)
 		}
 	}
 
-	if c.closeNATSOnClose && c.nc != nil {
-		c.nc.Close()
-	}
+	c.mbus.Close()
 }
 
 func (c *core) Start() error {
@@ -141,22 +137,37 @@ func (c *core) Start() error {
 
 	c.closeChan = make(chan struct{})
 
-	// Connect to NATS, if we do not already have a connection
-	if c.nc == nil {
-		n, err := nats.Connect(c.uri)
-		if err != nil {
-			c.close()
-			return eris.Wrap(err, "failed to connect to NATS")
+	// Connect to MessageBus, if we do not already have a connection
+	if c.mbus == nil {
+		switch messagebus.GetType(c.uri) {
+		case messagebus.TypeNats:
+			c.mbus = &messagebus.NatsBus{
+				Config: messagebus.Config{
+					URL:            c.uri,
+					TimeoutRetries: c.timeoutRetries,
+					RequestTimeout: c.requestTimeout,
+				},
+				Log: c.log,
+			}
+		case messagebus.TypeRabbitmq:
+			c.mbus = &messagebus.RabbitmqBus{
+				Config: messagebus.Config{
+					URL:            "amqp://guest:guest@rabbitmq:5672/",
+					TimeoutRetries: c.timeoutRetries,
+					RequestTimeout: c.requestTimeout,
+				},
+				Log: c.log,
+			}
+		default:
+			return errors.New("Unknown url for MessageBus: " + c.uri)
 		}
 
-		c.nc, err = nats.NewEncodedConn(n, nats.JSON_ENCODER)
+		err := c.mbus.Connect()
 		if err != nil {
-			n.Close() // need this here because nc is not yet bound to the core
 			c.close()
-			return eris.Wrap(err, "failed to encode NATS connection")
+			return eris.Wrap(err, "failed to connect to MessageBus")
 		}
-
-		c.closeNATSOnClose = true
+		c.closeMBusOnClose = true
 	}
 
 	// Create and start the cluster
@@ -173,7 +184,8 @@ func (c *core) Start() error {
 }
 
 func (c *core) maintainCluster() (err error) {
-	c.annSub, err = c.nc.Subscribe(proxy.AnnouncementSubject(c.prefix), func(o *proxy.Announcement) {
+
+	c.annSub, err = c.mbus.SubscribeAnnounce(proxy.AnnouncementSubject(c.prefix), func(o *proxy.Announcement) {
 		c.cluster.Update(o.Node, o.Application)
 	})
 	if err != nil {
@@ -181,7 +193,11 @@ func (c *core) maintainCluster() (err error) {
 	}
 
 	// Send an initial ping for proxy announcements
-	return c.nc.Publish(proxy.PingSubject(c.prefix), &proxy.Request{})
+	err = c.mbus.PublishPing(proxy.PingSubject(c.prefix))
+	if err != nil {
+		return eris.Wrap(err, "failed to publish ping")
+	}
+	return err
 }
 
 // Client provides an ari.Client for an ari-proxy server
@@ -198,7 +214,7 @@ type Client struct {
 	closed bool
 }
 
-// New creates a new Client to the Asterisk ARI NATS proxy.
+// New creates a new Client to the Asterisk ARI NATS/RabbitMQ proxy.
 func New(ctx context.Context, opts ...OptionFunc) (*Client, error) {
 	ctx, cancel := context.WithCancel(ctx)
 
@@ -218,7 +234,9 @@ func New(ctx context.Context, opts ...OptionFunc) (*Client, error) {
 	c.log.SetHandler(log15.DiscardHandler())
 
 	// Load environment-based configurations
-	if os.Getenv("NATS_URI") != "" {
+	if os.Getenv("MESSAGEBUS_URL") != "" {
+		c.core.uri = os.Getenv("MESSAGEBUS_URL")
+	} else if os.Getenv("NATS_URI") != "" { //backward compatibility
 		c.core.uri = os.Getenv("NATS_URI")
 	}
 
@@ -234,7 +252,7 @@ func New(ctx context.Context, opts ...OptionFunc) (*Client, error) {
 	}
 
 	// Create the bus
-	c.bus = bus.New(c.core.prefix, c.core.nc, c.core.log)
+	c.bus = bus.New(c.core.prefix, c.core.mbus, c.core.log)
 
 	// Call Close whenever the context is closed
 	go func() {
@@ -254,7 +272,7 @@ func New(ctx context.Context, opts ...OptionFunc) (*Client, error) {
 // New returns a new client from the existing one.  The new client will have a
 // separate event bus and lifecycle, allowing the closure of all subscriptions
 // and handles derived from the client by simply closing the client.  The
-// underlying NATS connection and cluster awareness (the common Core) will be
+// underlying MessageBus connection and cluster awareness (the common Core) will be
 // preserved across derived Client lifecycles.
 func (c *Client) New(ctx context.Context) *Client {
 	_, cancel := context.WithCancel(ctx)
@@ -263,7 +281,7 @@ func (c *Client) New(ctx context.Context) *Client {
 		appName: c.appName,
 		cancel:  cancel,
 		core:    c.core,
-		bus:     bus.New(c.core.prefix, c.core.nc, c.core.log),
+		bus:     bus.New(c.core.prefix, c.core.mbus, c.core.log),
 	}
 }
 
@@ -271,14 +289,14 @@ func (c *Client) New(ctx context.Context) *Client {
 type OptionFunc func(*Client)
 
 // FromClient configures the ARI Application to use the transport details from
-// another ARI Client.  Transport-related details are copied, such as the NATS
-// Client, the NATS prefix, the timeout values.
+// another ARI Client.  Transport-related details are copied, such as the MessageBus
+// Client, the MessageBus prefix, the timeout values.
 //
 // Specifically NOT copied are dialog, application, and asterisk details.
 //
-// NOTE: use of this function will cause NATS connection leakage if there is a
+// NOTE: use of this function will cause MessageBus connection leakage if there is a
 // mix of uses of FromClient and not over a period of time.  If you intend to
-// use FromClient, it is recommended that you always pass a NATS client in to
+// use FromClient, it is recommended that you always pass a MessageBus client in to
 // the first ari.Client and maintain lifecycle control of it manually.
 func FromClient(cl ari.Client) OptionFunc {
 	return func(c *Client) {
@@ -310,8 +328,8 @@ func WithLogHandler(h log15.Handler) OptionFunc {
 	}
 }
 
-// WithURI sets the NATS URI to which the client will attempt to connect.
-// The NATS URI may also be configured by the environment variable `NATS_URI`.
+// WithURI sets the MessageBus URI to which the client will attempt to connect.
+// The MessageBus URI may also be configured by the environment variable `MESSAGEBUS_URL`.
 func WithURI(uri string) OptionFunc {
 	return func(c *Client) {
 		c.core.uri = uri
@@ -321,11 +339,24 @@ func WithURI(uri string) OptionFunc {
 // WithNATS binds an existing NATS connection
 func WithNATS(nc *nats.EncodedConn) OptionFunc {
 	return func(c *Client) {
-		c.nc = nc
+		c.mbus = messagebus.NewNatsBus(
+			messagebus.Config{},
+			messagebus.WithNatsConn(nc),
+		)
 	}
 }
 
-// WithPrefix configures the NATS Prefix to use on a Client
+// WithRabbitmq binds an existing RabbitMQ connection
+func WithRabbitmq(conn *amqp091.Connection) OptionFunc {
+	return func(c *Client) {
+		c.mbus = messagebus.NewRabbitmqBus(
+			messagebus.Config{},
+			messagebus.WithRabbitmqConn(conn),
+		)
+	}
+}
+
+// WithPrefix configures the MessageBus Prefix to use on a Client
 func WithPrefix(prefix string) OptionFunc {
 	return func(c *Client) {
 		c.core.prefix = prefix
@@ -508,23 +539,12 @@ func (c *Client) listRequest(req *proxy.Request) ([]*ari.Key, error) {
 }
 
 func (c *Client) makeRequest(class string, req *proxy.Request) (*proxy.Response, error) {
-	var resp proxy.Response
-	var err error
-
 	if !c.completeCoordinates(req) {
 		return c.makeBroadcastRequestReturnFirstGoodResponse(class, req)
 	}
 
-	for i := 0; i <= c.core.timeoutRetries; i++ {
-		err = c.nc.Request(c.subject(class, req), req, &resp, c.requestTimeout)
-		if err == nats.ErrTimeout {
-			c.countTimeouts++
-			continue
-		}
-		return &resp, err
-	}
-
-	return nil, err
+	c.log.Error("request", "class", class, "req", req, "subject", c.subject(class, req))
+	return c.mbus.Request(c.subject(class, req), req)
 }
 
 func (c *Client) makeRequests(class string, req *proxy.Request) (responses []*proxy.Response, err error) {
@@ -535,76 +555,11 @@ func (c *Client) makeRequests(class string, req *proxy.Request) (responses []*pr
 		req.Key = ari.NewKey("", "")
 	}
 
-	var responseCount int
 	expected := len(c.core.cluster.Matching(req.Key.Node, req.Key.App, c.core.clusterMaxAge))
-	reply := rid.New("rp")
-	replyChan := make(chan *proxy.Response)
-	replySub, err := c.core.nc.Subscribe(reply, func(o *proxy.Response) {
-		responseCount++
 
-		replyChan <- o
-
-		if responseCount >= expected {
-			close(replyChan)
-		}
-	})
-	if err != nil {
-		return nil, eris.Wrap(err, "failed to subscribe to data responses")
-	}
-	defer replySub.Unsubscribe() // nolint: errcheck
-
-	// Make an all-call for the entity data
-	err = c.core.nc.PublishRequest(c.subject(class, req), reply, req)
-	if err != nil {
-		return nil, eris.Wrap(err, "failed to make request for data")
-	}
-
-	// Wait for replies
-	for {
-		select {
-		case <-time.After(c.requestTimeout):
-			return responses, nil
-		case resp, ok := <-replyChan:
-			if !ok {
-				return responses, nil
-			}
-			responses = append(responses, resp)
-		}
-	}
+	return c.mbus.MultipleRequest(c.subject(class, req), req, expected)
 }
 
-type limitedResponseForwarder struct {
-	closed   bool
-	count    int
-	expected int
-	fwdChan  chan *proxy.Response
-
-	mu sync.Mutex
-}
-
-func (f *limitedResponseForwarder) Forward(o *proxy.Response) {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-
-	f.count++
-
-	if f.closed {
-		return
-	}
-
-	// always send up reply, so we can track errors.
-	select {
-	case f.fwdChan <- o:
-	default:
-	}
-
-	if f.count >= f.expected {
-		f.closed = true
-		close(f.fwdChan)
-	}
-}
-
-// TODO: simplify
 func (c *Client) makeBroadcastRequestReturnFirstGoodResponse(class string, req *proxy.Request) (*proxy.Response, error) {
 	if req == nil {
 		return nil, eris.New("empty request")
@@ -614,49 +569,11 @@ func (c *Client) makeBroadcastRequestReturnFirstGoodResponse(class string, req *
 		req.Key = ari.NewKey("", "")
 	}
 
-	reply := rid.New("rp")
-
-	rf := &limitedResponseForwarder{
-		expected: len(c.core.cluster.Matching(req.Key.Node, req.Key.App, c.core.clusterMaxAge)),
-		fwdChan:  make(chan *proxy.Response),
-	}
-
-	replySub, err := c.core.nc.Subscribe(reply, rf.Forward)
-	if err != nil {
-		return nil, eris.Wrap(err, "failed to subscribe to data responses")
-	}
-	defer replySub.Unsubscribe() // nolint: errcheck
-
-	// Make an all-call for the entity data
-	if err = c.core.nc.PublishRequest(c.subject(class, req), reply, req); err != nil {
-		return nil, eris.Wrap(err, "failed to make request for data")
-	}
-
-	// Wait for replies
-	for {
-		select {
-		case <-time.After(c.requestTimeout):
-			// Return the last error if we got one; otherwise, return a timeout error
-			if err == nil {
-				err = eris.New("timeout")
-			}
-
-			return nil, err
-		case resp, more := <-rf.fwdChan:
-			if !more {
-				if err == nil {
-					err = eris.New("no data")
-				}
-
-				return nil, err
-			}
-			if resp != nil {
-				if err = resp.Err(); err == nil { // store the error for later return
-					return resp, nil // No error means to return the current value
-				}
-			}
-		}
-	}
+	return c.mbus.MultipleRequestReturnFirstGoodResponse(
+		c.subject(class, req),
+		req,
+		len(c.core.cluster.Matching(req.Key.Node, req.Key.App, c.core.clusterMaxAge)),
+	)
 }
 
 func (c *Client) completeCoordinates(req *proxy.Request) bool {
@@ -675,7 +592,8 @@ func (c *Client) subject(class string, req *proxy.Request) string {
 	return proxy.Subject(c.core.prefix, class, req.Key.App, req.Key.Node)
 }
 
-// TimeoutCount is the amount of times the NATS communication times out
+// TimeoutCount is the amount of times the communication times out
 func (c *Client) TimeoutCount() int64 {
-	return c.countTimeouts
+	// countTimeouts tracks how many timeouts the client has received, for metrics.
+	return c.mbus.TimeoutCount()
 }

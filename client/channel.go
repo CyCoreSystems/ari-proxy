@@ -291,7 +291,7 @@ func (c *channel) StageExternalMedia(referenceKey *ari.Key, opts ari.ExternalMed
 	// Asterisk box at the time of staging even though this staging call will
 	// never actually be used.
 	k, err := c.c.createRequest(&proxy.Request{
-		Kind: "ChannelStageOriginate",
+		Kind: "ChannelStageExternalMedia",
 		Key:  referenceKey,
 		ChannelExternalMedia: &proxy.ChannelExternalMedia{
 			Options: opts,

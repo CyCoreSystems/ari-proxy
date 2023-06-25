@@ -62,17 +62,27 @@ func WithNatsConn(nconn *nats.EncodedConn) OptionNatsFunc {
 
 // Connect creates a NATS connection
 func (n *NatsBus) Connect() error {
-	nc, err := nats.Connect(n.Config.URL)
-	reconnectionAttempts := DefaultReconnectionAttemts
-	for err == nats.ErrNoServers && reconnectionAttempts > 0 {
-		n.Log.Info("retrying to connect to NATS server", "attempts", reconnectionAttempts)
-		time.Sleep(DefaultReconnectionWait)
-		nc, err = nats.Connect(n.Config.URL)
-		reconnectionAttempts--
-	}
+	nc, err := nats.Connect(n.Config.URL,
+		nats.Name(n.Config.Application),
+		nats.MaxReconnects(DefaultReconnectionAttemts),
+		nats.ReconnectWait(DefaultReconnectionWait),
+		nats.ReconnectHandler(func(c *nats.Conn) {
+			n.Log.Info("retrying to connect to NATS server", "attempts", DefaultReconnectionAttemts)
+		}),
+		nats.MaxPingsOutstanding(3),
+	)
 	if err != nil {
 		return eris.Wrap(err, "failed to connect to NATS")
 	}
+	/*
+		reconnectionAttempts := DefaultReconnectionAttemts
+		for err == nats.ErrNoServers && reconnectionAttempts > 0 {
+			n.Log.Info("retrying to connect to NATS server", "attempts", reconnectionAttempts)
+			time.Sleep(DefaultReconnectionWait)
+			nc, err = nats.Connect(n.Config.URL)
+			reconnectionAttempts--
+		}
+	*/
 	n.conn, err = nats.NewEncodedConn(nc, nats.JSON_ENCODER)
 	if err != nil {
 		nc.Close()

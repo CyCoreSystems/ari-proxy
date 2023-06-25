@@ -72,6 +72,7 @@ type Config struct {
 	URL            string
 	TimeoutRetries int
 	RequestTimeout time.Duration
+	Application    string
 }
 
 // Subscription defines subscription interface

@@ -62,12 +62,15 @@ func WithNatsConn(nconn *nats.EncodedConn) OptionNatsFunc {
 
 // Connect creates a NATS connection
 func (n *NatsBus) Connect() error {
+	reconnectionAttempts := DefaultReconnectionAttemts
 	nc, err := nats.Connect(n.Config.URL,
-		nats.Name(n.Config.Application),
+		nats.Name(n.Config.ID),
 		nats.MaxReconnects(DefaultReconnectionAttemts),
 		nats.ReconnectWait(DefaultReconnectionWait),
 		nats.ReconnectHandler(func(c *nats.Conn) {
-			n.Log.Info("retrying to connect to NATS server", "attempts", DefaultReconnectionAttemts)
+			reconnectionAttempts--
+
+			n.Log.Info("retrying to connect to NATS server", "attempts", reconnectionAttempts)
 		}),
 		nats.MaxPingsOutstanding(3),
 	)
@@ -75,7 +78,7 @@ func (n *NatsBus) Connect() error {
 		return eris.Wrap(err, "failed to connect to NATS")
 	}
 	/*
-		reconnectionAttempts := DefaultReconnectionAttemts
+
 		for err == nats.ErrNoServers && reconnectionAttempts > 0 {
 			n.Log.Info("retrying to connect to NATS server", "attempts", reconnectionAttempts)
 			time.Sleep(DefaultReconnectionWait)

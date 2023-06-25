@@ -76,13 +76,19 @@ func (s *Server) Listen(ctx context.Context, ariOpts *native.Options, messagebus
 	switch mbtype {
 	case messagebus.TypeRabbitmq:
 		s.mbus = &messagebus.RabbitmqBus{
-			Config: messagebus.Config{URL: messagebusURL},
-			Log:    s.Log,
+			Config: messagebus.Config{
+				URL: messagebusURL,
+				ID:  "mq-" + s.Application + "-" + s.AsteriskID,
+			},
+			Log: s.Log,
 		}
 	case messagebus.TypeNats:
 		s.mbus = &messagebus.NatsBus{
-			Config: messagebus.Config{URL: messagebusURL},
-			Log:    s.Log,
+			Config: messagebus.Config{
+				URL: messagebusURL,
+				ID:  "nats-" + s.Application + "-" + s.AsteriskID,
+			},
+			Log: s.Log,
 		}
 	default:
 		return errors.New("Unkwnon url for MessageBus: " + messagebusURL)
